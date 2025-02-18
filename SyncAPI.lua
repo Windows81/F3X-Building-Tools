@@ -702,6 +702,17 @@ Actions = {
 		local Parts = {};
 		for _, Change in pairs(Changes) do
 			if Change.Part then
+				assert(typeof(Change.Part) == "Instance" and Change.Part:IsA("BasePart"), "Invalid part")
+				assert(typeof(Change.Surfaces) == "table", "Invalid surface dictionary")
+
+				-- Validate surface data
+				for surfaceId, surfaceType in Change.Surfaces do
+					assert(typeof(surfaceId) == "string", "Invalid surface")
+					assert(typeof(Enum.NormalId[surfaceId]) == "EnumItem", "Invalid surface")
+					assert(typeof(surfaceType) == "EnumItem", "Invalid surface type")
+					assert(surfaceType.EnumType == Enum.SurfaceType, "Invalid surface type")
+				end
+
 				table.insert(Parts, Change.Part);
 			end;
 		end;
