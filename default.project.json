@@ -82,6 +82,9 @@
         "Interfaces": {
           "$className": "Folder",
           "$ignoreUnknownInstances": true
+        },
+        "ThumbnailCamera": {
+          "$path": "ThumbnailCamera.model.json"
         }
       }
     }
