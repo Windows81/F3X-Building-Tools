@@ -1,5 +1,6 @@
 local HttpService = game:GetService('HttpService')
 local RunService = game:GetService('RunService')
+local Workspace = game:GetService('Workspace')
 
 -- References
 SyncAPI = script.Parent;
@@ -92,6 +93,12 @@ Actions = {
 		if Security.ArePartsViolatingAreas({ NewPart }, Player, false, AreaPermissions) then
 			return;
 		end;
+
+		-- If streaming is enabled in tool mode, to ensure returned instance reference isn't invalid,
+		-- trigger immediate part replication by parenting elsewhere first
+		if Player and Workspace.StreamingEnabled then
+			NewPart.Parent = Player
+		end
 
 		-- Parent the part
 		NewPart.Parent = Parent
