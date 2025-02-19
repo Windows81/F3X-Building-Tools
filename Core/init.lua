@@ -619,6 +619,9 @@ function CloneSelection()
 			-- Restore the clones
 			SyncAPI:Invoke('UndoRemove', HistoryRecord.Clones);
 
+			-- Reselect the restored clones
+			Selection.Replace(HistoryRecord.Clones)
+
 		end;
 
 	};
