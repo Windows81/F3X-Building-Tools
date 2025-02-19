@@ -31,6 +31,7 @@ local Cryo = require(Tool.Libraries:WaitForChild('Cryo'))
 Support.ImportServices();
 SyncAPI = Tool.SyncAPI;
 Player = Players.LocalPlayer;
+local CollectionService = game:GetService('CollectionService')
 local RunService = game:GetService('RunService')
 
 -- Preload assets
@@ -554,7 +555,48 @@ function CloneSelection()
 	end;
 
 	-- Send the cloning request to the server
-	local Clones = SyncAPI:Invoke('Clone', Selection.Items, GetHighestParent(Selection.Items))
+	local Clones, StreamingCloneId, StreamingCloneCount = SyncAPI:Invoke('Clone', Selection.Items, GetHighestParent(Selection.Items))
+
+	-- If the server is streaming clones, wait for them to replicate
+	if Clones == nil then
+		Clones = {}
+
+		-- Gather initial available clones
+		for _, Clone in CollectionService:GetTagged("BTStreamingClone") do
+			if Clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
+				table.insert(Clones, Clone)
+			end
+		end
+
+		-- Listen for clones yet to arrive
+		if #Clones < StreamingCloneCount then
+			local thread = coroutine.running()
+
+			-- If streaming takes too long, ignore remaining clones and resume thread early
+			local CLONE_STREAMING_TIMEOUT = 3
+			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function ()
+				warn(`[Building Tools by F3X] Cloning operation only received {#Clones}/{StreamingCloneCount} items after {CLONE_STREAMING_TIMEOUT} seconds, ignoring rest`)
+				coroutine.resume(thread)
+			end)
+
+			-- Track incoming clones from this cloning operation
+			local replicationListener = CollectionService:GetInstanceAddedSignal("BTStreamingClone"):Connect(function (clone)
+				if clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
+					table.insert(Clones, clone)
+
+					-- Once all clones have arrived, resume thread
+					if #Clones == StreamingCloneCount then
+						task.cancel(timeoutThread)
+						coroutine.resume(thread)
+					end
+				end
+			end)
+
+			-- Yield until resumed by replication completion, or timeout thread
+			coroutine.yield()
+			replicationListener:Disconnect()
+		end
+	end
 
 	-- Put together the history record
 	local HistoryRecord = {
