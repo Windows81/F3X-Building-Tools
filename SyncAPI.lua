@@ -18,12 +18,21 @@ Support.ImportServices();
 
 -- Default options
 Options = {
-	DisallowLocked = false
+	DisallowLocked = false,
+
+	--[[
+		When streaming is enabled, and the tool is being used by a player, cloned
+		items are tagged with a temporary ID for this long in order for clients to
+		be able to identify them as they replicate in.
+	]]
+	StreamingCloneTagLifetime = 2,
 }
 
 -- Keep track of created items in memory to not lose them in garbage collection
 CreatedInstances = {};
 LastParents = {};
+
+local streamingClonesPendingUntagging = {}
 
 -- Determine whether we're in tool or plugin mode
 ToolMode = (Tool.Parent:IsA 'Plugin') and 'Plugin' or 'Tool'
@@ -58,15 +67,39 @@ Actions = {
 		end
 
 		local Clones = {}
+		local StreamingCloneId = if (Player and Workspace.StreamingEnabled)
+			then math.random(-2^30, 2^30)
+			else nil
 
 		-- Clone items
 		for _, Item in pairs(Items) do
 			local Clone = Item:Clone()
+
+			-- Include metadata when streaming is enabled in tool mode
+			if StreamingCloneId then
+				Clone:SetAttribute("BTStreamingCloneID", StreamingCloneId)
+				Clone:AddTag("BTStreamingClone")
+				streamingClonesPendingUntagging[Clone] = true
+			end
+
 			Clone.Parent = Parent
 
 			-- Register the clone
 			table.insert(Clones, Clone)
 			CreatedInstances[Item] = Item
+		end
+
+		-- If streaming is enabled in tool mode, return temporary clone operation metadata
+		-- (instead of invalid instance references)
+		if StreamingCloneId then
+			task.delay(Options.StreamingCloneTagLifetime, function ()
+				for _, Clone in Clones do
+					Clone:RemoveTag("BTStreamingClone")
+					Clone:SetAttribute("BTStreamingCloneID", nil)
+					streamingClonesPendingUntagging[Clone] = nil
+				end
+			end)
+			return nil, StreamingCloneId, #Clones
 		end
 
 		-- Return the clones
@@ -1942,6 +1975,13 @@ if ToolMode == 'Tool' then
 		-- Clear `Player` if tool is not parented to a player
 		else
 			Player = nil;
+
+			-- Clean up remaining clone streaming metadata before tool becomes unable to
+			for clone in streamingClonesPendingUntagging do
+				clone:RemoveTag("BTStreamingClone")
+				clone:SetAttribute("BTStreamingCloneID", nil)
+				streamingClonesPendingUntagging[clone] = nil
+			end
 		end;
 
 	end);
