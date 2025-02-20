@@ -1,4 +1,4 @@
-local Core = getfenv(0)
+local Core = getfenv(debug.info(0, 'f'))
 Tool = script.Parent;
 Plugin = (Tool.Parent:IsA 'Plugin') and Tool.Parent or nil
 
@@ -174,7 +174,7 @@ function Enable(Mouse)
 	Enabling:Fire();
 
 	-- Update the core mouse
-	getfenv(0).Mouse = Mouse;
+	getfenv(debug.info(0, 'f')).Mouse = Mouse;
 
 	-- Use default mouse behavior
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default;
@@ -359,7 +359,7 @@ function OpenExplorer()
 
 	-- Initialize explorer
 	Explorer = Roact.createElement(ExplorerTemplate, {
-		Core = getfenv(0),
+		Core = getfenv(debug.info(0, 'f')),
 		Close = CloseExplorer,
 		Scope = Targeting.Scope
 	})
@@ -399,7 +399,7 @@ coroutine.wrap(function ()
 	-- Create scope HUD
 	local ScopeHUDTemplate = require(UIElements:WaitForChild 'ScopeHUD')
 	local ScopeHUD = Roact.createElement(ScopeHUDTemplate, {
-		Core = getfenv(0);
+		Core = getfenv(debug.info(0, 'f'));
 	})
 
 	-- Mount scope HUD
@@ -1088,4 +1088,4 @@ end;
 InitializeUI();
 
 -- Return core
-return getfenv(0);
+return getfenv(debug.info(0, 'f'));
