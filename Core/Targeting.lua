@@ -462,7 +462,12 @@ function TargetingModule.PrismSelect()
 	-- Get region for selection items and find potential parts
 	local Extents = require(Core.Tool.Core.BoundingBox).CalculateExtents(Selection.Items, nil, true);
 	local Region = Region3.new(Extents.Min, Extents.Max);
-	local PotentialParts = Workspace:FindPartsInRegion3WithIgnoreList(Region, Selection.Items, math.huge);
+	
+	local Params = OverlapParams.new()
+	Params.FilterDescendantsInstances = Selection.Items
+	Params.MaxParts = math.huge
+	
+	local PotentialParts = Workspace:GetPartBoundsInBox(Region.CFrame, Region.Size, Params);
 
 	-- Enable collision on all potential parts
 	local OriginalState = {};

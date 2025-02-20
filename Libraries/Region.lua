@@ -278,7 +278,6 @@ end
 
 local setmetatable	=setmetatable
 local components	=CFrame.new().components
-local Workspace		=Workspace
 local type			=type
 local IsA			=game.IsA
 local r3			=Region3.new
@@ -308,7 +307,12 @@ end
 
 local function FindAllPartsInRegion3(Region3, Ignore)
 	local Ignore = (type(Ignore) == 'table') and Ignore or { Ignore }
-	return Workspace:FindPartsInRegion3WithIgnoreList(Region3, Ignore, math.huge)
+	
+	local Params = OverlapParams.new()
+	Params.FilterDescendantsInstances = Ignore
+	Params.MaxParts = math.huge
+	
+	return workspace:GetPartBoundsInBox(Region3.CFrame, Region3.Size, Params)
 end
 
 
