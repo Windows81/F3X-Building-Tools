@@ -31,7 +31,7 @@ local NewPartTool = {
 	OnTypeChanged = Signal.new();
 }
 
-NewPartTool.ManualText = [[<font face="GothamBlack" size="16">New Part Tool  🛠</font>
+NewPartTool.ManualText = [[<font face="BuilderSansExtraBold" size="16">New Part Tool  🛠</font>
 Lets you create new parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click and drag where you want your part to be.]]

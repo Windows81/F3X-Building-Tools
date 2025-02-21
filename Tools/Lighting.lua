@@ -26,7 +26,7 @@ local LightingTool = {
 	OnSideChanged = Signal.new();
 }
 
-LightingTool.ManualText = [[<font face="GothamBlack" size="16">Lighting Tool  🛠</font>
+LightingTool.ManualText = [[<font face="BuilderSansExtraBold" size="16">Lighting Tool  🛠</font>
 Lets you add point lights, surface lights, and spotlights to parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click on the surface of any part to change a light's side quickly.]]
