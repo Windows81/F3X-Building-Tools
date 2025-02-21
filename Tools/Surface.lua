@@ -32,7 +32,7 @@ local SurfaceTool = {
 	OnSurfaceTypeChanged = Signal.new();
 }
 
-SurfaceTool.ManualText = [[<font face="BuilderSansExtraBold" size="16">Surface Tool  🛠</font>
+SurfaceTool.ManualText = [[<font face="MontserratBlack" size="16">Surface Tool  🛠</font>
 Lets you change the surfaces of parts.<font size="6"><br /></font>
 
 <b>TIP: </b>Click a part's surface to select it quickly.]]

@@ -29,7 +29,7 @@ local TextureTool = {
 	OnFaceChanged = Signal.new();
 }
 
-TextureTool.ManualText = [[<font face="BuilderSansExtraBold" size="16">Texture Tool  🛠</font>
+TextureTool.ManualText = [[<font face="MontserratBlack" size="16">Texture Tool  🛠</font>
 Lets you add decals and textures to parts.<font size="6"><br /></font>
 
 <b>TIP: </b>Click on any part's surface to quickly change a decal/texture's side.<font size="6"><br /></font>

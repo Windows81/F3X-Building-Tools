@@ -24,7 +24,7 @@ function Dropdown:BuildButtonList()
             BackgroundTransparency = (self.props.CurrentOption == Option) and 0.1 or 1;
             BackgroundColor3 = Color3.fromRGB(0, 145, 255);
             BorderSizePixel = 0;
-            Font = Enum.Font.BuilderSansBold;
+            Font = Enum.Font.MontserratBold;
             Text = Option;
             TextColor3 = Color3.fromRGB(255, 255, 255);
             TextSize = 10;
@@ -78,7 +78,7 @@ function Dropdown:render()
         });
         CurrentOption = new('TextLabel', {
             BackgroundTransparency = 1;
-            Font = Enum.Font.BuilderSansBold;
+            Font = Enum.Font.MontserratBold;
             Text = self.props.CurrentOption or '*';
             TextColor3 = Color3.fromRGB(255, 255, 255);
             TextSize = 10;

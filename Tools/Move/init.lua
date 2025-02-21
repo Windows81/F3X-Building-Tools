@@ -44,7 +44,7 @@ local MoveTool = {
 	AxesChanged = Signal.new();
 }
 
-MoveTool.ManualText = [[<font face="BuilderSansExtraBold" size="16">Move Tool  🛠</font>
+MoveTool.ManualText = [[<font face="MontserratBlack" size="16">Move Tool  🛠</font>
 Allows you to move parts.<font size="12"><br /></font>
 <font size="12" color="rgb(150, 150, 150)"><b>Axes</b></font>
 This option lets you choose in which direction to move each part.<font size="6"><br /></font>

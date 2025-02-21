@@ -29,7 +29,7 @@ local RotateTool = {
 	Pivot = 'Center';
 }
 
-RotateTool.ManualText = [[<font face="BuilderSansExtraBold" size="16">Rotate Tool  🛠</font>
+RotateTool.ManualText = [[<font face="MontserratBlack" size="16">Rotate Tool  🛠</font>
 Allows you to rotate parts.<font size="12"><br /></font>
 <font size="12" color="rgb(150, 150, 150)"><b>Pivot</b></font>
 This option lets you choose what to rotate the parts around.<font size="6"><br /></font>
