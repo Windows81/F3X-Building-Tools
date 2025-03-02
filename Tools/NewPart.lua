@@ -97,7 +97,7 @@ function NewPartTool:ShowUI()
 	self.UI.Visible = true
 
 	-- Creatable part types
-	Types = {
+	local Types = {
 		'Normal';
 		'Truss';
 		'Wedge';
