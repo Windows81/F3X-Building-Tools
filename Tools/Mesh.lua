@@ -110,7 +110,7 @@ function ShowUI()
 	};
 
 	-- Sort the mesh types
-	SortedMeshTypes = Support.Keys(MeshTypes);
+	local SortedMeshTypes = Support.Keys(MeshTypes);
 	table.sort(SortedMeshTypes);
 
 	-- Create type dropdown
