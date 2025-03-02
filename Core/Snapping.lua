@@ -195,7 +195,7 @@ function SnapTracking.GetClosestPoint()
 
 	-- Calculate proximity of each snapping point to the mouse
 	for SnappingPointKey, SnappingPoint in ipairs(SnappingPoints) do
-		SnappingPointProximity[SnappingPointKey] = (SnapTracking.MousePoint - SnappingPoint.p).magnitude;
+		SnappingPointProximity[SnappingPointKey] = (SnapTracking.MousePoint - SnappingPoint.p).Magnitude;
 	end;
 
 	-- Sort out the closest snapping point

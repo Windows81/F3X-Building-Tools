@@ -316,7 +316,7 @@ function TargetingModule.StartRectangleSelecting()
 			TargetingModule.UpdateSelectionRectangle();
 
 		-- Watch for potential rectangle selections
-		elseif RectangleSelectStart and (Vector2.new(Mouse.X, Mouse.Y) - RectangleSelectStart).magnitude >= 10 then
+		elseif RectangleSelectStart and (Vector2.new(Mouse.X, Mouse.Y) - RectangleSelectStart).Magnitude >= 10 then
 			RectangleSelecting = true;
 			SelectionCancelled = true;
 		end;

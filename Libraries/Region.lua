@@ -67,7 +67,7 @@ local Region={}
 
 
 local BoxPointCollision do
-	local VecDiv=CFrame.new().pointToObjectSpace--Right Division, yo.
+	local VecDiv=CFrame.new().PointToObjectSpace--Right Division, yo.
 	function BoxPointCollision(CFrame,Size,Point)
 		local Relative	=VecDiv(CFrame, Point)
 		local sx,sy,sz	=Size.x/2,Size.y/2,Size.z/2
@@ -79,7 +79,7 @@ end
 
 
 local BoxSphereCollision do
-	local VecDiv=CFrame.new().pointToObjectSpace--Right Division, yo.
+	local VecDiv=CFrame.new().PointToObjectSpace--Right Division, yo.
 	function BoxSphereCollision(CFrame,Size,Center,Radius)
 		local Relative	=VecDiv(CFrame,Center)
 		local sx,sy,sz	=Size.x/2,Size.y/2,Size.z/2
@@ -105,7 +105,7 @@ end
 --Also I ran out of local variables so I had to redo everything so that I could reuse the names lol.
 --So don't even try to read it.
 local BoxCollision do
-	local components=CFrame.new().components
+	local components=CFrame.new().GetComponents
 	function BoxCollision(CFrame0,Size0,CFrame1,Size1,AssumeTrue)
 		local	m00,m01,m02,
 				m03,m04,m05,
@@ -277,7 +277,7 @@ end
 
 
 local setmetatable	=setmetatable
-local components	=CFrame.new().components
+local components	=CFrame.new().GetComponents
 local type			=type
 local IsA			=game.IsA
 local r3			=Region3.new
