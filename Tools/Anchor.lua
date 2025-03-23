@@ -23,6 +23,11 @@ Lets you anchor and unanchor parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Press <b>Enter</b> to toggle anchor quickly.]]
 
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+AnchorTool.ManualText = AnchorTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
 

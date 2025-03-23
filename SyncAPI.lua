@@ -1,3 +1,4 @@
+local Debris = game:GetService('Debris')
 local HttpService = game:GetService('HttpService')
 local RunService = game:GetService('RunService')
 local Workspace = game:GetService('Workspace')
@@ -18,21 +19,12 @@ Support.ImportServices();
 
 -- Default options
 Options = {
-	DisallowLocked = false,
-
-	--[[
-		When streaming is enabled, and the tool is being used by a player, cloned
-		items are tagged with a temporary ID for this long in order for clients to
-		be able to identify them as they replicate in.
-	]]
-	StreamingCloneTagLifetime = 2,
+	DisallowLocked = false
 }
 
 -- Keep track of created items in memory to not lose them in garbage collection
 CreatedInstances = {};
 LastParents = {};
-
-local streamingClonesPendingUntagging = {}
 
 -- Determine whether we're in tool or plugin mode
 ToolMode = (Tool.Parent:IsA 'Plugin') and 'Plugin' or 'Tool'
@@ -67,39 +59,15 @@ Actions = {
 		end
 
 		local Clones = {}
-		local StreamingCloneId = if (Player and Workspace.StreamingEnabled)
-			then math.random(-2^30, 2^30)
-			else nil
 
 		-- Clone items
 		for _, Item in pairs(Items) do
 			local Clone = Item:Clone()
-
-			-- Include metadata when streaming is enabled in tool mode
-			if StreamingCloneId then
-				Clone:SetAttribute("BTStreamingCloneID", StreamingCloneId)
-				Clone:AddTag("BTStreamingClone")
-				streamingClonesPendingUntagging[Clone] = true
-			end
-
 			Clone.Parent = Parent
 
 			-- Register the clone
 			table.insert(Clones, Clone)
 			CreatedInstances[Item] = Item
-		end
-
-		-- If streaming is enabled in tool mode, return temporary clone operation metadata
-		-- (instead of invalid instance references)
-		if StreamingCloneId then
-			task.delay(Options.StreamingCloneTagLifetime, function ()
-				for _, Clone in Clones do
-					Clone:RemoveTag("BTStreamingClone")
-					Clone:SetAttribute("BTStreamingCloneID", nil)
-					streamingClonesPendingUntagging[Clone] = nil
-				end
-			end)
-			return nil, StreamingCloneId, #Clones
 		end
 
 		-- Return the clones
@@ -127,12 +95,6 @@ Actions = {
 			return;
 		end;
 
-		-- If streaming is enabled in tool mode, to ensure returned instance reference isn't invalid,
-		-- trigger immediate part replication by parenting elsewhere first
-		if Player and Workspace.StreamingEnabled then
-			NewPart.Parent = Player
-		end
-
 		-- Parent the part
 		NewPart.Parent = Parent
 
@@ -141,6 +103,49 @@ Actions = {
 
 		-- Return the part
 		return NewPart;
+		
+		--[[ {PATCH} Tags didn't exist in 2021E.
+		-- Creates a new part based on `PartType`
+
+		-- Validate requested parent
+		assert(typeof(Parent) == 'Instance', 'Invalid parent')
+		assert(Security.IsLocationAllowed(Parent, Player), 'Permission denied for client')
+
+		-- Create the part
+		local NewPart = CreatePart(PartType);
+
+		-- Include tag to wait for instance when streaming is enabled
+		local replicationTag: string? = nil
+		if (ToolMode == "Tool") and RunService:IsServer() and Workspace.StreamingEnabled then
+			replicationTag = `F3X/BT/IncomingInstanceMarker/{HttpService:GenerateGUID(false):lower()}`
+			local replicationMarker = Instance.new("Configuration")
+			replicationMarker.Name = "ReplicationMarker"
+			replicationMarker.Archivable = false
+			replicationMarker:AddTag(replicationTag)
+			replicationMarker.Parent = NewPart
+			Debris:AddItem(replicationMarker, 2)
+		end
+
+		-- Position the part
+		NewPart.CFrame = Position;
+
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas({ NewPart }), Player);
+
+		-- Make sure the player is allowed to create parts in the area
+		if Security.ArePartsViolatingAreas({ NewPart }, Player, false, AreaPermissions) then
+			return;
+		end;
+
+		-- Parent the part
+		NewPart.Parent = Parent
+
+		-- Register the part
+		CreatedInstances[NewPart] = NewPart;
+
+		-- Return the part
+		return NewPart, replicationTag
+		]]
 	end;
 
 	['CreateGroup'] = function (Type, Parent, Items)
@@ -742,17 +747,6 @@ Actions = {
 		local Parts = {};
 		for _, Change in pairs(Changes) do
 			if Change.Part then
-				assert(typeof(Change.Part) == "Instance" and Change.Part:IsA("BasePart"), "Invalid part")
-				assert(typeof(Change.Surfaces) == "table", "Invalid surface dictionary")
-
-				-- Validate surface data
-				for surfaceId, surfaceType in Change.Surfaces do
-					assert(typeof(surfaceId) == "string", "Invalid surface")
-					assert(typeof(Enum.NormalId[surfaceId]) == "EnumItem", "Invalid surface")
-					assert(typeof(surfaceType) == "EnumItem", "Invalid surface type")
-					assert(surfaceType.EnumType == Enum.SurfaceType, "Invalid surface type")
-				end
-
 				table.insert(Parts, Change.Part);
 			end;
 		end;
@@ -1910,12 +1904,12 @@ function CreatePart(PartType)
 
 	elseif PartType == 'Cylinder' then
 		NewPart = Instance.new('Part')
-		NewPart.Shape = 'Cylinder'
+		NewPart.Shape = Enum.PartType.Cylinder
 		NewPart.Size = Vector3.new(2, 2, 2)
 
 	elseif PartType == 'Ball' then
 		NewPart = Instance.new('Part')
-		NewPart.Shape = 'Ball'
+		NewPart.Shape = Enum.PartType.Ball
 
 	elseif PartType == 'Seat' then
 		NewPart = Instance.new('Seat')
@@ -1924,6 +1918,7 @@ function CreatePart(PartType)
 	elseif PartType == 'Vehicle Seat' then
 		NewPart = Instance.new('VehicleSeat')
 		NewPart.Size = Vector3.new(4, 1, 2)
+		NewPart.FrontSurface = Enum.SurfaceType.Hinge
 
 	elseif PartType == 'Spawn' then
 		NewPart = Instance.new('SpawnLocation')
@@ -1975,13 +1970,6 @@ if ToolMode == 'Tool' then
 		-- Clear `Player` if tool is not parented to a player
 		else
 			Player = nil;
-
-			-- Clean up remaining clone streaming metadata before tool becomes unable to
-			for clone in streamingClonesPendingUntagging do
-				clone:RemoveTag("BTStreamingClone")
-				clone:SetAttribute("BTStreamingCloneID", nil)
-				streamingClonesPendingUntagging[clone] = nil
-			end
 		end;
 
 	end);

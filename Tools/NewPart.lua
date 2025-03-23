@@ -5,6 +5,7 @@ local UI = Tool:WaitForChild('UI')
 local Libraries = Tool:WaitForChild('Libraries')
 
 -- Services
+local CollectionService = game:GetService('CollectionService')
 local ContextActionService = game:GetService 'ContextActionService'
 
 -- Libraries
@@ -35,6 +36,11 @@ NewPartTool.ManualText = [[<font face="GothamBlack" size="16">New Part Tool  ðŸ›
 Lets you create new parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click and drag where you want your part to be.]]
+
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+NewPartTool.ManualText = NewPartTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
 
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
@@ -179,7 +185,17 @@ end;
 function CreatePart(Type)
 
 	-- Send the creation request to the server
-	local Part = Core.SyncAPI:Invoke('CreatePart', Type, CFrame.new(Core.Mouse.Hit.p), Core.Targeting.Scope)
+	local Part, replicationTag = Core.SyncAPI:Invoke('CreatePart', Type, CFrame.new(Core.Mouse.Hit.p), Core.Targeting.Scope)
+
+	-- Use the replication tag to wait for the part if it's not ready
+	if (Part == nil) and replicationTag then
+		local existingMarker = CollectionService:GetTagged(replicationTag)[1]
+		if existingMarker then
+			Part = existingMarker.Parent
+		else
+			Part = CollectionService:GetInstanceAddedSignal(replicationTag):Wait().Parent
+		end
+	end
 
 	-- Make sure the part creation succeeds
 	if not Part then

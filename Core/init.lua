@@ -31,7 +31,6 @@ local Cryo = require(Tool.Libraries:WaitForChild('Cryo'))
 Support.ImportServices();
 SyncAPI = Tool.SyncAPI;
 Player = Players.LocalPlayer;
-local CollectionService = game:GetService('CollectionService')
 local RunService = game:GetService('RunService')
 
 -- Preload assets
@@ -555,48 +554,7 @@ function CloneSelection()
 	end;
 
 	-- Send the cloning request to the server
-	local Clones, StreamingCloneId, StreamingCloneCount = SyncAPI:Invoke('Clone', Selection.Items, GetHighestParent(Selection.Items))
-
-	-- If the server is streaming clones, wait for them to replicate
-	if Clones == nil then
-		Clones = {}
-
-		-- Gather initial available clones
-		for _, Clone in CollectionService:GetTagged("BTStreamingClone") do
-			if Clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
-				table.insert(Clones, Clone)
-			end
-		end
-
-		-- Listen for clones yet to arrive
-		if #Clones < StreamingCloneCount then
-			local thread = coroutine.running()
-
-			-- If streaming takes too long, ignore remaining clones and resume thread early
-			local CLONE_STREAMING_TIMEOUT = 3
-			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function ()
-				warn(`[Building Tools by F3X] Cloning operation only received {#Clones}/{StreamingCloneCount} items after {CLONE_STREAMING_TIMEOUT} seconds, ignoring rest`)
-				coroutine.resume(thread)
-			end)
-
-			-- Track incoming clones from this cloning operation
-			local replicationListener = CollectionService:GetInstanceAddedSignal("BTStreamingClone"):Connect(function (clone)
-				if clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
-					table.insert(Clones, clone)
-
-					-- Once all clones have arrived, resume thread
-					if #Clones == StreamingCloneCount then
-						task.cancel(timeoutThread)
-						coroutine.resume(thread)
-					end
-				end
-			end)
-
-			-- Yield until resumed by replication completion, or timeout thread
-			coroutine.yield()
-			replicationListener:Disconnect()
-		end
-	end
+	local Clones = SyncAPI:Invoke('Clone', Selection.Items, GetHighestParent(Selection.Items))
 
 	-- Put together the history record
 	local HistoryRecord = {
@@ -618,9 +576,6 @@ function CloneSelection()
 
 			-- Restore the clones
 			SyncAPI:Invoke('UndoRemove', HistoryRecord.Clones);
-
-			-- Reselect the restored clones
-			Selection.Replace(HistoryRecord.Clones)
 
 		end;
 
@@ -897,12 +852,27 @@ function ExportSelection()
 
 	-- Display creation ID on success
 	:Then(function (CreationId)
+		--[[
 		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
 			Text = 'Your creation\'s ID:<font size="5"><br /></font>\n' ..
 				'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' ..
 				'<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>';
 			OnDismiss = DialogDismissCallback;
 		}))
+		]]
+			
+		-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+		local Text = 'Your creation\'s ID:<font size="5"><br /></font>\n' ..
+			'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' ..
+			'<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>';
+		Text = Text
+			:gsub('\n', '<font size="0">\n</font>')
+			:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+			Text = Text;
+			OnDismiss = DialogDismissCallback;
+		}))
+
 		print('[Building Tools by F3X] Uploaded Export:', CreationId);
 	end)
 
@@ -948,6 +918,7 @@ end;
 function IsVersionOutdated()
 	-- Returns whether this version of Building Tools is out of date
 
+	--[[ {PATCH} skips to always returning false that no updating will be needed.
 	-- Check most recent version number
 	local AssetInfo = MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
 	local LatestMajorVersion, LatestMinorVersion, LatestPatchVersion = AssetInfo.Description:match '%[Version: ([0-9]+)%.([0-9]+)%.([0-9]+)%]';
@@ -969,6 +940,7 @@ function IsVersionOutdated()
 			return LatestPatchVersion > CurrentPatchVersion;
 		end;
 	end;
+	]]
 
 	-- Return an up-to-date status if not oudated
 	return false;

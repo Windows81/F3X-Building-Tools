@@ -826,4 +826,82 @@ function SupportLibrary.CreateConsecutiveCallDeferrer(MaxInterval)
 
 end
 
+--[=[
+	{PATCH} Vector3.FuzzyEqual didn't exist in 2021E.
+]=]
+function SupportLibrary.FuzzyEq(pos1: Vector3, pos2: Vector3, epsilon)
+	epsilon = epsilon or 1e-5
+	return
+		math.abs(pos1.X - pos2.X) <= epsilon and
+		math.abs(pos1.Y - pos2.Y) <= epsilon and
+		math.abs(pos1.Z - pos2.Z) <= epsilon
+end
+
+-- {PATCH} CFrame.identity didn't exist in 2021E.
+IDENTITY_CFRAME = CFrame.new();
+
+--[=[
+	Returns objectCFrame:ToObjectSpace(cframe), with each component
+	rounded to an identity CFrame if it's fuzzily equal.
+]=]
+function SupportLibrary.ToObjectSpace(objectCFrame: CFrame, cframe: CFrame): CFrame
+	-- local identity = CFrame.identity -- {PATCH} CFrame.identity didn't exist in 2021E.
+	local identity = IDENTITY_CFRAME
+	local offset = objectCFrame:ToObjectSpace(cframe)
+	
+	local Position
+	if SupportLibrary.FuzzyEq(offset.Position, identity.Position) then
+		Position = identity.Position
+	else
+		Position = offset.Position
+	end
+
+	local XVector
+	if SupportLibrary.FuzzyEq(offset.XVector, identity.XVector) then
+		XVector = identity.XVector
+	else
+		XVector = offset.XVector
+	end
+
+	local YVector
+	if SupportLibrary.FuzzyEq(offset.YVector, identity.YVector) then
+		YVector = identity.YVector
+	else
+		YVector = offset.YVector
+	end
+
+	local ZVector
+	if SupportLibrary.FuzzyEq(offset.ZVector, identity.ZVector) then
+		ZVector = identity.ZVector
+	else
+		ZVector = offset.ZVector
+	end
+	
+	return CFrame.new(
+		Position.X, Position.Y, Position.Z,
+		XVector.X, XVector.Y, XVector.Z,
+		YVector.X, YVector.Y, YVector.Z,
+		ZVector.X, ZVector.Y, ZVector.Z
+	)
+	
+	--[[  {PATCH} This weird syntax didn't exist in 2021E.
+	local identity = CFrame.identity
+	local offset = objectCFrame:ToObjectSpace(cframe)
+	return CFrame.fromMatrix(
+		if offset.Position:FuzzyEq(identity.Position)
+			then identity.Position
+			else offset.Position,
+		if offset.XVector:FuzzyEq(identity.XVector)
+			then identity.XVector
+			else offset.XVector,
+		if offset.YVector:FuzzyEq(identity.YVector)
+			then identity.YVector
+			else offset.YVector,
+		if offset.ZVector:FuzzyEq(identity.ZVector)
+			then identity.ZVector
+			else offset.ZVector
+	)
+	]]
+end
+
 return SupportLibrary;

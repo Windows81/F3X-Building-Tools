@@ -11,6 +11,7 @@ local UserInputService = game:GetService 'UserInputService'
 local Libraries = Tool:WaitForChild 'Libraries'
 local Signal = require(Libraries:WaitForChild 'Signal')
 local Maid = require(Libraries:WaitForChild 'Maid')
+local MoveUtil = require(script:WaitForChild('Util'))
 
 -- Import relevant references
 local Selection = Core.Selection
@@ -71,6 +72,11 @@ You can place parts perfectly together by holding the <b><i>R</i></b> key, and d
 <font size="12" color="rgb(150, 150, 150)"><b>Alignment</b></font>
 Press <b><i>T</i></b> while dragging to <b>align</b> the bottom surface of your base part to the current target surface.
 ]]
+
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+MoveTool.ManualText = MoveTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
 
 -- Initialize tool subsystems
 MoveTool.HandleDragging = require(script:WaitForChild 'HandleDragging')
@@ -172,11 +178,11 @@ function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, In
 
 		-- Move parts based on initial offset from focus
 		for Part, InitialState in pairs(InitialPartStates) do
-			local FocusOffset = InitialFocusCFrame:toObjectSpace(InitialState.CFrame)
+			local FocusOffset = Support.ToObjectSpace(InitialFocusCFrame, InitialState.CFrame)
 			Part.CFrame = FocusCFrame * FocusOffset
 		end
 		for Model, InitialState in pairs(InitialModelStates) do
-			local FocusOffset = InitialFocusCFrame:ToObjectSpace(InitialState.Pivot)
+			local FocusOffset = Support.ToObjectSpace(InitialFocusCFrame, InitialState.Pivot)
 			Model.WorldPivot = FocusCFrame * FocusOffset
 		end
 
@@ -495,6 +501,7 @@ function MoveTool:RegisterChange()
 			CFrame = Part.CFrame;
 		})
 	end;
+	--[[ {PATCH} GetPivot didn't exist in 2021E.
 	pcall(function ()
 		for _, Model in pairs(self.HistoryRecord.Models) do
 			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
@@ -504,6 +511,7 @@ function MoveTool:RegisterChange()
 			})
 		end
 	end)
+	]]
 
 	-- Send the change to the server
 	Core.SyncAPI:Invoke('SyncMove', Changes);

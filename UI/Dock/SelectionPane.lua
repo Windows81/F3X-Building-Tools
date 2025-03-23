@@ -88,48 +88,49 @@ function SelectionPane:render()
                 self.SetPaneSize(UDim2.fromOffset(rbx.AbsoluteContentSize.X, rbx.AbsoluteContentSize.Y))
             end;
         });
-
+		
+		-- {PATCH} Replace '<br />' with '<font size="0">\n</font>' because annoying boxes show up right after the newline.
         UndoButton = new(SelectionButton, {
             LayoutOrder = 0;
             IconAssetId = 'rbxassetid://141741408';
             IsActive = self.state.CanUndo;
             OnActivated = self.props.Core.History.Undo;
-            TooltipText = '<b>UNDO</b><br />Shift-Z';
+            TooltipText = '<b>UNDO</b><font size="0">\n</font>Shift-Z';
         });
         RedoButton = new(SelectionButton, {
             LayoutOrder = 1;
             IconAssetId = 'rbxassetid://141741327';
             IsActive = self.state.CanRedo;
             OnActivated = self.props.Core.History.Redo;
-            TooltipText = '<b>REDO</b><br />Shift-Y';
+            TooltipText = '<b>REDO</b><font size="0">\n</font>Shift-Y';
         });
         DeleteButton = new(SelectionButton, {
             LayoutOrder = 2;
             IconAssetId = 'rbxassetid://141896298';
             IsActive = not self.state.IsSelectionEmpty;
             OnActivated = self.props.Core.DeleteSelection;
-            TooltipText = '<b>DELETE</b><br />Shift-X';
+            TooltipText = '<b>DELETE</b><font size="0">\n</font>Shift-X';
         });
         ExportButton = new(SelectionButton, {
             LayoutOrder = 3;
             IconAssetId = 'rbxassetid://141741337';
             IsActive = not self.state.IsSelectionEmpty;
             OnActivated = self.props.Core.ExportSelection;
-            TooltipText = '<b>EXPORT</b><br />Shift-P';
+            TooltipText = '<b>EXPORT</b><font size="0">\n</font>Shift-P';
         });
         CloneButton = new(SelectionButton, {
             LayoutOrder = 4;
             IconAssetId = 'rbxassetid://142073926';
             IsActive = not self.state.IsSelectionEmpty;
             OnActivated = self.props.Core.CloneSelection;
-            TooltipText = '<b>CLONE</b><br />Shift-C';
+            TooltipText = '<b>CLONE</b><font size="0">\n</font>Shift-C';
         });
         ExplorerButton = new(SelectionButton, {
             LayoutOrder = 5;
             IconAssetId = 'rbxassetid://2326621485';
             IsActive = self.state.IsExplorerOpen;
             OnActivated = self.props.Core.ToggleExplorer;
-            TooltipText = '<b>EXPLORER</b><br />Shift-H';
+            TooltipText = '<b>EXPLORER</b><font size="0">\n</font>Shift-H';
         });
     })
 end

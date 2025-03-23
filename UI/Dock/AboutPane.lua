@@ -14,19 +14,23 @@ local new = Roact.createElement
 local ToolManualWindow = require(UI:WaitForChild('ToolManualWindow'))
 
 local MANUAL_CONTENT = [[<font face="GothamBlack" size="16">Building Tools by F3X  🛠</font>
-To learn more about each tool, click on its ❔ icon at the top right corner.<font size="12"><br /></font>
+To learn more about each tool, click on its ❔ icon at the top right corner.<font size="12">
+</font>
 
 <font size="12" color="rgb(150, 150, 150)"><b>Selecting</b></font>
- <font color="rgb(150, 150, 150)">•</font> Select individual parts by holding <b>Shift</b> and clicking each one.
- <font color="rgb(150, 150, 150)">•</font> Rectangle select parts by holding <b>Shift</b>, clicking, and dragging.
- <font color="rgb(150, 150, 150)">•</font> Press <b>Shift-K</b> to select parts inside of the selected parts.
- <font color="rgb(150, 150, 150)">•</font> Press <b>Shift-R</b> to clear your selection.<font size="12"><br /></font>
+<font color="rgb(150, 150, 150)">•</font> Select individual parts by holding <b>Shift</b> and clicking each one.
+<font color="rgb(150, 150, 150)">•</font> Rectangle select parts by holding <b>Shift</b>, clicking, and dragging.
+<font color="rgb(150, 150, 150)">•</font> Press <b>Shift-K</b> to select parts inside of the selected parts.
+<font color="rgb(150, 150, 150)">•</font> Press <b>Shift-R</b> to clear your selection.<font size="12">
+</font>
 <font size="12" color="rgb(150, 150, 150)"><b>Grouping</b></font>
 <font color="rgb(150, 150, 150)">•</font> Group parts as a <i>model</i> by pressing <b>Shift-G</b>.
 <font color="rgb(150, 150, 150)">•</font> Group parts into a <i>folder</i> by pressing <b>Shift-F</b>.
-<font color="rgb(150, 150, 150)">•</font> Ungroup parts by pressing <b>Shift-U</b>.<font size="12"><br /></font>
+<font color="rgb(150, 150, 150)">•</font> Ungroup parts by pressing <b>Shift-U</b>.<font size="12">
+</font>
 <font size="12" color="rgb(150, 150, 150)"><b>Exporting your creations</b></font>
-You can export your builds into a short code by clicking the export button, or pressing <b>Shift-P</b>.<font size="8"><br /></font>
+You can export your builds into a short code by clicking the export button, or pressing <b>Shift-P</b>.<font size="8">
+</font>
 Install the import plugin in <b>Roblox Studio</b> to import your creation:
 <font color="rgb(150, 150, 150)">roblox.com/library/142485815</font>]]
 
@@ -111,8 +115,9 @@ function AboutPane:render()
         ManualWindowPortal = new(Roact.Portal, {
             target = self.props.Core.UI;
         }, {
-            ManualWindow = (self.state.IsManualOpen or nil) and new(ToolManualWindow, {
-                Text = MANUAL_CONTENT;
+			ManualWindow = (self.state.IsManualOpen or nil) and new(ToolManualWindow, {
+				-- Text = MANUAL_CONTENT; {PATCH} Replace because annoying boxes show up right after the newline.
+				Text = MANUAL_CONTENT:gsub('\n+', '<font size="0">%0</font>');
                 ThemeColor = Color3.fromRGB(255, 176, 0);
             });
         });
