@@ -34,7 +34,7 @@ You can also:
 - Undo and redo any changes you make (Shift + Z, Shift + Y)
 - Switch between tools using hotkeys
 
-## How to Generate `rbxm`?
+## How to generate the `rbxm`?
 
 A pre-built `rbxm` file [is provided](<./Build/Building%20Tools%20(Prebuilt).rbxm>) for your convenience.
 
