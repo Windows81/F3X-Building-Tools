@@ -36,14 +36,21 @@ You can also:
 
 ## How to generate the `rbxm`?
 
-A pre-built `rbxm` file [is provided](<./Build/Building Tools.rbxm>) for your convenience.
+A pre-built `rbxm` file [is provided](<./Build/Building%20Tools%20(RFD).rbxm>) for your convenience.
 
 To generate your own builds, you'll need to have Rojo installed. Then you can execute:
 
 ```sh
-rojo build --output "./Build/Building Tools.rbxm" .
+rojo build . --output "./Build/Building Tools.rbxm"
 ```
+
+Because Rojo is optimised for modern versions of Rōblox, some aesthetic properties may not match with what you expect. Using the [Rōblox Freedom Distribution](https://github.com/Windows81/Roblox-Freedom-Distribution) executable, run the following:
+
+```sh
+RFD serialise --method rbxl --load "./Build/Building Tools.rbxm" --save "./Build/Building Tools (RFD).rbxm"
+
 
 ---
 
-Designed and built by [the F3X team](http://www.roblox.com/Groups/Group.aspx?gid=831895); patches added by [VisualPlugin](https://github.com/Windows81).
+Designed and built by [the F3X team](http://www.roblox.com/Groups/Group.aspx?gid=831895); patches added by [VisualPlugin](https://github.com/Windows81) et al.
+```
