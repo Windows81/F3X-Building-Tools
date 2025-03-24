@@ -1,6 +1,6 @@
-Building Tools by F3X
-=========================
-A set of powerful, easy building tools for ROBLOX. Get a built version [of the tools here](http://www.roblox.com/Building-Tools-by-F3X-item?id=142785488), [of the Studio plugin here](http://www.roblox.com/Building-Tools-by-F3X-Plugin-item?id=144950355) or [of the import plugin here](http://www.roblox.com/Import-from-Building-Tools-by-F3X-item?id=142485815). Builds of work that has not been released as a version yet can be found in the `build` folder in the `development` branch.
+# Building Tools by F3X
+**patched for [Rōblox Freedom Distribution](https://github.com/Windows81/Roblox-Freedom-Distribution) [2021E]**
+A set of powerful, easy building tools for Rōblox.
 
 ## What's included?
 BT includes the following tools:
@@ -32,4 +32,4 @@ You can also:
   -  Switch between tools using hotkeys
 
 ---
-Designed and built by [the F3X team](http://www.roblox.com/Groups/Group.aspx?gid=831895).
+Designed and built by [the F3X team](http://www.roblox.com/Groups/Group.aspx?gid=831895); patches added by [VisualPlugin](https://github.com/Windows81).
