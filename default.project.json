@@ -62,6 +62,9 @@
 				"$path": "Support/ReplicationListener.client.lua"
 			}
 		},
+		"Handle": {
+			"$path": "Handle.rbxmx"
+		},
 		"Version": {
 			"$className": "StringValue",
 			"$properties": {
@@ -73,6 +76,9 @@
 		},
 		"Interfaces": {
 			"$path": "Interfaces.rbxmx"
+		},
+		"$properties": {
+			"RequiresHandle": false
 		}
 	}
 }

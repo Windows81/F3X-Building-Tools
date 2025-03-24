@@ -36,12 +36,12 @@ You can also:
 
 ## How to generate the `rbxm`?
 
-A pre-built `rbxm` file [is provided](<./Build/Building%20Tools%20(Prebuilt).rbxm>) for your convenience.
+A pre-built `rbxm` file [is provided](<./Build/Building Tools.rbxm>) for your convenience.
 
 To generate your own builds, you'll need to have Rojo installed. Then you can execute:
 
 ```sh
-rojo build --output Rbxm/build.rbxmx .
+rojo build --output "./Build/Building Tools.rbxm" .
 ```
 
 ---
