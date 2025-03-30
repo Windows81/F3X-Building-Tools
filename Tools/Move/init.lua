@@ -76,7 +76,7 @@ Press <b><i>T</i></b> while dragging to <b>align</b> the bottom surface of your 
 -- {PATCH} annoying boxes appear after newlines in 2021E rich text.
 MoveTool.ManualText = MoveTool.ManualText
 	:gsub('\n', '<font size="0">\n</font>')
-	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>')
 
 -- Initialize tool subsystems
 MoveTool.HandleDragging = require(script:WaitForChild 'HandleDragging')
@@ -114,8 +114,8 @@ function MoveTool:Unequip()
 	self.UIController:HideUI()
 	self.HandleDragging:HideHandles()
 	self.Maid:Destroy()
-	BoundingBox.ClearBoundingBox();
-	SnapTracking.StopTracking();
+	BoundingBox.ClearBoundingBox()
+	SnapTracking.StopTracking()
 
 end
 
@@ -127,7 +127,7 @@ function MoveTool:SetAxes(AxisMode)
 	self.AxesChanged:Fire(self.Axes)
 
 	-- Disable any unnecessary bounding boxes
-	BoundingBox.ClearBoundingBox();
+	BoundingBox.ClearBoundingBox()
 
 	-- For global mode, use bounding box handles
 	if AxisMode == 'Global' then
@@ -201,13 +201,13 @@ function MoveTool:BindShortcutKeys()
 
 		-- Make sure this input is a key press
 		if InputInfo.UserInputType ~= Enum.UserInputType.Keyboard then
-			return;
-		end;
+			return
+		end
 
 		-- Make sure it wasn't pressed while typing
 		if UserInputService:GetFocusedTextBox() then
-			return;
-		end;
+			return
+		end
 
 		-- Check if the enter key was pressed
 		if InputInfo.KeyCode == Enum.KeyCode.Return or InputInfo.KeyCode == Enum.KeyCode.KeypadEnter then
@@ -265,16 +265,16 @@ function MoveTool:BindShortcutKeys()
 
 		-- Make sure this is input from the keyboard
 		if InputInfo.UserInputType ~= Enum.UserInputType.Keyboard then
-			return;
-		end;
+			return
+		end
 
 		-- Check if the R key was let go
 		if InputInfo.KeyCode == Enum.KeyCode.R then
 
 			-- Make sure it wasn't pressed while typing
 			if UserInputService:GetFocusedTextBox() then
-				return;
-			end;
+				return
+			end
 
 			-- Reset handles if not dragging
 			if not self.FreeDragging.IsDragging then
@@ -282,7 +282,7 @@ function MoveTool:BindShortcutKeys()
 			end
 
 			-- Stop snapping point tracking if it was enabled
-			SnapTracking.StopTracking();
+			SnapTracking.StopTracking()
 
 		-- If - key was released, focus on increment input
 		elseif (InputInfo.KeyCode.Name == 'Minus') or (InputInfo.KeyCode.Name == 'KeypadMinus') then
@@ -297,12 +297,12 @@ function MoveTool:StartSnapping()
 
 	-- Hide any handles or bounding boxes
 	self.HandleDragging:AttachHandles(nil, true)
-	BoundingBox.ClearBoundingBox();
+	BoundingBox.ClearBoundingBox()
 
 	-- Avoid targeting snap points in selected parts while dragging
 	if self.FreeDragging.IsDragging then
-		SnapTracking.TargetBlacklist = Selection.Items;
-	end;
+		SnapTracking.TargetBlacklist = Selection.Items
+	end
 
 	-- Start tracking the closest snapping point
 	SnapTracking.StartTracking(function (NewPoint)
@@ -334,27 +334,27 @@ function MoveTool:SetAxisPosition(Axis, Position)
 			Axis == 'X' and Position or Part.Position.X,
 			Axis == 'Y' and Position or Part.Position.Y,
 			Axis == 'Z' and Position or Part.Position.Z
-		) * (Part.CFrame - Part.CFrame.p);
+		) * (Part.CFrame - Part.CFrame.p)
 
-	end;
+	end
 
 	-- Cache up permissions for all private areas
-	local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player);
+	local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player)
 
 	-- Revert changes if player is not authorized to move parts to target destination
 	if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
 		for Part, State in pairs(InitialPartStates) do
-			Part.CFrame = State.CFrame;
-		end;
-	end;
+			Part.CFrame = State.CFrame
+		end
+	end
 
 	-- Restore the parts' original states
 	for Part, State in pairs(InitialPartStates) do
-		Part:MakeJoints();
-		Core.RestoreJoints(State.Joints);
-		Part.CanCollide = State.CanCollide;
-		Part.Anchored = State.Anchored;
-	end;
+		Part:MakeJoints()
+		Core.RestoreJoints(State.Joints)
+		Part.CanCollide = State.CanCollide
+		Part.Anchored = State.Anchored
+	end
 
 	-- Register the change
 	self:RegisterChange()
@@ -368,10 +368,10 @@ function MoveTool:NudgeSelectionByFace(Face)
 	local NudgeAmount = self.Increment
 
 	-- Reverse nudge amount if shift key is held while nudging
-	local PressedKeys = Support.FlipTable(Support.GetListMembers(UserInputService:GetKeysPressed(), 'KeyCode'));
+	local PressedKeys = Support.FlipTable(Support.GetListMembers(UserInputService:GetKeysPressed(), 'KeyCode'))
 	if PressedKeys[Enum.KeyCode.LeftShift] or PressedKeys[Enum.KeyCode.RightShift] then
-		NudgeAmount = -NudgeAmount;
-	end;
+		NudgeAmount = -NudgeAmount
+	end
 
 	-- Track this change
 	self:TrackChange()
@@ -386,22 +386,22 @@ function MoveTool:NudgeSelectionByFace(Face)
 	self.DragChanged:Fire(NudgeAmount)
 
 	-- Cache up permissions for all private areas
-	local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player);
+	local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player)
 
 	-- Revert changes if player is not authorized to move parts to target destination
 	if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
 		for Part, State in pairs(InitialPartStates) do
-			Part.CFrame = State.CFrame;
-		end;
-	end;
+			Part.CFrame = State.CFrame
+		end
+	end
 
 	-- Restore the parts' original states
 	for Part, State in pairs(InitialPartStates) do
-		Part:MakeJoints();
-		Core.RestoreJoints(State.Joints);
-		Part.CanCollide = State.CanCollide;
-		Part.Anchored = State.Anchored;
-	end;
+		Part:MakeJoints()
+		Core.RestoreJoints(State.Joints)
+		Part.CanCollide = State.CanCollide
+		Part.Anchored = State.Anchored
+	end
 
 	-- Register the change
 	self:RegisterChange()
@@ -440,7 +440,7 @@ function MoveTool:TrackChange()
 			end
 
 			-- Send the change request
-			Core.SyncAPI:Invoke('SyncMove', Changes);
+			Core.SyncAPI:Invoke('SyncMove', Changes)
 
 		end;
 
@@ -451,7 +451,7 @@ function MoveTool:TrackChange()
 			Selection.Replace(Record.Selection)
 
 			-- Put together the change request
-			local Changes = {};
+			local Changes = {}
 			for _, Part in ipairs(Record.Parts) do
 				table.insert(Changes, {
 					Part = Part;
@@ -466,11 +466,11 @@ function MoveTool:TrackChange()
 			end
 
 			-- Send the change request
-			Core.SyncAPI:Invoke('SyncMove', Changes);
+			Core.SyncAPI:Invoke('SyncMove', Changes)
 
 		end;
 
-	};
+	}
 
 	-- Collect the selection's initial state
 	for _, Part in pairs(self.HistoryRecord.Parts) do
@@ -478,7 +478,10 @@ function MoveTool:TrackChange()
 	end
 	pcall(function ()
 		for _, Model in ipairs(self.HistoryRecord.Models) do
-			self.HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
+			--[[ {PATCH} GetPivot didn't exist in 2021E.
+			self.HistoryRecord.BeforeCFrame[Model] = Model:GetPivot();
+			]]
+			self.HistoryRecord.BeforeCFrame[Model] = Model:GetModelCFrame();
 		end
 	end)
 
@@ -500,21 +503,25 @@ function MoveTool:RegisterChange()
 			Part = Part;
 			CFrame = Part.CFrame;
 		})
-	end;
-	--[[ {PATCH} GetPivot didn't exist in 2021E.
+	end
 	pcall(function ()
 		for _, Model in pairs(self.HistoryRecord.Models) do
-			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
+			--[[ {PATCH} GetPivot didn't exist in 2021E.
+			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot();
+			]]
+			self.HistoryRecord.AfterCFrame[Model] = Model:GetModelCFrame();
 			table.insert(Changes, {
 				Model = Model;
+				--[[ {PATCH} GetPivot didn't exist in 2021E.
 				Pivot = Model:GetPivot();
+				]]
+				Pivot = Model:GetModelCFrame();
 			})
 		end
 	end)
-	]]
 
 	-- Send the change to the server
-	Core.SyncAPI:Invoke('SyncMove', Changes);
+	Core.SyncAPI:Invoke('SyncMove', Changes)
 
 	-- Register the record and clear the staging
 	Core.History.Add(self.HistoryRecord)
@@ -537,19 +544,23 @@ function MoveTool:PrepareSelectionForDragging()
 			CanCollide = Part.CanCollide;
 			CFrame = Part.CFrame;
 		}
-		Part.Anchored = true;
-		Part.CanCollide = false;
+		Part.Anchored = true
+		Part.CanCollide = false
 		InitialPartStates[Part].Joints = Core.PreserveJoints(Part, PartIndex)
-		Part:BreakJoints();
-		Part.Velocity = Vector3.new();
-		Part.RotVelocity = Vector3.new();
-	end;
+		Part:BreakJoints()
+		Part.Velocity = Vector3.new()
+		Part.RotVelocity = Vector3.new()
+	end
 
 	-- Get initial model states (temporarily pcalled due to pivot API being in beta)
+	
 	pcall(function ()
 		for _, Model in ipairs(Selection.Models) do
 			InitialModelStates[Model] = {
+				--[[ {PATCH} GetPivot didn't exist in 2021E.
 				Pivot = Model:GetPivot();
+				]]
+				Pivot = Model:GetModelCFrame();
 			}
 		end
 	end)
@@ -564,12 +575,15 @@ function MoveTool:PrepareSelectionForDragging()
 	elseif Focus:IsA 'Model' then
 		InitialFocusCFrame = Focus:GetModelCFrame()
 		pcall(function ()
-			InitialFocusCFrame = Focus:GetPivot()
+			--[[ {PATCH} GetPivot didn't exist in 2021E.
+			InitialFocusCFrame = Focus:GetPivot();
+			]]
+			InitialFocusCFrame = Focus:GetModelCFrame();
 		end)
 	end
 
 	return InitialPartStates, InitialModelStates, InitialFocusCFrame
-end;
+end
 
 -- Return the tool
-return MoveTool;
+return MoveTool
