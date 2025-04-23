@@ -4,6 +4,10 @@ A open-source, patched, and improved fork of the F3X building tools.
 
 A plugin will also be released, but the tool is more often used, hence why I started by that.
 
+# Note about the files in the fork:
+
+I only started to use GitHub on the 22nd April 2025. I still didn't update the fork's file, and I'll only update them once I'll be done with the plugin. Sorry for the inconvenience!
+
 # What does Fork3X include compared to F3X?
 
 ## For tools:
