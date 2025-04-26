@@ -1,6 +1,6 @@
 # Fork3X
 
-A open-source, patched, and improved fork of the F3X building tools.
+An open-source, patched, and improved fork of the F3X building tools.
 
 A plugin will also be released, but the tool is more often used, hence why I started by that.
 
