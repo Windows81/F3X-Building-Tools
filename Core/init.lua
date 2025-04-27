@@ -31,11 +31,19 @@ local Cryo = require(Tool.Libraries:WaitForChild('Cryo'))
 Support.ImportServices();
 SyncAPI = Tool.SyncAPI;
 Player = Players.LocalPlayer;
-local CollectionService = game:GetService('CollectionService')
+Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
+
+if not Options then
+	error("F3X Core failed to load: Options are missing!")
+end
+
+local DataStoresEnabled
+
 local RunService = game:GetService('RunService')
+local CanClone = true
 
 -- Preload assets
-Assets = require(Tool.Assets)
+Assets = require(Tool:WaitForChild("Assets"))
 
 -- Core events
 ToolChanged = Signal.new()
@@ -183,6 +191,7 @@ function Enable(Mouse)
 	if Mode == 'Tool' then
 		coroutine.resume(coroutine.create(function ()
 			SyncAPI:Invoke('SetMouseLockEnabled', false)
+			DataStoresEnabled = SyncAPI:Invoke('CheckDataStores')
 		end))
 	end
 
@@ -208,6 +217,8 @@ function Enable(Mouse)
 	EnableHotkeys();
 	Targeting:EnableTargeting()
 	Selection.EnableOutlines();
+	Selection.EnableBeams();
+	Selection.ShowHiddenAttachments();
 	Selection.EnableMultiselectionHotkeys();
 
 	-- Sync studio selection in
@@ -262,6 +273,9 @@ function Disable()
 	if UI then
 		UI.Parent = script;
 	end;
+	
+	-- Hide attachments while the tool is being inactive
+	Selection.HideHiddenAttachments()
 
 	-- Unequip current tool
 	if CurrentTool then
@@ -343,6 +357,19 @@ Core.ExplorerVisibilityChanged = Signal.new()
 Core.ExplorerVisible = false
 
 function ToggleExplorer()
+	if type(Options.CanUseExplorer) == "boolean" and Options.CanUseExplorer == false or type(Options.CanUseExplorer) == "function" and Options.CanUseExplorer(Player) == false then
+		local DialogHandle
+		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+		
+		local DialogElement = Roact.createElement(DialogComponent, {
+			Text = "You're not allowed to use the explorer.";
+			Hide = function()
+				Roact.unmount(DialogHandle)
+			end,
+		})
+		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
+		return 
+	end
 	if not Core.ExplorerVisible then
 		OpenExplorer()
 	else
@@ -417,7 +444,7 @@ if Mode == 'Plugin' then
 	UIContainer = CoreGui;
 
 	-- Create the toolbar button
-	PluginButton = Plugin:CreateToolbar('Building Tools by F3X'):CreateButton(
+	PluginButton = Plugin:CreateToolbar('Fork3X Building Tools by Vikko151'):CreateButton(
 		'Building Tools by F3X',
 		'Building Tools by F3X',
 		Assets.PluginIcon
@@ -550,9 +577,15 @@ function CloneSelection()
 	-- Clones selected parts
 
 	-- Make sure that there are items in the selection
-	if #Selection.Items == 0 then
+	if (#Selection.Items == 0) or CanClone == false then
 		return;
 	end;
+	
+	CanClone = false
+	
+	-- Clones selected parts
+
+	-- Make sure that there are items in the selection
 
 	-- Send the cloning request to the server
 	local Clones, StreamingCloneId, StreamingCloneCount = SyncAPI:Invoke('Clone', Selection.Items, GetHighestParent(Selection.Items))
@@ -562,7 +595,7 @@ function CloneSelection()
 		Clones = {}
 
 		-- Gather initial available clones
-		for _, Clone in CollectionService:GetTagged("BTStreamingClone") do
+		for _, Clone in game:GetService("CollectionService"):GetTagged("BTStreamingClone") do
 			if Clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
 				table.insert(Clones, Clone)
 			end
@@ -580,7 +613,7 @@ function CloneSelection()
 			end)
 
 			-- Track incoming clones from this cloning operation
-			local replicationListener = CollectionService:GetInstanceAddedSignal("BTStreamingClone"):Connect(function (clone)
+			local replicationListener = game:GetService("CollectionService"):GetInstanceAddedSignal("BTStreamingClone"):Connect(function (clone)
 				if clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
 					table.insert(Clones, clone)
 
@@ -634,7 +667,8 @@ function CloneSelection()
 
 	-- Flash the outlines of the new parts
 	coroutine.wrap(Selection.FlashOutlines)();
-
+	task.delay(Options.CloningDelay, function() CanClone = true; end)
+	
 end;
 
 function DeleteSelection()
@@ -642,6 +676,7 @@ function DeleteSelection()
 
 	-- Put together the history record
 	local HistoryRecord = {
+		IsDeleting = true;
 		Parts = Support.CloneTable(Selection.Items);
 
 		Unapply = function (HistoryRecord)
@@ -791,7 +826,7 @@ function UngroupSelection()
 
 		-- Perform ungrouping
 		self.GroupParents = Support.GetListMembers(self.Groups, 'Parent')
-		self.GroupChildren = SyncAPI:Invoke('Ungroup', self.Groups)
+		self.GroupChildren = SyncAPI:Invoke('Ungroup', self.Groups) or {}
 
 		-- Get unpacked children
 		local UnpackedChildren = Support.CloneTable(self.Selection)
@@ -822,6 +857,185 @@ AssignHotkey({ 'RightShift', 'F' }, Support.Call(GroupSelection, 'Folder'))
 AssignHotkey({ 'LeftShift', 'U' }, UngroupSelection)
 AssignHotkey({ 'RightShift', 'U' }, UngroupSelection)
 
+function ArrangePartHotkey()
+	-- Exports the selected parts
+
+	-- Make sure that there are items in the selection
+	if #Selection.Items == 0 then
+		return;
+	end;
+
+	-- Start an export dialog
+	local DialogHandle
+	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('GroupDialog'))
+	local FolderCallback = function ()
+		GroupSelection("Folder")
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local ModelCallback = function ()
+		GroupSelection("Model")
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local UngroupCallback = function ()
+		UngroupSelection()
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local GroupCallback = function ()
+		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+			Text = 'What kind of grouping do you want to do?<font size="5"><br /></font>\n' ..
+				'<font face="Gotham" size="10"> Tip: If you still need to select your group piece per piece, a folder might be better. </font>';
+			Function1 = ModelCallback;
+			Function2 = FolderCallback;
+			CallForGroup = nil;
+			CallForUnGroup = nil;
+			Option1 = "Model";
+			Option2 = "Folder";
+		}))
+	end
+local DialogElement = Roact.createElement(DialogComponent, {
+		Text = 'What kind of arrangement do you want to do?<font size="5"><br /></font>\n' ..
+			'<font face="Gotham" size="10"> WARNING: Ungrouping a NPC or player might result into consequences! </font>';
+		CallForGroup = nil;
+		CallForUnGroup = nil;
+		Function1 = GroupCallback;
+		Function2 = UngroupCallback;
+		Option1 = "Group";
+		Option2 = "Ungroup";
+	})
+	DialogHandle = Roact.mount(DialogElement, UI, 'ExportDialog')
+end
+
+Core.SaveLoadVisibilityChanged = Signal.new()
+Core.SaveLoadVisible = false
+Core.SaveLoadCreated = false
+Core.CanLoad = true
+
+function ToggleSaveLoad()
+	
+	if type(Options.CanUseSaveLoad) == "boolean" and Options.CanUseSaveLoad == false or type(Options.CanUseSaveLoad) == "function" and Options.CanUseSaveLoad(Player) == false then
+		
+		local DialogHandle
+		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+
+		local DialogElement = Roact.createElement(DialogComponent, {
+			Text = "You're not allowed to use the save/load interface.";
+			Hide = function()
+				Roact.unmount(DialogHandle)
+			end,
+		})
+		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
+		return 
+			
+	elseif DataStoresEnabled == false then
+		
+		local DialogHandle
+		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+
+		local DialogElement = Roact.createElement(DialogComponent, {
+			Text = "You cannot use Save/Load because DataStores are disabled in this game.";
+			Hide = function()
+				Roact.unmount(DialogHandle)
+			end,
+		})
+		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
+		return 
+			
+	elseif RunService:IsStudio() then
+		
+		local DialogHandle
+		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+
+		local DialogElement = Roact.createElement(DialogComponent, {
+			Text = "You cannot use Save/Load in Studio.";
+			Hide = function()
+				Roact.unmount(DialogHandle)
+			end,
+		})
+		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
+		return 
+		
+	end
+	
+	if not Core.SaveLoadCreated then
+		CreateSaveAndLoad()
+		Core.SaveLoadCreated = true
+		Core.SaveLoadVisible = true
+		Core.SaveLoadVisibilityChanged:Fire()
+	elseif not Core.SaveLoadVisible then
+		Core.SaveLoadVisible = true
+		Core.SaveLoadVisibilityChanged:Fire()
+	else
+		Core.SaveLoadVisible = false
+		Core.SaveLoadVisibilityChanged:Fire()
+	end
+end
+
+function CreateSaveAndLoad()
+	-- Exports the selected parts
+	-- Start an export dialog
+	local DialogHandle
+	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('SaveInterface'))
+	
+	local FirstSaveCallback = function ()	
+		if #Selection.Items == 0 then
+			return;
+		end;
+		SyncAPI:Invoke('SaveBuild', Selection.Items, "1")
+	end
+
+	local SecondSaveCallback = function ()	
+		if #Selection.Items == 0 then
+			return;
+		end;
+		SyncAPI:Invoke('SaveBuild', Selection.Items, "2")
+	end
+	
+	local ThirdSaveCallback = function ()	
+		if #Selection.Items == 0 then
+			return;
+		end;
+		SyncAPI:Invoke('SaveBuild', Selection.Items, "3")
+	end
+	
+	local FirstLoadCallback = function ()	
+		if not Core.CanLoad then
+			return;
+		end;
+		SyncAPI:Invoke('LoadBuild', "1")
+		Core.CanLoad = false
+		task.delay(240, function() Core.CanLoad = true end)
+	end
+	
+	local SecondLoadCallback = function ()	
+		if not Core.CanLoad then
+			return;
+		end;
+		SyncAPI:Invoke('LoadBuild', "2")
+		Core.CanLoad = false
+		task.delay(240, function() Core.CanLoad = true end)
+	end
+	
+	local ThirdLoadCallback = function ()	
+		if not Core.CanLoad then
+			return;
+		end;
+		SyncAPI:Invoke('LoadBuild', "3")
+		Core.CanLoad = false
+		task.delay(240, function() Core.CanLoad = true end)
+	end
+
+	local DialogElement = Roact.createElement(DialogComponent, {
+		Core = Core;
+		FirstSaveLoad = FirstLoadCallback;
+		FirstSave = FirstSaveCallback;
+		SecondSaveLoad = SecondLoadCallback;
+		SecondSave = SecondSaveCallback;
+		ThirdSaveLoad = ThirdLoadCallback;
+		ThirdSave = ThirdSaveCallback;
+	})
+	DialogHandle = Roact.mount(DialogElement, UI, 'ExportDialog')
+end 
+
 function GetPartsFromSelection(Selection)
 	local Parts = {}
 
@@ -851,7 +1065,9 @@ function IsSelectable(Items)
 	for _, Item in pairs(Items) do
 
 		-- Ensure item exists and is not locked
-		if (not Item) or (not Item.Parent) or (Item:IsA 'BasePart' and Item.Locked) then
+		if (not Item) or (not Item.Parent) then
+			return false
+		elseif Item:IsA 'BasePart' and Item.Locked then
 			return false
 		end
 
@@ -949,7 +1165,7 @@ function IsVersionOutdated()
 	-- Returns whether this version of Building Tools is out of date
 
 	-- Check most recent version number
-	local AssetInfo = MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
+	local AssetInfo = game.MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
 	local LatestMajorVersion, LatestMinorVersion, LatestPatchVersion = AssetInfo.Description:match '%[Version: ([0-9]+)%.([0-9]+)%.([0-9]+)%]';
 	local CurrentMajorVersion, CurrentMinorVersion, CurrentPatchVersion = Tool.Version.Value:match '([0-9]+)%.([0-9]+)%.([0-9]+)';
 
@@ -974,6 +1190,144 @@ function IsVersionOutdated()
 	return false;
 
 end;
+
+function ToggleMultiSelect()
+	if Selection.Multiselecting == false then
+		Selection.Multiselecting = true
+	elseif Selection.Multiselecting == true then
+		Selection.Multiselecting = false
+	end
+end
+
+--[[function Import()
+	-- Imports an object according to it's ID.
+
+	-- Start an export dialog
+	local DialogHandle
+	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('ImportDialog'))
+	local DialogDismissCallback = function ()
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local DialogSendCallback = function (CreationID)
+		if CreationID == nil then return end
+		Try(SyncAPI.Invoke, SyncAPI, 'Import', CreationID)
+			:Then(function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'Your creation has been succesfully imported!<font size="5"><br /></font>\n';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch('Http requests are not enabled', function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'Please enable HTTP requests.';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch('Export failed due to server-side error', function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'An error occurred — please try again.';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch('Post data too large', function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'Try splitting up your build.';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch(function (Error, Stack, Attempt)
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'An unknown error occurred — please try again.';
+					OnDismiss = DialogDismissCallback;
+				}))
+				warn('❌ [Building Tools by F3X] Failed to import', '\n\nError:\n', Error, '\n\nStack:\n', Stack)
+			end)
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local DialogElement = Roact.createElement(DialogComponent, {
+		Text = 'Loading...';
+		OnDismiss = DialogDismissCallback;
+	})
+	DialogHandle = Roact.mount(DialogElement, UI, 'ImportDialog')
+			Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+				Text = 'Whats\'s your creation\'s ID?<font size="5"><br /></font>\n';
+		Function1 = function()
+			DialogHandle = Roact.unmount(DialogHandle)
+			ExportSelection()
+			end;
+		Function2 = LocalSave;
+		Option1 = "On F3X servers (erase risks)";
+		Option2 = "On BTG servers (safer)";		}))
+
+end;]]
+
+function NewExport()
+	-- Imports an object according to it's ID.
+
+	-- Start an export dialog
+	local DialogHandle
+	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('ImportDialog'))
+	local DialogDismissCallback = function ()
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local DialogSendCallback = function (CreationID)
+		if CreationID == nil then return end
+		Try(SyncAPI.Invoke, SyncAPI, 'Import', CreationID)
+			:Then(function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'Your creation has been succesfully imported!<font size="5"><br /></font>\n';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch('Http requests are not enabled', function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'Please enable HTTP requests.';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch('Export failed due to server-side error', function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'An error occurred — please try again.';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch('Post data too large', function ()
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'Try splitting up your build.';
+					OnDismiss = DialogDismissCallback;
+				}))
+			end)
+			:Catch(function (Error, Stack, Attempt)
+				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+					Text = 'An unknown error occurred — please try again.';
+					OnDismiss = DialogDismissCallback;
+				}))
+				warn('❌ [Building Tools by F3X] Failed to import', '\n\nError:\n', Error, '\n\nStack:\n', Stack)
+			end)
+		DialogHandle = Roact.unmount(DialogHandle)
+	end
+	local DialogElement = Roact.createElement(DialogComponent, {
+		Text = 'Loading...';
+		OnDismiss = DialogDismissCallback;
+	})
+	DialogHandle = Roact.mount(DialogElement, UI, 'ImportDialog')
+	Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+		Text = 'How would you like to export your creation?<font size="5"><br /></font>\n';
+		OnDismiss = DialogDismissCallback;
+		OnSend = DialogSendCallback;			}))
+
+end;
+
+-- Assign hotkey for exporting selection
+--AssignHotkey({ 'LeftShift', 'M' }, Import);
+--AssignHotkey({ 'RightShift', 'M' }, Import);
+
+-- If in-game, enable ctrl hotkeys for exporting
+--if Mode == 'Tool' then
+--	AssignHotkey({ 'LeftControl', 'M' }, Import);
+--	AssignHotkey({ 'RightControl', 'M' }, Import);
+--end;
+
 
 function ToggleSwitch(CurrentButtonName, SwitchContainer)
 	-- Toggles between the buttons in a switch
