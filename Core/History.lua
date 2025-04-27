@@ -71,7 +71,7 @@ function History.Add(Record)
 		History.Stack[Index] = nil;
 	end;
 
-	-- Fire the Changed event
+	-- Fire the Changed event	
 	History.Changed:Fire();
 
 end;
