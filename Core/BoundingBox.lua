@@ -68,7 +68,7 @@ function IsPhysicsStatic()
 
 	-- Determine value if not yet cached
 	if _IsPhysicsStatic == nil then
-		_IsPhysicsStatic = (Core.Mode == 'Plugin') and (Workspace.DistributedGameTime == 0);
+		_IsPhysicsStatic = (Core.Mode == 'Plugin') and (game.Workspace.DistributedGameTime == 0);
 	end;
 
 	-- Return cached value

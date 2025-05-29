@@ -4,12 +4,15 @@ local UserInputService = game:GetService 'UserInputService'
 local ContextActionService = game:GetService 'ContextActionService'
 local Selection = require(script.Parent.Selection);
 
+local Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
+
 -- Libraries
 local Libraries = Tool:WaitForChild 'Libraries'
 local Support = require(Libraries:WaitForChild 'SupportLibrary')
 local Signal = require(Libraries:WaitForChild 'Signal')
 local Make = require(Libraries:WaitForChild 'Make')
 local InstancePool = require(Libraries:WaitForChild 'InstancePool')
+local IndicatorText
 
 TargetingModule = {};
 TargetingModule.TargetingMode = 'Scoped'
@@ -78,7 +81,7 @@ end
 
 local function IsTargetable(Item)
 	return Item:IsA 'Model' or
-		Item:IsA 'BasePart' or
+		(Item:IsA 'BasePart' and Item.Parent ~= game.Workspace.Terrain) or
 		Item:IsA 'Tool' or
 		Item:IsA 'Accessory' or
 		Item:IsA 'Accoutrement'
@@ -122,6 +125,34 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	-- Get target
 	local NewTarget = Mouse.Target
 	local NewScopeTarget = self:FindTargetInScope(NewTarget, Scope)
+	
+	local Core = GetCore()
+	
+	if Options.PartHintFunction ~= false then
+		if not IndicatorText then
+			IndicatorText = Make 'TextLabel' {
+				Name = "IndicatorText";
+				Parent = Core.UI;
+				Size = UDim2.new(0, 0, 0, 0);
+				TextColor3 = Color3.new(1, 1, 1);
+				TextTransparency = 0;
+				TextStrokeTransparency = 0;
+				TextSize = 8;
+				BackgroundTransparency = 1;
+				--		Position = UDim2.new(0, Mouse.X + 20, 0, Mouse.Y - 26);
+				AutomaticSize = Enum.AutomaticSize.XY;
+			};
+		end
+
+		IndicatorText.Position = UDim2.new(0, Mouse.X + 16, 0, Mouse.Y + 19);
+	
+		if NewTarget == nil or NewTarget.Locked == true then
+			IndicatorText.TextTransparency = 1
+		else
+			IndicatorText.Text = Options.PartHintFunction(NewTarget, game.Players.LocalPlayer)
+			IndicatorText.TextTransparency = 0
+		end
+	end
 
 	-- Register whether target has changed
 	if (self.LastTarget == NewTarget) and (not Force) then
@@ -132,14 +163,21 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	end
 
 	-- Make sure target is selectable
-	local Core = GetCore()
+	
 	if not Core.IsSelectable({ NewTarget }) then
+		if Options.PartHintFunction ~= false then
+			IndicatorText.TextColor3 = Color3.new(1, 0, 0)
+		end
 		self.HighlightTarget(nil)
 		self.LastTarget = nil
 		self.LastScopeTarget = nil
 		self.TargetChanged:Fire(nil)
 		self.ScopeTargetChanged:Fire(nil)
 		return
+	end
+	
+	if Options.PartHintFunction ~= false then
+		IndicatorText.TextColor3 = Color3.new(1, 1, 1)
 	end
 
 	-- Register whether scope target has changed
@@ -188,6 +226,7 @@ end)
 
 -- Define target box cleanup routine
 function TargetBoxPool.Cleanup(TargetBox)
+	local Target = TargetBox.Adornee
 	TargetBox.Adornee = nil
 	TargetBox.Visible = nil
 end
@@ -462,7 +501,7 @@ function TargetingModule.PrismSelect()
 	-- Get region for selection items and find potential parts
 	local Extents = require(Core.Tool.Core.BoundingBox).CalculateExtents(Selection.Items, nil, true);
 	local Region = Region3.new(Extents.Min, Extents.Max);
-	local PotentialParts = Workspace:FindPartsInRegion3WithIgnoreList(Region, Selection.Items, math.huge);
+	local PotentialParts = game.Workspace:FindPartsInRegion3WithIgnoreList(Region, Selection.Items, math.huge);
 
 	-- Enable collision on all potential parts
 	local OriginalState = {};
