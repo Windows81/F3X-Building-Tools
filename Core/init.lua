@@ -599,9 +599,13 @@ function CloneSelection()
 			-- If streaming takes too long, ignore remaining clones and resume thread early
 			local CLONE_STREAMING_TIMEOUT = 3
 			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function()
-				warn(
-					`[Building Tools by F3X] Cloning operation only received {#Clones}/{StreamingCloneCount} items after {CLONE_STREAMING_TIMEOUT} seconds, ignoring rest`
+				local warning = string.format(
+					"[Building Tools by F3X] Cloning operation only received %d/%d items after %d seconds, ignoring rest",
+					#Clones,
+					StreamingCloneCount,
+					CLONE_STREAMING_TIMEOUT
 				)
+				warn(warning)
 				coroutine.resume(thread)
 			end)
 
