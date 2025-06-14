@@ -50,6 +50,9 @@
 				"$path": "AutomaticUpdating.server.lua"
 			}
 		},
+		"Options": {
+			"$path": "Options.lua"
+		},
 		"Loaded": {
 			"$className": "BoolValue",
 			"DescendantCount": {
