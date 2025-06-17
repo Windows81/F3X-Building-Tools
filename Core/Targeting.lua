@@ -139,7 +139,6 @@ function TargetingModule:UpdateTarget(Scope, Force)
 				TextStrokeTransparency = 0;
 				TextSize = 8;
 				BackgroundTransparency = 1;
-				--		Position = UDim2.new(0, Mouse.X + 20, 0, Mouse.Y - 26);
 				AutomaticSize = Enum.AutomaticSize.XY;
 			};
 		end
