@@ -35,6 +35,17 @@ Assets = {
 	TextureIcon				= 'rbxassetid://141805275';
 	WeldIcon				= 'rbxassetid://141741418';
 	ExplorerDockIcon		= 'rbxassetid://2326621485';
-};
+	MarketplaceIcon			= 'rbxassetid://10893267086';
+	TextIcon				= 'rbxassetid://8216875770';
+	TransformationIcon		= 'rbxassetid://12120687742';
+	AttachmentIcon 			= 'rbxassetid://267733385';
+	ImportIcon 				= 'rbxassetid://9321840818';
+	PersonIcon				= 'rbxassetid://9211611888';
+	MagnifyingGlassIcon		= 'rbxassetid://9322179287';
+	GapfillIcon				= 'rbxassetid://9322178226';
+	AccessoryIcon			= 'rbxassetid://9882757239';
+	MultiselectIcon			= 'rbxassetid://16124331566';
+	ThemeIcon               = 'rbxassetid://17109876169';
+}
 
-return Assets;
+return Assets

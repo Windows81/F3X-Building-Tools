@@ -82,4 +82,17 @@ local DecorateTool = require(CoreTools:WaitForChild 'Decorate')
 Core.AssignHotkey('P', Core.Support.Call(Core.EquipTool, DecorateTool));
 Core.AddToolButton(Core.Assets.DecorateIcon, 'P', DecorateTool)
 
+-- Initialize marketplace tool
+local MarketplaceTool = require(CoreTools:WaitForChild 'Marketplace')
+Core.AssignHotkey('L', Core.Support.Call(Core.EquipTool, MarketplaceTool));
+Core.AddToolButton(Core.Assets.MarketplaceIcon, 'L', MarketplaceTool)
+
+local TextTool = require(CoreTools:WaitForChild 'Text')
+Core.AssignHotkey('T', Core.Support.Call(Core.EquipTool, TextTool));
+Core.AddToolButton(Core.Assets.TextIcon, 'T', TextTool)
+
+local AttachmentTool = require(CoreTools:WaitForChild 'Attachment')
+Core.AssignHotkey('Y', Core.Support.Call(Core.EquipTool, AttachmentTool));
+Core.AddToolButton(Core.Assets.AttachmentIcon, 'Y', AttachmentTool)
+
 return Core

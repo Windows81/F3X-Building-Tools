@@ -372,21 +372,84 @@ local math_min = math.min;
 local math_max = math.max;
 local unpack = unpack;
 
-function BoundingBoxModule.CalculateExtents(Items, StaticExtents, ExtentsOnly)
+function BoundingBoxModule.CalculateExtents(Items, Attachments, StaticExtents, ExtentsOnly)
 	-- Returns the size and position of a box covering all items in `Items`
 
 	-- Ensure there are items
-	if #Items == 0 then
+	if #Items == 0 and #Attachments == 0 then
 		return;
 	end;
 
 	-- Get initial extents data for comparison
-	local ComparisonBaseMin = StaticExtents and StaticExtents.Min or Items[1].Position;
-	local ComparisonBaseMax = StaticExtents and StaticExtents.Max or Items[1].Position;
+	local ComparisonBaseMin = StaticExtents and StaticExtents.Min or Items[1] and Items[1].Position or Attachments[1] and Attachments[1].WorldCFrame;
+	local ComparisonBaseMax = StaticExtents and StaticExtents.Max or Items[1] and Items[1].Position or Attachments[1] and Attachments[1].WorldCFrame;
 	local MinX, MinY, MinZ = ComparisonBaseMin.X, ComparisonBaseMin.Y, ComparisonBaseMin.Z;
 	local MaxX, MaxY, MaxZ = ComparisonBaseMax.X, ComparisonBaseMax.Y, ComparisonBaseMax.Z;
 
 	-- Go through each part in `Items`
+	for _, Attachment in pairs(Attachments) do
+
+			-- Get shortcuts to part data
+			local PartCFrame = Attachment.WorldCFrame;
+			local PartSize = Vector3.new(0.2, 0.2, 0.2) / 2;
+			
+			print(PartSize)
+			
+			local SizeX, SizeY, SizeZ = PartSize.X, PartSize.Y, PartSize.Z;
+
+			local Corner;
+			local XPoints, YPoints, ZPoints = {}, {}, {};
+
+			Corner = PartCFrame * CFrame_new(SizeX, SizeY, SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(-SizeX, SizeY, SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(SizeX, -SizeY, SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(SizeX, SizeY, -SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(-SizeX, SizeY, -SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(-SizeX, -SizeY, SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(SizeX, -SizeY, -SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			Corner = PartCFrame * CFrame_new(-SizeX, -SizeY, -SizeZ);
+			table_insert(XPoints, Corner.x);
+			table_insert(YPoints, Corner.y);
+			table_insert(ZPoints, Corner.z);
+
+			-- Reduce gathered points to min/max extents
+			MinX = math_min(MinX, unpack(XPoints));
+			MinY = math_min(MinY, unpack(YPoints));
+			MinZ = math_min(MinZ, unpack(ZPoints));
+			MaxX = math_max(MaxX, unpack(XPoints));
+			MaxY = math_max(MaxY, unpack(YPoints));
+			MaxZ = math_max(MaxZ, unpack(ZPoints));
+
+	end;
+	
 	for _, Part in pairs(Items) do
 
 		-- Avoid re-calculating for static parts

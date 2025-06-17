@@ -131,9 +131,14 @@ function MoveTool:SetAxes(AxisMode)
 
 	-- For global mode, use bounding box handles
 	if AxisMode == 'Global' then
-		BoundingBox.StartBoundingBox(function (BoundingBox)
-			self.HandleDragging:AttachHandles(BoundingBox)
-		end)
+		
+		if #Selection.Attachments > 0 and #Selection.Parts == 0 then
+			self.HandleDragging:AttachHandles(Selection.Focus, true, true)
+		else
+			BoundingBox.StartBoundingBox(function (BoundingBox)
+				self.HandleDragging:AttachHandles(BoundingBox, nil, false)
+			end)
+		end
 
 	-- For local mode, use focused part handles
 	elseif AxisMode == 'Local' then
@@ -414,6 +419,7 @@ function MoveTool:TrackChange()
 	self.HistoryRecord = {
 		Parts = Support.CloneTable(Selection.Parts);
 		Models = Support.CloneTable(Selection.Models);
+		Attachments = Support.CloneTable(Selection.Attachments);
 		BeforeCFrame = {};
 		AfterCFrame = {};
 		Selection = Selection.Items;
@@ -458,6 +464,12 @@ function MoveTool:TrackChange()
 					CFrame = Record.AfterCFrame[Part];
 				})
 			end
+			for _, Attachment in ipairs(Record.Attachments) do
+				table.insert(Changes, {
+					Attachment = Attachment;
+					WorldCFrame = Record.AfterCFrame[Attachment];
+				})
+			end
 			for _, Model in ipairs(Record.Models) do
 				table.insert(Changes, {
 					Model = Model;
@@ -476,12 +488,15 @@ function MoveTool:TrackChange()
 	for _, Part in pairs(self.HistoryRecord.Parts) do
 		self.HistoryRecord.BeforeCFrame[Part] = Part.CFrame
 	end
+	for _, Attachment in pairs(self.HistoryRecord.Attachments) do
+		self.HistoryRecord.BeforeCFrame[Attachment] = Attachment.WorldCFrame
+	end
 	pcall(function ()
 		for _, Model in ipairs(self.HistoryRecord.Models) do
 			--[[ {PATCH} GetPivot didn't exist in 2021E.
 			self.HistoryRecord.BeforeCFrame[Model] = Model:GetPivot();
 			]]
-			self.HistoryRecord.BeforeCFrame[Model] = Model:GetModelCFrame();
+			self.HistoryRecord.BeforeCFrame[Model] = Model:GetModelCFrame()
 		end
 	end)
 
@@ -509,7 +524,7 @@ function MoveTool:RegisterChange()
 			--[[ {PATCH} GetPivot didn't exist in 2021E.
 			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot();
 			]]
-			self.HistoryRecord.AfterCFrame[Model] = Model:GetModelCFrame();
+			self.HistoryRecord.AfterCFrame[Model] = Model:GetModelCFrame()
 			table.insert(Changes, {
 				Model = Model;
 				--[[ {PATCH} GetPivot didn't exist in 2021E.
@@ -564,6 +579,14 @@ function MoveTool:PrepareSelectionForDragging()
 			}
 		end
 	end)
+	
+	pcall(function ()
+		for _, Attachment in ipairs(Selection.Attachments) do
+			InitialAttachmentsStates[Attachment] = {
+				WorldCFrame = Attachment.WorldCFrame;
+			}
+		end
+	end)
 
 	-- Get initial state of focused item
 	local InitialFocusCFrame
@@ -578,7 +601,7 @@ function MoveTool:PrepareSelectionForDragging()
 			--[[ {PATCH} GetPivot didn't exist in 2021E.
 			InitialFocusCFrame = Focus:GetPivot();
 			]]
-			InitialFocusCFrame = Focus:GetModelCFrame();
+			InitialFocusCFrame = Focus:GetModelCFrame()
 		end)
 	end
 

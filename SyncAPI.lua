@@ -12,7 +12,7 @@ Player = nil;
 Security = require(Tool.Core.Security);
 RegionModule = require(Tool.Libraries.Region);
 Support = require(Tool.Libraries.SupportLibrary);
-Serialization = require(Tool.Libraries.SerializationV3);
+Serialization = require(Tool.Libraries.SerializationV4);
 
 -- Import services
 Support.ImportServices();

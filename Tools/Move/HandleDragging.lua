@@ -76,7 +76,7 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		-- Freeze bounding box extents while dragging
 		if BoundingBox.GetBoundingBox() then
 			local InitialExtentsSize, InitialExtentsCFrame =
-				BoundingBox.CalculateExtents(Selection.Parts, BoundingBox.StaticExtents)
+				BoundingBox.CalculateExtents(Selection.Parts, Selection.Attachments, BoundingBox.StaticExtents)
 			self.InitialExtentsSize = InitialExtentsSize
 			self.InitialExtentsCFrame = InitialExtentsCFrame
 			BoundingBox.PauseMonitoring()
