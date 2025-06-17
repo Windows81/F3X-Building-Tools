@@ -32,7 +32,7 @@ end
 function Tooltip:render()
     return new('Frame', {
         AnchorPoint = Vector2.new(0.5, 0);
-        BackgroundColor3 = Color3.fromRGB(58, 58, 58);
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0);
         BackgroundTransparency = 0;
         BorderSizePixel = 0;
         Position = UDim2.new(0.5, 0, 1, 2);
@@ -45,7 +45,7 @@ function Tooltip:render()
         });
         Arrow = new('Frame', {
             AnchorPoint = Vector2.new(0.5, 0.5);
-            BackgroundColor3 = Color3.fromRGB(58, 58, 58);
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0);
             BackgroundTransparency = 0;
             BorderSizePixel = 0;
             Position = UDim2.new(0.5, 0, 0, 0);
@@ -58,7 +58,7 @@ function Tooltip:render()
             ZIndex = 2;
             Font = Enum.Font.Gotham;
             RichText = true;
-            Text = self.props.Text;
+			Text = '<font family="rbxassetid://12187365977">' .. self.props.Text .. '</font>';
             TextColor3 = Color3.fromRGB(255, 255, 255);
             TextSize = 10;
             TextXAlignment = Enum.TextXAlignment.Center;

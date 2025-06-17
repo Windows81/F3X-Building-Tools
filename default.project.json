@@ -41,15 +41,6 @@
 		"Assets": {
 			"$path": "Support/Assets.lua"
 		},
-		"AutoUpdate": {
-			"$className": "BoolValue",
-			"$properties": {
-				"Value": false
-			},
-			"AutomaticUpdating": {
-				"$path": "AutomaticUpdating.server.lua"
-			}
-		},
 		"Options": {
 			"$path": "Options.lua"
 		},
@@ -65,9 +56,6 @@
 				"$path": "Support/ReplicationListener.client.lua"
 			}
 		},
-		"Handle": {
-			"$path": "Handle.rbxmx"
-		},
 		"Version": {
 			"$className": "StringValue",
 			"$properties": {
@@ -77,8 +65,14 @@
 		"UI": {
 			"$path": "UI"
 		},
+		"Handle": {
+			"$path": "Handle.rbxmx"
+		},
 		"Interfaces": {
 			"$path": "Interfaces.rbxmx"
+		},
+		"Sounds": {
+			"$path": "Sounds.rbxmx"
 		},
 		"$properties": {
 			"RequiresHandle": false

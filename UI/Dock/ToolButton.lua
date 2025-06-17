@@ -1,6 +1,7 @@
 local Root = script:FindFirstAncestorWhichIsA('Tool')
 local Vendor = Root:WaitForChild('Vendor')
 local TextService = game:GetService('TextService')
+local Sounds = Root:WaitForChild("Sounds")
 
 -- Libraries
 local Roact = require(Vendor:WaitForChild('Roact'))
@@ -33,11 +34,17 @@ function ToolButton:render()
         BackgroundColor3 = self.props.Tool.Color.Color;
         BackgroundTransparency = (self.props.CurrentTool == self.props.Tool) and 0 or 1;
         BorderSizePixel = 0;
-        Image = self.props.IconAssetId;
+		Image = self.props.IconAssetId;
+		ImageTransparency = self.props.Position and self.props.Size and 1 or 0;
+		LayoutOrder = self.props.LayoutOrder;
         AutoButtonColor = false;
-        [Roact.Event.Activated] = function ()
+		[Roact.Event.Activated] = function ()
+			game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
             self.props.Core.EquipTool(self.props.Tool)
-        end;
+		end;
+		[Roact.Event.MouseEnter] = function ()
+			game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
+		end;
     }, {
         Corners = new('UICorner', {
             CornerRadius = UDim.new(0, 3);
@@ -47,12 +54,20 @@ function ToolButton:render()
             Position = UDim2.new(0, 3, 0, 3);
             Size = UDim2.fromOffset(self.HotkeyTextSize.X, self.HotkeyTextSize.Y);
             Font = Enum.Font.Gotham;
-            Text = self.props.HotkeyLabel;
+			Text = '<font family="rbxassetid://12187365977">' .. self.props.HotkeyLabel .. '</font>';
+			RichText = true;
             TextColor3 = Color3.fromRGB(255, 255, 255);
             TextSize = 9;
             TextXAlignment = Enum.TextXAlignment.Left;
             TextYAlignment = Enum.TextYAlignment.Top;
-        });
+		});
+		ResizedImage = self.props.Position and self.props.Size and new('ImageLabel', {
+			BackgroundTransparency = 1;
+			ImageTransparency = 0;
+			Image = self.props.IconAssetId;
+			Position = self.props.Position;
+			Size = self.props.Size;
+		});
     })
 end
 
