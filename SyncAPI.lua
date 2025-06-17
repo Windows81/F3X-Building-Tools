@@ -463,22 +463,26 @@ Actions = {
 
 	end;
 
+
 	['SyncMove'] = function (Changes)
 		-- Updates parts server-side given their new CFrames
 
 		-- Grab a list of every part we're attempting to modify
 		local Parts = {};
-		local Models = {}
+		local Models = {};
+		local Attachments = {}
 		for _, Change in pairs(Changes) do
 			if Change.Part then
 				table.insert(Parts, Change.Part);
+			elseif Change.Attachments then
+				table.insert(Attachments, Change.Attachment);
 			elseif Change.Model then
 				table.insert(Models, Change.Model)
 			end
 		end;
 
 		-- Ensure parts are selectable
-		if not (CanModifyItems(Parts) and CanModifyItems(Models)) then
+		if not (CanModifyItems(Parts) and CanModifyItems(Attachments) and CanModifyItems(Models)) then
 			return;
 		end;
 
@@ -493,7 +497,8 @@ Actions = {
 		-- Reorganize the changes
 		local PartChangeSet = {}
 		local ModelChangeSet = {}
-		for _, Change in pairs(Changes) do
+		local AttachmentChangeSet = {}
+		for _, Change in ipairs(Changes) do
 			if Change.Part then
 				Change.InitialState = {
 					Anchored = Change.Part.Anchored;
@@ -502,8 +507,13 @@ Actions = {
 				PartChangeSet[Change.Part] = Change
 			elseif Change.Model then
 				ModelChangeSet[Change.Model] = Change.Pivot
+			elseif Change.Attachment then
+				AttachmentChangeSet[Change.Attachment] = Change.WorldCFrame
 			end
 		end;
+		
+		local PartCFrames = {}
+		local PartsToMove = {}
 
 		-- Preserve joints
 		for Part, Change in pairs(PartChangeSet) do
@@ -520,21 +530,33 @@ Actions = {
 			Part.RotVelocity = Vector3.new();
 
 			-- Set the part's CFrame
-			Part.CFrame = Change.CFrame;
-
+			
+			table.insert(PartsToMove, Part)
+			table.insert(PartCFrames, Change.CFrame)
+			
 		end;
+		
+		game.Workspace:BulkMoveTo(PartsToMove, PartCFrames)
+		
 		for Model, Pivot in pairs(ModelChangeSet) do
 			Model.WorldPivot = Pivot
+		end
+		for Attachment, WorldCFrame in pairs(AttachmentChangeSet) do
+			Attachment.WorldCFrame = WorldCFrame
 		end
 
 		-- Make sure the player is authorized to move parts into this area
 		if Security.ArePartsViolatingAreas(Parts, Player, false, AreaPermissions) then
-
+			
+			local RevertCFrames =  {}
+			local PartsToRevert = {}
 			-- Revert changes if unauthorized destination
 			for Part, Change in pairs(PartChangeSet) do
-				Part.CFrame = Change.InitialState.CFrame;
+				table.insert(PartsToRevert, Part);
+				table.insert(RevertCFrames, Change.InitialState.CFrame);
 			end;
 
+			game.Workspace:BulkMoveTo(PartsToRevert, RevertCFrames)
 		end;
 
 		-- Restore the parts' original states
@@ -618,12 +640,15 @@ Actions = {
 
 		-- Grab a list of every part and model we're attempting to modify
 		local Parts = {};
-		local Models = {}
+		local Models = {};
+		local Attachments = {}
 		for _, Change in pairs(Changes) do
 			if Change.Part then
 				table.insert(Parts, Change.Part);
 			elseif Change.Model then
 				table.insert(Models, Change.Model)
+			elseif Change.Attachment then
+				table.insert(Attachments, Change.Attachment)
 			end
 		end;
 
@@ -643,6 +668,7 @@ Actions = {
 		-- Reorganize the changes
 		local PartChangeSet = {}
 		local ModelChangeSet = {}
+		local AttachmentsChangeSet = {}
 		for _, Change in pairs(Changes) do
 			if Change.Part then
 				Change.InitialState = {
@@ -652,6 +678,8 @@ Actions = {
 				PartChangeSet[Change.Part] = Change
 			elseif Change.Model then
 				ModelChangeSet[Change.Model] = Change.Pivot
+			elseif Change.Attachment then
+				AttachmentsChangeSet[Change.Attachment] = Change.WorldCFrame
 			end
 		end;
 
@@ -675,6 +703,9 @@ Actions = {
 		end;
 		for Model, Pivot in pairs(ModelChangeSet) do
 			Model.WorldPivot = Pivot
+		end
+		for Attachment, WorldCFrame in pairs(AttachmentsChangeSet) do
+			Attachment.WorldCFrame = WorldCFrame
 		end
 
 		-- Make sure the player is authorized to move parts into this area
@@ -1756,8 +1787,492 @@ Actions = {
 			end
 		end
 
-	end
+	end;
+	
+ 
+	["SearchAsset"] = function(Type, Input, Page)
 
+		local Results
+
+		--> Detect if the keyword arg is an ID, and if so, load only that audio instead:
+
+		--> Request songs list from proxy server:
+			if Type == "Decal" then
+			Results = game:GetService("InsertService"):GetFreeDecals(Input, Page)[1].Results
+			end
+			
+		if not Results then
+			return {}, true
+		else
+			return Results	
+		end
+
+	end;
+
+	['CreateText'] = function (Changes)
+		-- Creates textures in the given parts
+
+		-- Grab a list of every part we're attempting to modify
+		local Parts = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				table.insert(Parts, Change.Part);
+			end;
+		end;
+
+		-- Ensure parts are selectable
+		if not CanModifyItems(Parts) then
+			return;
+		end;
+
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Parts), Player);
+
+		-- Make sure the player is allowed to perform changes to these parts
+		if Security.ArePartsViolatingAreas(Parts, Player, true, AreaPermissions) then
+			return;
+		end;
+
+		-- Reorganize the changes
+		local ChangeSet = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				ChangeSet[Change.Part] = Change;
+			end;
+		end;
+
+		-- Keep track of the newly created textures
+		local Texts = {};
+
+		-- Create each texture
+		for Part, Change in pairs(ChangeSet) do
+
+			-- Make sure the requested light type is valid
+				-- Create the texture
+			local SurfaceGUI = Instance.new("SurfaceGui", Part);
+			SurfaceGUI.Parent = Part
+			SurfaceGUI.Name = "F3XSurfaceGui"
+			SurfaceGUI.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			SurfaceGUI.PixelsPerStud = 60
+			SurfaceGUI.Face = Change.Face;	
+			local Text = Instance.new("TextLabel", SurfaceGUI);
+			Text.BackgroundTransparency = 1;
+			Text.Size = UDim2.new(1, 0, 1, 0);
+			Text.TextScaled = true;
+			Text.RichText = false;
+			Text.Font = Enum.Font.Arimo;
+			Text.Text = "Use the text tool to edit me.";
+			Text.TextTransparency = 0;
+			Text.TextColor3 = Color3.fromRGB(255, 255, 255);
+			local ActualTextValue = Instance.new("StringValue");
+			ActualTextValue.Name = "ActualText";
+			ActualTextValue.Parent = Text;
+			ActualTextValue.Value = "Use the text tool to edit me.";
+			
+			
+			
+			
+			table.insert(Texts, Text);
+
+				-- Register the texture
+				CreatedInstances[Text] = Text;
+
+		end;
+
+		-- Return the new textures
+		return Texts;
+
+	end;
+
+	['SyncText'] = function (Changes)
+		-- Updates aspects of the given selection's textures
+
+		-- Grab a list of every part we're attempting to modify
+		local Parts = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				table.insert(Parts, Change.Part);
+			end;
+		end;
+
+		-- Ensure parts are selectable
+		if not CanModifyItems(Parts) then
+			return;
+		end;
+
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Parts), Player);
+
+		-- Make sure the player is allowed to perform changes to these parts
+		if Security.ArePartsViolatingAreas(Parts, Player, true, AreaPermissions) then
+			return;
+		end;
+
+		-- Reorganize the changes
+		local ChangeSet = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				ChangeSet[Change.Part] = Change;
+			end;
+		end;
+
+		-- Make a list of allowed texture type requests
+
+		-- Update each part's textures
+		for Part, Change in pairs(ChangeSet) do
+
+			-- Make sure that the texture type requested is valid
+				-- Get the right textures within the part
+			if Part.ClassName == "SurfaceGui" and Part.Face == Change.Face then
+			for _, Surface in pairs(Part:GetChildren()) do
+					for _, Text in pairs(Part:GetChildren()) do
+					if Text.ClassName == "TextLabel" then
+						-- Perform the changes
+					if Change.Text ~= nil then
+						local filterResult
+						local CleanedText
+								
+						local function CleanText(Text)
+							return Text:gsub("<.+>", "") -- ".+" as for like any character more than 1 character. 
+						end
+								
+						if Text.RichText == true then
+							CleanedText = CleanText(Change.Text)
+						else
+							CleanedText = Change.Text
+						end
+							if not RunService:IsStudio() then
+								local success, errorMessage = pcall(function()
+									filterResult = game:GetService("TextService"):FilterStringAsync(CleanedText, game.Players:GetPlayerFromCharacter(Tool.Parent).UserId):GetNonChatStringForBroadcastAsync()
+								end)
+								if success then
+									if CleanedText == filterResult then
+										Text.Text = Change.Text
+									else
+										Text.Text = filterResult
+									end
+								end
+								if errorMessage then
+									warn(errorMessage)
+									Text.Text = "Oops! Seems like the Roblox filtering experienced a problem..."
+								end
+								if Text:FindFirstChild("ActualText") then
+									Text.ActualText.Value = Change.Text
+									end
+								else
+									Text.Text = Change.Text
+									if Text:FindFirstChild("ActualText") then
+										Text.ActualText.Value = Change.Text
+									end
+								end
+						end;
+						if Change.TextTransparency ~= nil then
+							Text.TextTransparency = Change.TextTransparency;
+						end;
+						if Change.RichText ~= nil then
+								Text.RichText = Change.RichText;
+							if not RunService:IsStudio() then
+								local filterResult
+								local CleanedText
+								local StartText = Change.Text
+								if Change.Text == nil then
+									StartText = Text.ActualText.Value
+								end
+								local	function CleanText(Text)
+									return Text:gsub("<.+>", "") -- ".+" as for like any character more than 1 character. 
+								end
+								if Text.RichText == true then
+									CleanedText = CleanText(StartText)
+								else
+									CleanedText = StartText
+								end
+								local success, errorMessage = pcall(function()
+									filterResult = game:GetService("TextService"):FilterStringAsync(CleanedText, game.Players:GetPlayerFromCharacter(Tool.Parent).UserId):GetNonChatStringForBroadcastAsync()
+								end)
+								if success then
+									if CleanedText == filterResult then
+										Text.Text = StartText
+									else
+										Text.Text = filterResult
+									end
+								end
+								if errorMessage then
+									warn(errorMessage)
+									Text.Text = "Oops! Seems like the Roblox filtering experienced a problem..."
+									end
+							end
+						end;
+						if Change.Font ~= nil then
+							Text.Font = Change.Font;
+						end;
+					if Change.TextColor3 ~= nil then
+						Text.TextColor3 = Change.TextColor3;
+					end;
+
+					end;
+					end;
+						end;
+					end;
+				end;
+
+			end;
+
+	['CreateUnion'] = function (Parts, NegativeParts, KeepAttachments)
+		
+		local AllParts = {};
+		for _, Part in pairs(Parts) do
+				table.insert(AllParts, Part);
+		end;
+		for _, NegativePart in pairs(NegativeParts) do
+			table.insert(AllParts, NegativePart);
+		end;
+		
+		if not CanModifyItems(AllParts) then
+			return;
+		end;
+		
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Parts), Player);
+
+		-- Make sure the player is allowed to perform changes to these parts
+		if Security.ArePartsViolatingAreas(AllParts, Player, true, AreaPermissions) then
+			return;
+		end;
+		
+		-- First, negate the parts.
+		local NegatedUnions = {}
+		local GeometryService = game:GetService("GeometryService")
+		
+		for _, NormalPart in ipairs(Parts) do
+			local NegatedParts
+			if #NegativeParts ~= 0 then
+			NegatedParts = GeometryService:SubtractAsync(NormalPart, NegativeParts)
+				for _, NegatedPart in pairs(NegatedParts) do
+					table.insert(NegatedUnions, NegatedPart)
+					NegatedPart.Parent = NormalPart.Parent
+				end
+		else
+			table.insert(NegatedUnions, NormalPart)
+		end
+		end
+	
+		local FinalUnion = {}
+		
+		local NegatedPart = NegatedUnions[1]
+			local FinalUnions = NegatedPart
+				FinalUnions = GeometryService:UnionAsync(NegatedPart, NegatedUnions)
+				for _, Union in pairs(FinalUnions) do
+					table.insert(FinalUnion, Union)
+					Union.Parent = NegatedPart.Parent
+					Options.SetPermission(Union, Player, "New")
+				end
+				for _, PartToDelete in ipairs(NegatedUnions) do
+					if PartToDelete:IsA("PartOperation") then
+					PartToDelete:Destroy()
+					end
+				end
+		
+	--[[	for _, Part in ipairs(AllParts) do
+			Part:Destroy()
+		end]]
+		
+		return FinalUnion
+	end;
+	
+	['CreateAttachments'] = function (Changes)
+		-- Creates meshes in the given parts
+
+		-- Grab a list of every part we're attempting to modify
+		local Parts = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				table.insert(Parts, Change.Part);
+			end;
+		end;
+
+		-- Ensure parts are selectable
+		if not CanModifyItems(Parts) then
+			return;
+		end;
+
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Parts), Player);
+
+		-- Make sure the player is allowed to perform changes to these parts
+		if Security.ArePartsViolatingAreas(Parts, Player, true, AreaPermissions) then
+			return;
+		end;
+
+		-- Reorganize the changes
+		local ChangeSet = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				ChangeSet[Change.Part] = Change;
+			end;
+		end;
+
+		-- Keep track of the newly created attachments
+		local Attachments = {};
+
+		-- Create each mesh
+		for Part, Change in pairs(ChangeSet) do
+
+			-- Create the mesh
+			local Attachment = Instance.new('Attachment', Part);
+			table.insert(Attachments, Attachment);
+
+			-- Register the mesh
+			CreatedInstances[Attachment] = Attachment;
+
+		end;
+
+		-- Return the new meshes
+		return Attachments;
+
+	end;
+	
+	['SyncAttachments'] = function (Changes)
+		-- Updates aspects of the given selection's meshes
+
+		-- Grab a list of every part we're attempting to modify
+		local Attachments = {};
+		for _, Change in pairs(Changes) do
+			if Change.Part then
+				table.insert(Attachments, Change.Attachment);
+			end;
+		end;
+
+		-- Ensure parts are selectable
+		if not CanModifyItems(Attachments) then
+			return;
+		end;
+
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Attachments), Player);
+
+		-- Make sure the player is allowed to perform changes to these parts
+		if Security.ArePartsViolatingAreas(Attachments, Player, true, AreaPermissions) then
+			return;
+		end;
+
+		-- Reorganize the changes
+		local ChangeSet = {};
+		for _, Change in pairs(Changes) do
+			if Change.Attachment then
+				ChangeSet[Change.Attachment] = Change;
+			end;
+		end;
+
+		-- Update each part's meshes
+		for Attachment, Change in pairs(ChangeSet) do
+
+				-- Make the requested changes
+				if Change.Visible ~= nil then
+					Attachment.Visible = Change.Visible;
+				end;
+				if Change.Position ~= nil then
+					Attachment.Position = Change.Position;
+				end;
+
+		end;
+
+	end;
+	
+	['SaveBuild'] = function (Parts, Slot)
+		-- Serializes, exports, and returns ID for importing given parts
+
+		-- Offload action to server-side if API is running locally
+
+		-- Ensure valid selection
+		assert(type(Parts) == 'table', 'Invalid item table');
+
+		-- Ensure there are items to export
+		if #Parts == 0 or Player == nil then
+			return;
+		end;
+
+		-- Ensure parts are selectable
+		if not CanModifyItems(Parts) then
+			return;
+		end;
+
+		-- Cache up permissions for all private areas
+		local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Parts), Player);
+
+		-- Make sure the player is allowed to access these parts
+		if Security.ArePartsViolatingAreas(Parts, Player, true, AreaPermissions) then
+			return;
+		end;
+
+		-- Get all descendants of the parts
+		local Items = Support.CloneTable(Parts);
+		for _, Part in pairs(Parts) do
+			Support.ConcatTable(Items, Part:GetDescendants());
+		end;
+
+		-- After confirming permissions, serialize parts
+		local SerializedBuildData = SerializationV4.SerializeModel(Items, game.Players:GetPlayerFromCharacter(Tool.Parent).UserId);
+
+		-- Return creation ID on success
+		if SerializedBuildData then
+			local DataStoreService = game:GetService("DataStoreService")
+			local PlayerDataStore = DataStoreService:GetDataStore(Player.UserId .. "Builds")
+			
+			if PlayerDataStore then
+				PlayerDataStore:SetAsync("Slot" .. Slot, SerializedBuildData)
+			end
+		else
+			error("Save failed: Build didn't get serialized successfully!");
+		end;
+
+	end;
+	
+	['LoadBuild'] = function (Slot)
+
+		-- Ensure there are items to export
+		if Player == nil then
+			return;
+		end;
+		
+		-- After confirming permissions, serialize parts
+		local Build
+		
+		local DataStoreService = game:GetService("DataStoreService")
+		local PlayerDataStore = DataStoreService:GetDataStore(Player.UserId .. "Builds")
+
+		if PlayerDataStore then
+			Build = PlayerDataStore:GetAsync("Slot" .. Slot)
+		end
+
+		-- Return creation ID on success
+		if Build then
+			local Container = Instance.new( 'Model', game.Workspace );
+			Container.Name = Player.Name ..'BTLoad';
+			
+			local LoadedModel = SerializationV4.InflateBuildData(Build)
+			for _, Part in pairs(LoadedModel) do
+				Part.Parent = Container;
+				Options.SetPermission(Part, Player, "New")
+			end;
+			
+			return LoadedModel
+		else
+			warn("Load failed: The requested build isn't valid.");
+		end;
+
+	end;
+	
+	['CheckDataStores'] = function()
+		local success, result = pcall(function()
+			return game:GetService("DataStoreService"):GetDataStore("a")
+		end)
+		
+		if success then
+			return true
+		else
+			return false
+		end
+	end;
 }
 
 function CanModifyItems(Items)

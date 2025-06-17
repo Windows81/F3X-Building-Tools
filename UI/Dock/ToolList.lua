@@ -1,6 +1,7 @@
 local Root = script:FindFirstAncestorWhichIsA('Tool')
 local Vendor = Root:WaitForChild('Vendor')
 local Libraries = Root:WaitForChild('Libraries')
+local NUM_ROWS = 9;
 
 -- Libraries
 local Roact = require(Vendor:WaitForChild('Roact'))
@@ -67,7 +68,7 @@ function ToolList:render()
         BorderSizePixel = 0;
         LayoutOrder = self.props.LayoutOrder;
         Size = self.CanvasSize:map(function (CanvasSize)
-            return UDim2.fromOffset(CanvasSize.X.Offset, (35) * 7)
+            return UDim2.fromOffset(CanvasSize.X.Offset, (35) * NUM_ROWS)
         end);
     }, {
         Corners = new('UICorner', {

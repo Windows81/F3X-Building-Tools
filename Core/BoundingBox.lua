@@ -90,15 +90,16 @@ function BoundingBoxModule.UpdateBoundingBox()
 		InactiveBoundingBox = nil;
 		BoundingBoxHandleCallback(BoundingBox);
 
+
 	-- If the bounding box is active, and there are no parts, disable it
-	elseif BoundingBox and #Core.Selection.Parts == 0 then
+	elseif BoundingBox and (#Core.Selection.Parts == 0 and #Core.Selection.Attachments == 0) then
 		InactiveBoundingBox = BoundingBox;
 		BoundingBox = nil;
 		BoundingBoxHandleCallback(BoundingBox);
 		return;
 
 	-- Don't try to update the bounding box if there are no parts
-	elseif #Core.Selection.Parts == 0 then
+	elseif #Core.Selection.Parts == 0 and #Core.Selection.Attachments == 0 then
 		return;
 	end;
 

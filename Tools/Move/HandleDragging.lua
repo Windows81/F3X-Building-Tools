@@ -7,8 +7,8 @@ local Security = Core.Security
 local BoundingBox = require(Tool.Core.BoundingBox)
 
 -- Libraries
-local Libraries = Tool:WaitForChild 'Libraries'
-local MoveUtil = require(script.Parent:WaitForChild 'Util')
+local Libraries = Tool:WaitForChild("Libraries")
+local MoveUtil = require(script.Parent:WaitForChild("Util"))
 
 -- Create class
 local HandleDragging = {}
@@ -16,39 +16,48 @@ HandleDragging.__index = HandleDragging
 
 -- Directions of movement for each handle's dragged face
 local AxisMultipliers = {
-	[Enum.NormalId.Top] = Vector3.new(0, 1, 0);
-	[Enum.NormalId.Bottom] = Vector3.new(0, -1, 0);
-	[Enum.NormalId.Front] = Vector3.new(0, 0, -1);
-	[Enum.NormalId.Back] = Vector3.new(0, 0, 1);
-	[Enum.NormalId.Left] = Vector3.new(-1, 0, 0);
-	[Enum.NormalId.Right] = Vector3.new(1, 0, 0);
+	[Enum.NormalId.Top] = Vector3.new(0, 1, 0),
+	[Enum.NormalId.Bottom] = Vector3.new(0, -1, 0),
+	[Enum.NormalId.Front] = Vector3.new(0, 0, -1),
+	[Enum.NormalId.Back] = Vector3.new(0, 0, 1),
+	[Enum.NormalId.Left] = Vector3.new(-1, 0, 0),
+	[Enum.NormalId.Right] = Vector3.new(1, 0, 0),
 }
 
 function HandleDragging.new(Tool)
-    local self = {
-		Tool = Tool;
+	local self = {
+		Tool = Tool,
 
 		-- Handle state
-		IsHandleDragging = false;
-		Handles = nil;
+		IsHandleDragging = false,
+		Handles = nil,
 
 		-- Selection state
-		InitialExtentsSize = nil;
-		InitialExtentsCFrame = nil;
-		InitialState = nil;
-		InitialFocusCFrame = nil;
-    }
+		InitialExtentsSize = nil,
+		InitialExtentsCFrame = nil,
+		InitialState = nil,
+		InitialFocusCFrame = nil,
+	}
 
-    return setmetatable(self, HandleDragging)
+	return setmetatable(self, HandleDragging)
 end
 
-function HandleDragging:AttachHandles(Part, Autofocus)
+function HandleDragging:AttachHandles(Part, Autofocus, IsGlobal)
 	-- Creates and attaches handles to `Part`, and optionally automatically attaches to the focused part
 
+	if Part == nil then
+		print("NO")
+		return
+	end
+
 	-- Enable autofocus if requested and not already on
-	if Autofocus and not self.Tool.Maid.AutofocusHandle then
-		self.Tool.Maid.AutofocusHandle = Selection.FocusChanged:Connect(function ()
-			self:AttachHandles(Selection.Focus, true)
+	if (Autofocus or self.Tool.Axes == "Global") and not self.Tool.Maid.AutofocusHandle then
+		self.Tool.Maid.AutofocusHandle = Selection.FocusChanged:Connect(function()
+			local Autofocus = self.Tool:UpdateFocus(self.Tool.Axes)
+
+			if Autofocus == true then
+				self:AttachHandles(Selection.Focus, Autofocus, false)
+			end
 		end)
 
 	-- Disable autofocus if not requested and on
@@ -59,7 +68,7 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 	-- Just attach and show the handles if they already exist
 	if self.Handles then
 		self.Handles:BlacklistObstacle(BoundingBox.GetBoundingBox())
-		self.Handles:SetAdornee(Part)
+		self.Handles:SetAdornee(Part, IsGlobal)
 		return
 	end
 
@@ -76,26 +85,28 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		-- Freeze bounding box extents while dragging
 		if BoundingBox.GetBoundingBox() then
 			local InitialExtentsSize, InitialExtentsCFrame =
-				BoundingBox.CalculateExtents(Selection.Parts, Selection.Attachments, BoundingBox.StaticExtents)
+				BoundingBox.CalculateExtents(Selection.Parts, BoundingBox.StaticExtents)
 			self.InitialExtentsSize = InitialExtentsSize
 			self.InitialExtentsCFrame = InitialExtentsCFrame
 			BoundingBox.PauseMonitoring()
 		end
 
 		-- Stop parts from moving, and capture the initial state of the parts
-		local InitialPartStates, InitialModelStates, InitialFocusCFrame = self.Tool:PrepareSelectionForDragging()
+		local InitialPartStates, InitialModelStates, InitialAttachmentsStates, InitialFocusCFrame =
+			self.Tool:PrepareSelectionForDragging()
 		self.InitialPartStates = InitialPartStates
 		self.InitialModelStates = InitialModelStates
+		self.InitialAttachmentsStates = InitialAttachmentsStates
+
 		self.InitialFocusCFrame = InitialFocusCFrame
 
 		-- Track the change
 		self.Tool:TrackChange()
 
 		-- Cache area permissions information
-		if Core.Mode == 'Tool' then
+		if Core.Mode == "Tool" then
 			AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player)
 		end
-
 	end
 
 	local function OnHandleDrag(Face, Distance)
@@ -110,13 +121,28 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		Distance = MoveUtil.GetIncrementMultiple(Distance, self.Tool.Increment)
 
 		-- Move the parts along the selected axes by the calculated distance
-		self.Tool:MovePartsAlongAxesByFace(Face, Distance, self.InitialPartStates, self.InitialModelStates, self.InitialFocusCFrame)
+		self.Tool:MovePartsAlongAxesByFace(
+			Face,
+			Distance,
+			self.InitialPartStates,
+			self.InitialModelStates,
+			self.InitialAttachmentsStates,
+			self.InitialFocusCFrame
+		)
 
 		-- Make sure we're not entering any unauthorized private areas
-		if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
+		if
+			Core.Mode == "Tool"
+			and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions)
+		then
 			local Part, InitialPartState = next(self.InitialPartStates)
 			Part.CFrame = InitialPartState.CFrame
-			MoveUtil.TranslatePartsRelativeToPart(Part, self.InitialPartStates, self.InitialModelStates)
+			MoveUtil.TranslatePartsRelativeToPart(
+				Part,
+				self.InitialPartStates,
+				self.InitialModelStates,
+				self.InitialAttachmentsStates
+			)
 			Distance = 0
 		end
 
@@ -124,10 +150,9 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		self.Tool.DragChanged:Fire(Distance)
 
 		-- Update bounding box if enabled in global axes movements
-		if self.Tool.Axes == 'Global' and BoundingBox.GetBoundingBox() then
+		if self.Tool.Axes == "Global" and BoundingBox.GetBoundingBox() then
 			BoundingBox.GetBoundingBox().CFrame = self.InitialExtentsCFrame + (AxisMultipliers[Face] * Distance)
 		end
-
 	end
 
 	local function OnHandleDragEnd()
@@ -155,7 +180,7 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 	end
 
 	-- Create the handles
-	local Handles = require(Libraries:WaitForChild 'Handles')
+	local Handles = require(Libraries:WaitForChild("Handles"))
 	self.Handles = Handles.new({
 		Color = self.Tool.Color.Color,
 		Parent = Core.UIContainer,
@@ -163,9 +188,9 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		ObstacleBlacklist = { BoundingBox.GetBoundingBox() },
 		OnDragStart = OnHandleDragStart,
 		OnDrag = OnHandleDrag,
-		OnDragEnd = OnHandleDragEnd
+		OnDragEnd = OnHandleDragEnd,
+		GlobalException = IsGlobal or false,
 	})
-
 end
 
 function HandleDragging:HideHandles()
@@ -181,7 +206,6 @@ function HandleDragging:HideHandles()
 
 	-- Disable handle autofocus
 	self.Tool.Maid.AutofocusHandle = nil
-
 end
 
 return HandleDragging
