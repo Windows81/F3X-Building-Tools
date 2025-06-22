@@ -354,11 +354,7 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 		end;
 
 		-- Stop parts from moving, and capture the initial state of the parts
-<<<<<<< HEAD
 		InitialPartStates, InitialModelStates, InitialAttachmentsStates = PrepareSelectionForRotating()
-=======
-		InitialState = PreparePartsForRotating();
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 		-- Track the change
 		TrackChange();
@@ -383,14 +379,11 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 				PivotPoint = Selection.Focus.CFrame
 			elseif Selection.Focus:IsA 'Model' then
 				PivotPoint = Selection.Focus:GetModelCFrame()
-<<<<<<< HEAD
 				pcall(function ()
 					PivotPoint = Selection.Focus:GetPivot()
 				end)
 			elseif Selection.Focus:IsA 'Attachment' then
 				PivotPoint = Selection.Focus.WorldCFrame
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 			end
 		end;
 
@@ -414,26 +407,19 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 		local DisplayedRotation = GetHandleDisplayDelta(Rotation);
 
 		-- Perform the rotation
-<<<<<<< HEAD
-		RotateSelectionAroundPivot(RotateTool.Pivot, PivotPoint, Axis, Rotation, InitialPartStates, InitialModelStates, InitialAttachmentsStates)
-=======
-		RotatePartsAroundPivot(RotateTool.Pivot, PivotPoint, Axis, Rotation, InitialState);
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+		RotateSelectionAroundPivot(RotateTool.Pivot, PivotPoint, Axis, Rotation, InitialPartStates, InitialModelStates, InitialAttachmentsStates);
 
 		-- Make sure we're not entering any unauthorized private areas
 		if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
 			for Part, State in pairs(InitialState) do
 				Part.CFrame = State.CFrame;
 			end;
-<<<<<<< HEAD
 			for Model, State in pairs(InitialModelStates) do
-				Model.WorldPivot = State.Pivot
-			end
+				Model.WorldPivot = State.Pivot;
+			end;
 			for Attachment, State in pairs(InitialAttachmentsStates) do
-				Attachment.WorldCFrame = State.WorldCFrame
-			end
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+				Attachment.WorldCFrame = State.WorldCFrame;
+			end;
 
 			-- Reset displayed rotation delta
 			DisplayedRotation = 0;
@@ -511,13 +497,8 @@ function HideHandles()
 
 end;
 
-<<<<<<< HEAD
 function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, InitialPartStates, InitialModelStates, InitialAttachmentsStates)
 	-- Rotates the given selection around `PivotMode` (using `PivotPoint` if applicable)'s `Axis` by `Rotation`
-=======
-function RotatePartsAroundPivot(PivotMode, PivotPoint, Axis, Rotation, InitialStates)
-	-- Rotates the given parts in `InitialStates` around `PivotMode` (using `PivotPoint` if applicable)'s `Axis` by `Rotation`
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Create a CFrame that increments rotation by `Rotation` around `Axis`
 	local RotationCFrame = CFrame.fromAxisAngle(Vector3.FromAxis(Axis), math.rad(Rotation));
@@ -545,7 +526,6 @@ function RotatePartsAroundPivot(PivotMode, PivotPoint, Axis, Rotation, InitialSt
 
 	end;
 
-<<<<<<< HEAD
 	-- Rotate each model's pivot
 	for Model, InitialState in pairs(InitialModelStates) do
 		
@@ -585,8 +565,6 @@ function RotatePartsAroundPivot(PivotMode, PivotPoint, Axis, Rotation, InitialSt
 		
 	end
 
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 end;
 
 function GetHandleDisplayDelta(HandleRotation)
@@ -783,11 +761,7 @@ function SetAxisAngle(Axis, Angle)
 	TrackChange();
 
 	-- Prepare parts to be moved
-<<<<<<< HEAD
 	local InitialPartStates, uzhdsgzs, InitialAttachmentsStates = PrepareSelectionForRotating()
-=======
-	local InitialStates = PreparePartsForRotating();
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Update each part
 	for Part, State in pairs(InitialStates) do
@@ -856,11 +830,7 @@ function NudgeSelectionByAxis(Axis, Direction)
 	TrackChange();
 
 	-- Stop parts from moving, and capture the initial state of the parts
-<<<<<<< HEAD
-	local InitialPartStates, InitialModelStates, InitialAttachmentsStates = PrepareSelectionForRotating()
-=======
-	local InitialState = PreparePartsForRotating();
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+	local InitialPartStates, InitialModelStates, InitialAttachmentsStates = PrepareSelectionForRotating();
 
 	-- Set the pivot point to the center of the selection if in Center mode
 	if RotateTool.Pivot == 'Center' and #Selection.Parts == 0 then
@@ -873,23 +843,16 @@ function NudgeSelectionByAxis(Axis, Direction)
 			PivotPoint = Selection.Focus.CFrame
 		elseif Selection.Focus:IsA 'Model' then
 			PivotPoint = Selection.Focus:GetModelCFrame()
-<<<<<<< HEAD
 			pcall(function ()
-				PivotPoint = Selection.Focus:GetPivot()
+				PivotPoint = Selection.Focus:GetPivot();
 			end)
 		elseif Selection.Focus:IsA 'Attachment' then
 			PivotPoint = Selection.Focus.WorldCFrame
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 		end
 	end;
 
 	-- Perform the rotation
-<<<<<<< HEAD
-	RotateSelectionAroundPivot(RotateTool.Pivot, PivotPoint, Axis, NudgeAmount * (Direction or 1), InitialPartStates, InitialModelStates, InitialAttachmentsStates)
-=======
-	RotatePartsAroundPivot(RotateTool.Pivot, PivotPoint, Axis, NudgeAmount * (Direction or 1), InitialState);
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+	RotateSelectionAroundPivot(RotateTool.Pivot, PivotPoint, Axis, NudgeAmount * (Direction or 1), InitialPartStates, InitialModelStates, InitialAttachmentsStates);
 
 	-- Update the "degrees rotated" indicator
 	if RotateTool.UI then
@@ -904,15 +867,12 @@ function NudgeSelectionByAxis(Axis, Direction)
 		for Part, State in pairs(InitialState) do
 			Part.CFrame = State.CFrame;
 		end;
-<<<<<<< HEAD
 		for Model, State in pairs(InitialModelStates) do
-			Model.WorldPivot = State.Pivot
-		end
-		for Attachment, State in pairs(InitialAttachmentsStates) do
-			Attachment.WorldCFrame = State.WorldCFrame;
+			Model.WorldPivot = State.Pivot;
 		end;
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+		for Attachment, State in pairs(InitialAttachmentsStates) do
+			Attachment.WorldCFrame = State.WorldCFrame;;
+		end;
 	end;
 
 	-- Make joints, restore original anchor and collision states
@@ -933,11 +893,8 @@ function TrackChange()
 	-- Start the record
 	HistoryRecord = {
 		Parts = Support.CloneTable(Selection.Parts);
-<<<<<<< HEAD
 		Models = Support.CloneTable(Selection.Models);
 		Attachments = Support.CloneTable(Selection.Attachments);
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 		BeforeCFrame = {};
 		AfterCFrame = {};
 		Selection = Selection.Items;
@@ -951,23 +908,23 @@ function TrackChange()
 			-- Put together the change request
 			local Changes = {};
 			for _, Part in pairs(Record.Parts) do
-				table.insert(Changes, { Part = Part, CFrame = Record.BeforeCFrame[Part] });
+				table.insert(Changes, { 
+					Part = Part;
+					CFrame = Record.BeforeCFrame[Part];
+				});
 			end;
-<<<<<<< HEAD
 			for _, Model in pairs(Record.Models) do
 				table.insert(Changes, {
 					Model = Model;
 					Pivot = Record.BeforeCFrame[Model];
-				})
-			end
+				});
+			end;
 			for _, Attachment in pairs(Record.Attachments) do
 				table.insert(Changes, {
 					Attachment = Attachment;
 					Pivot = Record.BeforeCFrame[Attachment];
-				})
-			end
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+				});
+			end;
 
 			-- Send the change request
 			Core.SyncAPI:Invoke('SyncRotate', Changes);
@@ -983,23 +940,23 @@ function TrackChange()
 			-- Put together the change request
 			local Changes = {};
 			for _, Part in pairs(Record.Parts) do
-				table.insert(Changes, { Part = Part, CFrame = Record.AfterCFrame[Part] });
+				table.insert(Changes, {
+					Part = Part;
+					CFrame = Record.AfterCFrame[Part];
+				});
 			end;
-<<<<<<< HEAD
 			for _, Model in pairs(Record.Models) do
 				table.insert(Changes, {
 					Model = Model;
 					Pivot = Record.AfterCFrame[Model];
-				})
-			end
+				});
+			end;
 			for _, Attachment in pairs(Record.Attachments) do
 				table.insert(Changes, {
 					Attachment = Attachment;
 					Pivot = Record.AfterCFrame[Attachment];
-				})
-			end
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+				});
+			end;
 
 			-- Send the change request
 			Core.SyncAPI:Invoke('SyncRotate', Changes);
@@ -1012,18 +969,14 @@ function TrackChange()
 	for _, Part in pairs(HistoryRecord.Parts) do
 		HistoryRecord.BeforeCFrame[Part] = Part.CFrame;
 	end;
-<<<<<<< HEAD
 	pcall(function ()
 		for _, Model in pairs(HistoryRecord.Models) do
 			HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
-		end
-	end)
-		for _, Attachment in pairs(HistoryRecord.Attachments) do
-			HistoryRecord.BeforeCFrame[Attachment] = Attachment.WorldCFrame;
 		end;
-=======
-
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+	end);
+	for _, Attachment in pairs(HistoryRecord.Attachments) do
+		HistoryRecord.BeforeCFrame[Attachment] = Attachment.WorldCFrame;
+	end;
 end;
 
 function RegisterChange()
@@ -1038,27 +991,27 @@ function RegisterChange()
 	local Changes = {};
 	for _, Part in pairs(HistoryRecord.Parts) do
 		HistoryRecord.AfterCFrame[Part] = Part.CFrame;
-		table.insert(Changes, { Part = Part, CFrame = Part.CFrame });
+		table.insert(Changes, {
+			Part = Part;
+			CFrame = Part.CFrame;
+		});
 	end;
-<<<<<<< HEAD
 	pcall(function ()
 		for _, Model in pairs(HistoryRecord.Models) do
 			HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
 			table.insert(Changes, {
 				Model = Model;
 				Pivot = Model:GetPivot();
-			})
-		end
+			});
+		end;
 	end)
 	for _, Attachment in pairs(HistoryRecord.Attachments) do
 		HistoryRecord.AfterCFrame[Attachment] = Attachment.WorldCFrame;
 		table.insert(Changes, {
 			Attachment = Attachment;
 			WorldCFrame = Attachment.WorldCFrame;
-		})
+		});
 	end;
-=======
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Send the change to the server
 	Core.SyncAPI:Invoke('SyncRotate', Changes);
@@ -1072,13 +1025,9 @@ end;
 function PreparePartsForRotating()
 	-- Prepares parts for rotating and returns the initial state of the parts
 
-<<<<<<< HEAD
-	local InitialPartStates = {}
-	local InitialModelStates = {}
-	local InitialAttachmentsStates = {}
-=======
-	local InitialState = {};
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
+	local InitialPartStates = {};
+	local InitialModelStates = {};
+	local InitialAttachmentsStates = {};
 
 	-- Get index of parts
 	local PartIndex = Support.FlipTable(Selection.Parts);
@@ -1094,7 +1043,6 @@ function PreparePartsForRotating()
 		Part.RotVelocity = Vector3.new();
 	end;
 
-<<<<<<< HEAD
 	-- Record model pivots
 	-- (temporarily pcalled due to pivot API being in beta)
 	pcall(function ()
@@ -1112,9 +1060,6 @@ function PreparePartsForRotating()
 	end
 
 	return InitialPartStates, InitialModelStates, InitialAttachmentsStates
-=======
-	return InitialState;
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 end;
 
 function GetIncrementMultiple(Number, Increment)

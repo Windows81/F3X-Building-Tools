@@ -13,14 +13,9 @@ local Maid = require(Libraries:WaitForChild('Maid'))
 local new = Roact.createElement
 local ToolManualWindow = require(UI:WaitForChild('ToolManualWindow'))
 
-<<<<<<< HEAD
-local MANUAL_CONTENT = [[<font face="GothamBlack" size="16">Fork3X, based on F3X's work, by Vikko151  🛠</font>
-To learn more about each tool, click on its ❔ icon at the top right corner.<font size="12"><br /></font>
-=======
 local MANUAL_CONTENT = [[<font face="GothamBlack" size="16">Building Tools by F3X  🛠</font>
 To learn more about each tool, click on its ❔ icon at the top right corner.<font size="12">
 </font>
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 <font size="12" color="rgb(150, 150, 150)"><b>Selecting</b></font>
 <font color="rgb(150, 150, 150)">•</font> Select individual parts by holding <b>Shift</b> and clicking each one.
@@ -108,56 +103,6 @@ function AboutPane:render()
 					end
 				end)
 
-<<<<<<< HEAD
-				self.Maid.DockDraggingEnd = UserInputService.InputEnded:Connect(function (Input)
-					if (Input.UserInputType.Name == 'MouseButton1') or (Input.UserInputType.Name == 'Touch') then
-						self.Maid.DockDragging = nil
-						self.Maid.DockDraggingEnd = nil
-						rbx.Active = true
-					end
-				end)
-			end;
-			ZIndex = 2;
-		}, {
-			Corners = new('UICorner', {
-				CornerRadius = UDim.new(0.09375, 0);
-			});
-			Signature = new('TextLabel', {
-				AnchorPoint = Vector2.new(0, 0.5);
-				BackgroundTransparency = 1;
-				Size = UDim2.new(1, 0, 0.87, -8);
-				Text = [[<font weight="900"><u>FORK</u><br/>3X</font>]];
-				TextStrokeTransparency = 0.8;
-				TextScaled = true;
-				RichText = true; 
-				TextYAlignment = Enum.TextYAlignment.Bottom;
-				TextColor3 = Color3.new(1, 1, 1);
-				Font = Enum.Font.MontserratBlack;
-				Position = UDim2.new(0.05, 0, 0.5, -4);
-				ZIndex = 3;
-			}, {
-				AspectRatio = new('UIAspectRatioConstraint', {
-					AspectRatio = 1.2;
-				});
-			});
-			HelpIcon = new('ImageLabel', {
-				AnchorPoint = Vector2.new(1, 0.5);
-				BackgroundTransparency = 1;
-				Position = UDim2.new(1, 0, 0.5, -4);
-				Size = UDim2.new(0, 30, 0, 30);
-				Image = 'rbxassetid://141911973';
-				ZIndex = 3;
-			});
-			ManualWindowPortal = new(Roact.Portal, {
-				target = self.props.Core.UI;
-			}, {
-				ManualWindow = (self.state.IsManualOpen or nil) and new(ToolManualWindow, {
-					Text = MANUAL_CONTENT;
-					ThemeColor = Color3.fromRGB(255, 176, 0);
-				});
-			});
-		})})
-=======
             self.Maid.DockDraggingEnd = UserInputService.InputEnded:Connect(function (Input)
                 if (Input.UserInputType.Name == 'MouseButton1') or (Input.UserInputType.Name == 'Touch') then
                     self.Maid.DockDragging = nil
@@ -199,7 +144,6 @@ function AboutPane:render()
             });
         });
     })
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 end
 
 return AboutPane

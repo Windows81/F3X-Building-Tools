@@ -136,13 +136,8 @@ function SelectionPane:render()
             IconAssetId = 'rbxassetid://141741337';
             IsActive = not self.state.IsSelectionEmpty;
             OnActivated = self.props.Core.ExportSelection;
-<<<<<<< HEAD
-            TooltipText = '<b>EXPORT</b><br />Shift-P';
-		});
-=======
             TooltipText = '<b>EXPORT</b><font size="0">\n</font>Shift-P';
         });
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
         CloneButton = new(SelectionButton, {
             LayoutOrder = 4;
             IconAssetId = 'rbxassetid://142073926';
@@ -155,15 +150,14 @@ function SelectionPane:render()
             IconAssetId = 'rbxassetid://2326621485';
             IsActive = self.state.IsExplorerOpen;
             OnActivated = self.props.Core.ToggleExplorer;
-<<<<<<< HEAD
-            TooltipText = '<b>EXPLORER</b><br />Shift-H';
+            TooltipText = '<b>EXPLORER</b><font size="0">\n</font><br />Shift-H';
 		});
 		GroupButton = new(SelectionButton, {
 			LayoutOrder = 6;
 			IconAssetId = "rbxassetid://1166534350";
 			IsActive = not self.state.IsSelectionEmpty;
 			OnActivated = self.props.Core.ArrangePartHotkey;
-			TooltipText = '<b>GROUP/UNGROUP</b><br />Shift-M';
+			TooltipText = '<b>GROUP/UNGROUP</b><font size="0">\n</font><br />Shift-M';
 			Size = UDim2.new(0.55, 0, 0.55, 0);
 			Position = UDim2.new(0.225, 0, 0.225, 0);
 		});
@@ -172,7 +166,7 @@ function SelectionPane:render()
 			IconAssetId = 'rbxassetid://12072054746';
 			IsActive = self.state.MultiSelecting;
 			OnActivated = self.props.Core.ToggleMultiSelect;
-			TooltipText = '<b>MULTISELECT</b><br />Hold Shift or Ctrl';
+			TooltipText = '<b>MULTISELECT</b><font size="0">\n</font><br />Hold Shift or Ctrl';
 			Size = UDim2.new(0.7, 0, 0.7, 0);
 			Position = UDim2.new(0.15, 0, 0.15, 0);
 		});
@@ -181,14 +175,10 @@ function SelectionPane:render()
 			IconAssetId = "rbxassetid://12392896984";
 			IsActive = self.state.IsSaveLoadOpen;
 			OnActivated = self.props.Core.ToggleSaveLoad;
-			TooltipText = '<b>SAVE/LOAD</b><br />Shift-L';
+			TooltipText = '<b>SAVE/LOAD</b><font size="0">\n</font><br />Shift-L';
 			Size = UDim2.new(0.7, 0, 0.7, 0);
 			Position = UDim2.new(0.175, 0, 0.15, 0);
 		});
-=======
-            TooltipText = '<b>EXPLORER</b><font size="0">\n</font>Shift-H';
-        });
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
     })
 end
 

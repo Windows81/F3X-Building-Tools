@@ -9,7 +9,6 @@ local Support = require(Libraries:WaitForChild 'SupportLibrary')
 local Signal = require(Libraries:WaitForChild 'Signal')
 local Maid = require(Libraries:WaitForChild 'Maid')
 local Make = require(Libraries:WaitForChild 'Make')
-local Arrow = require(Libraries:WaitForChild("Arrow"))
 local InstancePool = require(Libraries:WaitForChild 'InstancePool')
 
 -- Core selection system
@@ -441,8 +440,7 @@ local function GetVisibleFocus(Item)
 			Item:FindFirstChildWhichIsA('Model') or
 			Item:FindFirstChildWhichIsA('BasePart', true) or
 			Item:FindFirstChildWhichIsA('Model', true) or
-			Item:IsA("Attachment") and
-			Item
+			Item:IsA("Attachment")
 	end
 end
 

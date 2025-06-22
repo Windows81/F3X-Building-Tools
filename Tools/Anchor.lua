@@ -26,7 +26,6 @@ Lets you anchor and unanchor parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Press <b>Enter</b> to toggle anchor quickly.]]
 
-<<<<<<< HEAD
 --[[
 
 <font color="rgb(150, 150, 150)">•</font>  <b>PARTICLE EMITTERS </b> <font color="rgb(150, 150, 150)"></font><b>An extremely flexible effect</b> that emits particles that can be modified.<font size="6"><br /></font>
@@ -35,12 +34,10 @@ Lets you anchor and unanchor parts.<font size="6"><br /></font>
 
 <b>TIP:</b> If your highlights don't show, it's because they reached their limit.
 ]]
-=======
 -- {PATCH} annoying boxes appear after newlines in 2021E rich text.
 AnchorTool.ManualText = AnchorTool.ManualText
 	:gsub('\n', '<font size="0">\n</font>')
 	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};

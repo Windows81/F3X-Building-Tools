@@ -31,9 +31,9 @@ local Maid = require(Tool.Libraries:WaitForChild("Maid"))
 local Cryo = require(Tool.Libraries:WaitForChild("Cryo"))
 
 -- References
-Support.ImportServices()
-SyncAPI = Tool.SyncAPI
-Player = Players.LocalPlayer
+Support.ImportServices();
+SyncAPI = Tool.SyncAPI;
+Player = Players.LocalPlayer;
 Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
 
 if not Options then
@@ -42,7 +42,7 @@ end
 
 local DataStoresEnabled
 
-local RunService = game:GetService("RunService")
+local RunService = game:GetService('RunService')
 local CanClone = true
 
 -- Preload assets
@@ -273,8 +273,8 @@ function Disable()
 
 	-- Hide UI
 	if UI then
-		UI.Parent = script
-	end
+		UI.Parent = script;
+	end;
 
 	-- Hide attachments while the tool is being inactive
 	Selection.HideHiddenAttachments()
@@ -316,7 +316,7 @@ function ToggleExplorer()
 		or type(Options.CanUseExplorer) == "function" and Options.CanUseExplorer(Player) == false
 	then
 		local DialogHandle
-		local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("Error"))
+		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
 
 		local DialogElement = Roact.createElement(DialogComponent, {
 			Text = "You're not allowed to use the explorer.",
@@ -324,7 +324,7 @@ function ToggleExplorer()
 				Roact.unmount(DialogHandle)
 			end,
 		})
-		DialogHandle = Roact.mount(DialogElement, UI, "Error")
+		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
 		return
 	end
 	if not Core.ExplorerVisible then
@@ -547,8 +547,8 @@ function CloneSelection()
 
 	-- Make sure that there are items in the selection
 	if (#Selection.Items == 0) or CanClone == false then
-		return
-	end
+		return;
+	end;
 
 	CanClone = false
 
@@ -577,10 +577,14 @@ function CloneSelection()
 
 			-- If streaming takes too long, ignore remaining clones and resume thread early
 			local CLONE_STREAMING_TIMEOUT = 3
-			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function()
-				warn(
-					`[Building Tools by F3X] Cloning operation only received {#Clones}/{StreamingCloneCount} items after {CLONE_STREAMING_TIMEOUT} seconds, ignoring rest`
+			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function ()
+				local warning = string.format(
+					"[Building Tools by F3X] Cloning operation only received %d/%d items after %d seconds, ignoring rest",
+					#Clones,
+					StreamingCloneCount,
+					CLONE_STREAMING_TIMEOUT
 				)
+				warn(warning)
 				coroutine.resume(thread)
 			end)
 
@@ -623,9 +627,14 @@ function CloneSelection()
 			-- Reapplies this change
 
 			-- Restore the clones
-			SyncAPI:Invoke("UndoRemove", HistoryRecord.Clones)
-		end,
-	}
+			SyncAPI:Invoke('UndoRemove', HistoryRecord.Clones);
+
+			-- Reselect the restored clones
+			Selection.Replace(HistoryRecord.Clones)
+
+		end;
+
+	};
 
 	-- Register the history record
 	History.Add(HistoryRecord)
@@ -634,11 +643,10 @@ function CloneSelection()
 	Selection.Replace(Clones)
 
 	-- Flash the outlines of the new parts
-	coroutine.wrap(Selection.FlashOutlines)()
-	task.delay(Options.CloningDelay, function()
-		CanClone = true
-	end)
-end
+	coroutine.wrap(Selection.FlashOutlines)();
+	delay(Options.CloningDelay, function() CanClone = true; end)
+
+end;
 
 function DeleteSelection()
 	-- Deletes selected items
@@ -885,9 +893,11 @@ function ToggleSaveLoad()
 				Roact.unmount(DialogHandle)
 			end,
 		})
-		DialogHandle = Roact.mount(DialogElement, UI, "Error")
+		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
 		return
+
 	elseif DataStoresEnabled == false then
+
 		local DialogHandle
 		local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("Error"))
 
@@ -930,30 +940,30 @@ function CreateSaveAndLoad()
 	-- Exports the selected parts
 	-- Start an export dialog
 	local DialogHandle
-	local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("SaveInterface"))
+	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('SaveInterface'))
 
-	local FirstSaveCallback = function()
+	local FirstSaveCallback = function ()
 		if #Selection.Items == 0 then
 			return
 		end
 		SyncAPI:Invoke("SaveBuild", Selection.Items, "1")
 	end
 
-	local SecondSaveCallback = function()
+	local SecondSaveCallback = function ()
 		if #Selection.Items == 0 then
 			return
 		end
 		SyncAPI:Invoke("SaveBuild", Selection.Items, "2")
 	end
 
-	local ThirdSaveCallback = function()
+	local ThirdSaveCallback = function ()
 		if #Selection.Items == 0 then
 			return
 		end
 		SyncAPI:Invoke("SaveBuild", Selection.Items, "3")
 	end
 
-	local FirstLoadCallback = function()
+	local FirstLoadCallback = function ()
 		if not Core.CanLoad then
 			return
 		end
@@ -964,7 +974,7 @@ function CreateSaveAndLoad()
 		end)
 	end
 
-	local SecondLoadCallback = function()
+	local SecondLoadCallback = function ()
 		if not Core.CanLoad then
 			return
 		end
@@ -975,7 +985,7 @@ function CreateSaveAndLoad()
 		end)
 	end
 
-	local ThirdLoadCallback = function()
+	local ThirdLoadCallback = function ()
 		if not Core.CanLoad then
 			return
 		end
@@ -995,7 +1005,7 @@ function CreateSaveAndLoad()
 		ThirdSaveLoad = ThirdLoadCallback,
 		ThirdSave = ThirdSaveCallback,
 	})
-	DialogHandle = Roact.mount(DialogElement, UI, "SaveInterface")
+	DialogHandle = Roact.mount(DialogElement, UI, 'ExportDialog')
 end
 
 function GetPartsFromSelection(Selection)
@@ -1073,33 +1083,18 @@ function ExportSelection()
 	DialogHandle = Roact.mount(DialogElement, UI, "ExportDialog")
 
 	-- Send the exporting request to the server
-	Try(SyncAPI.Invoke, SyncAPI, "Export", Selection.Items)
-		-- Display creation ID on success
-		:Then(function(CreationId)
-			--[[
+	Try(SyncAPI.Invoke, SyncAPI, 'Export', Selection.Items)
+
+	-- Display creation ID on success
+	:Then(function (CreationId)
 		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
 			Text = 'Your creation\'s ID:<font size="5"><br /></font>\n' ..
 				'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' ..
 				'<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>';
 			OnDismiss = DialogDismissCallback;
 		}))
-		]]
-
-			-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
-			local Text = 'Your creation\'s ID:<font size="5"><br /></font>\n'
-				.. '<font face="GothamBlack" size="18">'
-				.. CreationId
-				.. '</font><font size="6"><br /></font>\n'
-				.. '<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>'
-			Text = Text:gsub("\n", '<font size="0">\n</font>')
-				:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>')
-			Roact.update(
-				DialogHandle,
-				Roact.createElement(DialogComponent, {
-					Text = Text,
-					OnDismiss = DialogDismissCallback,
-				})
-			)
+		print('[Building Tools by F3X] Uploaded Export:', CreationId);
+	end)
 
 			print("[Building Tools by F3X] Uploaded Export:", CreationId)
 		end)
@@ -1162,10 +1157,12 @@ if Mode == "Tool" then
 	AssignHotkey({ "RightControl", "P" }, ExportSelection)
 end
 
+-- {PATCH} no need to check for outdatedness if we're using outdated Rōblox anyways.
+--[[
 function IsVersionOutdated()
+
 	-- Returns whether this version of Building Tools is out of date
 
-	--[[ {PATCH} skips to always returning false that no updating will be needed.
 	-- Check most recent version number
 	local AssetInfo = game.MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
 	local LatestMajorVersion, LatestMinorVersion, LatestPatchVersion = AssetInfo.Description:match '%[Version: ([0-9]+)%.([0-9]+)%.([0-9]+)%]';
@@ -1187,11 +1184,12 @@ function IsVersionOutdated()
 			return LatestPatchVersion > CurrentPatchVersion;
 		end;
 	end;
-	]]
 
 	-- Return an up-to-date status if not oudated
-	return false
-end
+	return false;
+
+end;
+]]
 
 function ToggleMultiSelect()
 	if Selection.Multiselecting == false then
@@ -1640,4 +1638,4 @@ for FunctionName, Arguments in Options.CustomCoreFunctions do
 end
 
 -- Return core
-return getfenv(0)
+return getfenv(0);
