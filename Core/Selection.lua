@@ -1,6 +1,8 @@
 local Tool = script.Parent.Parent
 local History = require(script.Parent.History)
 
+local Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
+
 -- Libraries
 local Libraries = Tool:WaitForChild 'Libraries'
 local Support = require(Libraries:WaitForChild 'SupportLibrary')
@@ -17,7 +19,11 @@ Selection.Parts = {}
 Selection.PartIndex = {}
 Selection.Models = {}
 Selection.ModelIndex = {}
+Selection.Attachments = {}
+Selection.AttachmentsIndex = {}
 Selection.Outlines = {}
+Selection.Beams = {}
+Selection.HiddenAttachments = {}
 Selection.Color = BrickColor.new 'Cyan'
 Selection.Multiselecting = false
 Selection.Maid = Maid.new()
@@ -27,9 +33,12 @@ Selection.ItemsAdded = Signal.new()
 Selection.ItemsRemoved = Signal.new()
 Selection.PartsAdded = Signal.new()
 Selection.PartsRemoved = Signal.new()
+Selection.AttachmentsAdded = Signal.new()
+Selection.AttachmentsRemoved = Signal.new()
 Selection.FocusChanged = Signal.new()
 Selection.Cleared = Signal.new()
 Selection.Changed = Signal.new()
+Selection.MultiselectToggle = Signal.new()
 
 function Selection.IsSelected(Item)
 	-- Returns whether `Item` is selected or not
@@ -40,11 +49,15 @@ function Selection.IsSelected(Item)
 end;
 
 --- Adds parts & models found in `Item` to `PartTable` & `ModelTable`.
-local function CollectPartsAndModels(Item, PartTable, ModelTable)
+local function CollectPartsAndModelsAndAttachments(Item, PartTable, ModelTable, AttachmentsTable)
 
 	-- Collect item if it's a part
 	if Item:IsA('BasePart') then
 		table.insert(PartTable, Item)
+	
+	elseif Item:IsA('Attachment') then
+		
+		table.insert(AttachmentsTable, Item)
 
 	else
 
@@ -74,19 +87,43 @@ function Selection.Add(Items, RegisterHistory)
 	-- Go through and validate each given item
 	local SelectableItems = {};
 	for _, Item in pairs(Items) do
+		
+		local ItemToInspect = Item:IsA("Attachment") and Item.Parent or Item
 
 		-- Make sure each item is valid and not already selected
 		if Item.Parent and (not Selection.ItemIndex[Item]) then
-			table.insert(SelectableItems, Item);
+			
+			if Item:FindFirstAncestorWhichIsA("Model") and game.Players:GetPlayerFromCharacter(Item:FindFirstAncestorWhichIsA("Model")) then
+				if Options.PlayerTolerance == 1 and game.Players:GetPlayerFromCharacter(Item:FindFirstAncestorWhichIsA("Model")) ~= game.Players.LocalPlayer then
+					continue
+				elseif Options.PlayerTolerance == 2 then
+					continue
+				end
+			elseif Item:IsA("Model") and game.Players:GetPlayerFromCharacter(Item)then
+				if Options.PlayerTolerance == 1 and game.Players:GetPlayerFromCharacter(Item) ~= game.Players.LocalPlayer then
+					continue
+				elseif Options.PlayerTolerance == 2 then
+					continue
+				end
+			end
+			
+			if Options.CheckPermission(ItemToInspect, game.Players.LocalPlayer) == true then
+				table.insert(SelectableItems, Item);
+			end
 		end;
 
 	end;
+	
+
 
 	local OldSelection = Selection.Items;
 
 	-- Track parts and models in new selection
 	local Parts = {}
 	local Models = {}
+	local Attachments = {}
+	
+	if Options.PartSelectionLimit ~= 0 and #SelectableItems + #Selection.Items > Options.PartSelectionLimit then return end
 
 	-- Go through the valid new selection items
 	for _, Item in pairs(SelectableItems) do
@@ -94,6 +131,13 @@ function Selection.Add(Items, RegisterHistory)
 		-- Add each valid item to the selection
 		Selection.ItemIndex[Item] = true;
 		CreateSelectionBoxes(Item)
+		if Item:IsA("Attachment") then
+			CreateLookDirectionBeam(Item)
+			if Item.Visible == false and table.find(Selection.HiddenAttachments, Item) == nil then
+			table.insert(Selection.HiddenAttachments, Item)
+			Item.Visible = true
+			end
+		end
 
 		-- Create maid for cleaning up item listeners
 		local ItemMaid = Maid.new()
@@ -107,7 +151,7 @@ function Selection.Add(Items, RegisterHistory)
 		end)
 
 		-- Find parts and models within item
-		CollectPartsAndModels(Item, Parts, Models)
+		CollectPartsAndModelsAndAttachments(Item, Parts, Models, Attachments)
 
 		-- Listen for new parts or models in groups
 		local IsGroup = not Item:IsA 'BasePart' or nil
@@ -124,6 +168,10 @@ function Selection.Add(Items, RegisterHistory)
 					local NewRefCount = (Selection.ModelIndex[Descendant] or 0) + 1
 					Selection.ModelIndex[Descendant] = NewRefCount
 					Selection.Models = Support.Keys(Selection.ModelIndex)
+				elseif Descendant:IsA('Attachment') then
+					local NewRefCount = (Selection.AttachmentsIndex[Descendant] or 0) + 1
+					Selection.AttachmentsIndex[Descendant] = NewRefCount
+					Selection.Attachments = Support.Keys(Selection.AttachmentsIndex)
 				end
 			end
 		end)
@@ -140,6 +188,12 @@ function Selection.Add(Items, RegisterHistory)
 				Selection.ModelIndex[Descendant] = (NewRefCount > 0) and NewRefCount or nil
 				if NewRefCount == 0 then
 					Selection.Models = Support.Keys(Selection.ModelIndex)
+				end
+			elseif Selection.AttachmentsIndex[Descendant] then
+				local NewRefCount = (Selection.AttachmentsIndex[Descendant] or 0) - 1
+				Selection.AttachmentsIndex[Descendant] = (NewRefCount > 0) and NewRefCount or nil
+				if NewRefCount == 0 then
+					Selection.Attachments = Support.Keys(Selection.AttachmentsIndex)
 				end
 			end
 		end)
@@ -163,6 +217,18 @@ function Selection.Add(Items, RegisterHistory)
 			table.insert(NewParts, Part)
 		end
 	end
+	
+	local NewAttachments = {}
+	for _, Attachment in pairs(Attachments) do
+		if Attachment == nil then
+			return
+		end
+		local NewRefCount = (Selection.AttachmentsIndex[Attachment] or 0) + 1
+		Selection.AttachmentsIndex[Attachment] = NewRefCount
+		if NewRefCount == 1 then
+			table.insert(NewAttachments, Attachment)
+		end
+	end
 
 	-- Register references to new models
 	local NewModelCount = 0
@@ -178,6 +244,11 @@ function Selection.Add(Items, RegisterHistory)
 	if #NewParts > 0 then
 		Selection.Parts = Support.Keys(Selection.PartIndex)
 		Selection.PartsAdded:Fire(NewParts)
+	end
+	
+	if #NewAttachments > 0 then
+		Selection.Attachments = Support.Keys(Selection.AttachmentsIndex)
+		Selection.AttachmentsAdded:Fire(NewAttachments)
 	end
 
 	-- Update models list
@@ -212,6 +283,7 @@ function Selection.Remove(Items, RegisterHistory)
 	-- Track parts and models in removing selection
 	local Parts = {}
 	local Models = {}
+	local Attachments = {}
 
 	-- Go through the valid deselectable items
 	for _, Item in pairs(DeselectableItems) do
@@ -219,12 +291,19 @@ function Selection.Remove(Items, RegisterHistory)
 		-- Remove item from selection
 		Selection.ItemIndex[Item] = nil;
 		RemoveSelectionBoxes(Item)
+		if Item:IsA("Attachment") then
+			RemoveLookDirectionBeams(Item)
+			if table.find(Selection.HiddenAttachments, Item) then
+				Item.Visible = false
+				table.remove(Selection.HiddenAttachments, table.find(Selection.HiddenAttachments, Item))
+			end
+		end
 
 		-- Stop tracking item's parts
 		Selection.Maid[Item] = nil
 
 		-- Find parts and models associated with item
-		CollectPartsAndModels(Item, Parts, Models)
+		CollectPartsAndModelsAndAttachments(Item, Parts, Models, Attachments)
 
 	end;
 
@@ -245,6 +324,15 @@ function Selection.Remove(Items, RegisterHistory)
 			table.insert(RemovingParts, Part)
 		end
 	end
+	
+	local RemovingAttachments = {}
+	for _, Attachment in pairs(Attachments) do
+		local NewRefCount = (Selection.AttachmentsIndex[Attachment] or 0) - 1
+		Selection.AttachmentsIndex[Attachment] = (NewRefCount > 0) and NewRefCount or nil
+		if NewRefCount == 0 then
+			table.insert(RemovingAttachments, Attachment)
+		end
+	end
 
 	-- Clear references to removing models
 	local RemovingModelCount = 0
@@ -261,6 +349,12 @@ function Selection.Remove(Items, RegisterHistory)
 		Selection.Parts = Support.Keys(Selection.PartIndex)
 		Selection.PartsRemoved:Fire(RemovingParts)
 	end
+
+	if #RemovingAttachments > 0 then
+		Selection.Attachments = Support.Keys(Selection.AttachmentsIndex)
+		Selection.AttachmentsRemoved:Fire(RemovingParts)
+	end
+
 
 	-- Update models list
 	if RemovingModelCount > 0 then
@@ -345,7 +439,8 @@ local function GetVisibleFocus(Item)
 		return Item:FindFirstChildWhichIsA('BasePart') or
 			Item:FindFirstChildWhichIsA('Model') or
 			Item:FindFirstChildWhichIsA('BasePart', true) or
-			Item:FindFirstChildWhichIsA('Model', true)
+			Item:FindFirstChildWhichIsA('Model', true) or
+			Item:IsA("Attachment")
 	end
 end
 
@@ -406,17 +501,28 @@ end
 
 -- Create target box pool
 local SelectionBoxPool = InstancePool.new(60, function ()
-	return Make 'SelectionBox' {
-		Name = 'BTSelectionBox',
+	return Make('SelectionBox')(Options.SelectionBoxMake(GetCore()))
+end)
+
+
+local LookDirectionPool = InstancePool.new(60, function ()
+	return Make 'LineHandleAdornment' {
+		Name = 'BTLookAt',
 		Parent = GetCore().UI,
-		LineThickness = 0.025,
-		Transparency = 0.5,
-		Color = Selection.Color
+		Length = 100,
+		Thickness = 2,
+		Transparency = 0,
+		Color3 = Color3.new(0, 1, 0)
 	}
 end)
 
 -- Define target box cleanup routine
 function SelectionBoxPool.Cleanup(SelectionBox)
+	SelectionBox.Adornee = nil
+	SelectionBox.Visible = nil
+end
+
+function LookDirectionPool.Cleanup(SelectionBox)
 	SelectionBox.Adornee = nil
 	SelectionBox.Visible = nil
 end
@@ -459,6 +565,56 @@ function CreateSelectionBoxes(Item)
 
 end;
 
+function CreateLookDirectionBeam(Item)
+	-- Creates selection boxes for the given item
+
+	-- Only create selection boxes if in tool mode
+	if GetCore().Mode ~= 'Tool' then
+		return;
+	end;
+
+	-- Ensure selection boxes don't already exist for item
+	if Selection.Beams[Item] then
+		return
+	end
+
+	-- Get targetable items
+	local Items = Support.FlipTable { Item }
+
+	-- Create selection box for each targetable item
+	local Beams = {}
+	
+	for Item in pairs(Items) do
+
+		-- Create the selection box
+		local Beam = LookDirectionPool:Get()
+		Beam.Adornee = Item:FindFirstAncestorWhichIsA("BasePart")
+		Beam.CFrame = Item.CFrame * CFrame.fromEulerAnglesXYZ(0, math.rad(-90), 0)
+		Beam.Visible = true
+		
+		coroutine.wrap(function()
+			
+			repeat 
+				task.wait(0.1)
+			until Selection.Beams[Item]
+			
+			while Beam and Selection.Beams[Item] do
+				Beam.CFrame = Item.CFrame * CFrame.fromEulerAnglesXYZ(0, math.rad(-90), 0)
+				task.wait(1 / 30)																	
+			end
+			
+		end)()
+
+		-- Register the outline
+		Beams[Item] = Beam  
+
+	end
+
+	-- Register selection boxes for this item
+	Selection.Beams[Item] = Beams
+
+end;
+
 function RemoveSelectionBoxes(Item)
 	-- Removes the given item's selection boxes
 
@@ -476,6 +632,43 @@ function RemoveSelectionBoxes(Item)
 	-- Clear list of outlines for item
 	Selection.Outlines[Item] = nil
 
+end
+
+function RemoveLookDirectionBeams(Item)
+	-- Removes the given item's selection boxes
+
+	-- Only proceed if outlines exist for item
+	local LookDirectionBeams = Selection.Beams[Item]
+	if not LookDirectionBeams then
+		return
+	end
+
+	-- Remove each item's outline
+	for _, Beam in pairs(LookDirectionBeams) do
+		LookDirectionPool:Release(Beam)
+	end
+
+	-- Clear list of outlines for item
+	Selection.Beams[Item] = nil
+
+end
+
+function Selection.HideHiddenAttachments()
+	-- Hides every hidden attachments
+
+	-- Make every hidden attachments invisible
+	for _, Item in pairs(Selection.HiddenAttachments) do
+		Item.Visible = false
+	end
+end
+
+function Selection.ShowHiddenAttachments()
+	-- Shows back every hidden attachments
+
+	-- Make every hidden attachments invisible
+	for _, Item in pairs(Selection.HiddenAttachments) do
+		Item.Visible = true
+	end
 end
 
 function Selection.RecolorOutlines(Color)
@@ -537,6 +730,7 @@ function Selection.EnableMultiselectionHotkeys()
 	Core.Connections.MultiselectionHotkeys = Support.AddUserInputListener('Began', 'Keyboard', false, function (Input)
 		if Hotkeys[Input.KeyCode.Name] then
 			Selection.Multiselecting = true;
+			Selection.MultiselectToggle:Fire()
 		end;
 	end);
 
@@ -555,6 +749,7 @@ function Selection.EnableMultiselectionHotkeys()
 
 		-- Disable multiselection if matching key not found
 		Selection.Multiselecting = false;
+		Selection.MultiselectToggle:Fire()
 
 	end);
 
@@ -575,6 +770,24 @@ function Selection.HideOutlines()
 	-- Remove every item's outlines
 	for Item in pairs(Selection.Outlines) do
 		RemoveSelectionBoxes(Item)
+	end
+end
+
+function Selection.EnableBeams()
+	-- Enables selection outlines
+
+	-- Create outlines for each item
+	for Item in pairs(Selection.AttachmentsIndex) do
+		CreateLookDirectionBeam(Item)
+	end
+end
+
+function Selection.HideBeams()
+	-- Hides selection outlines
+
+	-- Remove every item's outlines
+	for Item in pairs(Selection.Beams) do
+		RemoveLookDirectionBeams(Item)
 	end
 end
 

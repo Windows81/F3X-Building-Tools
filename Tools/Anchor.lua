@@ -1,5 +1,6 @@
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
 
 -- Libraries
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
@@ -18,11 +19,21 @@ local AnchorTool = {
 
 }
 
-AnchorTool.ManualText = [[<font face="GothamBlack" size="16">Anchor Tool  🛠</font>
+AnchorTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Anchor Tool  🛠</i></u></font>
 Lets you anchor and unanchor parts.<font size="6"><br /></font>
+
+
 
 <b>TIP:</b> Press <b>Enter</b> to toggle anchor quickly.]]
 
+--[[
+
+<font color="rgb(150, 150, 150)">•</font>  <b>PARTICLE EMITTERS </b> <font color="rgb(150, 150, 150)"></font><b>An extremely flexible effect</b> that emits particles that can be modified.<font size="6"><br /></font>
+<font color="rgb(150, 150, 150)">•</font>  <b>HIGHLIGHTS </b> <font color="rgb(150, 150, 150)"></font><b>Makes the object marked with an outline and filling.</b> This effect works on every shapes and can be seen through walls.<font size="6"><br /></font>
+<font color="rgb(150, 150, 150)">•</font>  <b>SELECTION BOX </b> <font color="rgb(150, 150, 150)"></font><b>Marks the object with a box-shaped outline.</b> This effect doesn't fits every shapes, but is useful on basic parts.<font size="6"><br /></font>
+
+<b>TIP:</b> If your highlights don't show, it's because they reached their limit.
+]]
 -- {PATCH} annoying boxes appear after newlines in 2021E rich text.
 AnchorTool.ManualText = AnchorTool.ManualText
 	:gsub('\n', '<font size="0">\n</font>')
@@ -63,7 +74,7 @@ function ShowUI()
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if UI then
+	if UI and UI.Parent ~= nil then
 
 		-- Reveal the UI
 		UI.Visible = true;
@@ -75,6 +86,10 @@ function ShowUI()
 		return;
 
 	end;
+	
+	if UI then
+		UI:Destroy()
+	end
 
 	-- Create the UI
 	UI = Core.Tool.Interfaces.BTAnchorToolGUI:Clone();
@@ -87,10 +102,18 @@ function ShowUI()
 
 	-- Enable the anchor status switch
 	AnchorButton.MouseButton1Click:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 		SetProperty('Anchored', true);
 	end);
+	AnchorButton.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
+	end);
 	UnanchorButton.MouseButton1Click:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 		SetProperty('Anchored', false);
+	end);
+	UnanchorButton.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Hook up manual triggering
@@ -147,7 +170,7 @@ end;
 function SetProperty(Property, Value)
 
 	-- Make sure the given value is valid
-	if Value == nil then
+	if Value == nil or #Selection.Parts <= 0 then
 		return;
 	end;
 
@@ -158,10 +181,10 @@ function SetProperty(Property, Value)
 	for _, Part in pairs(Selection.Parts) do
 
 		-- Store the state of the part before modification
-		table.insert(HistoryRecord.Before, { Part = Part, [Property] = Part[Property] });
+		table.insert(HistoryRecord.Before, { Part = Part, [Property] = Part[Property], CFrame = Part.CFrame });
 
 		-- Create the change request for this part
-		table.insert(HistoryRecord.After, { Part = Part, [Property] = Value });
+		table.insert(HistoryRecord.After, { Part = Part, [Property] = Value, CFrame = Part.CFrame });
 
 	end;
 

@@ -4,12 +4,15 @@ local UserInputService = game:GetService 'UserInputService'
 local ContextActionService = game:GetService 'ContextActionService'
 local Selection = require(script.Parent.Selection);
 
+local Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
+
 -- Libraries
 local Libraries = Tool:WaitForChild 'Libraries'
 local Support = require(Libraries:WaitForChild 'SupportLibrary')
 local Signal = require(Libraries:WaitForChild 'Signal')
 local Make = require(Libraries:WaitForChild 'Make')
 local InstancePool = require(Libraries:WaitForChild 'InstancePool')
+local IndicatorText
 
 TargetingModule = {};
 TargetingModule.TargetingMode = 'Scoped'
@@ -78,7 +81,7 @@ end
 
 local function IsTargetable(Item)
 	return Item:IsA 'Model' or
-		Item:IsA 'BasePart' or
+		(Item:IsA 'BasePart' and Item.Parent ~= game.Workspace.Terrain) or
 		Item:IsA 'Tool' or
 		Item:IsA 'Accessory' or
 		Item:IsA 'Accoutrement'
@@ -123,6 +126,34 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	local NewTarget = Mouse.Target
 	local NewScopeTarget = self:FindTargetInScope(NewTarget, Scope)
 
+	local Core = GetCore()
+
+	if Options.PartHintFunction ~= false then
+		if not IndicatorText then
+			IndicatorText = Make 'TextLabel' {
+				Name = "IndicatorText";
+				Font = Enum.Font.SourceSansSemibold;
+				Parent = Core.UI;
+				Size = UDim2.new(0, 0, 0, 0);
+				TextColor3 = Color3.new(1, 1, 1);
+				TextTransparency = 0;
+				TextStrokeTransparency = 0.4;
+				TextSize = 12;
+				BackgroundTransparency = 1;
+				AutomaticSize = Enum.AutomaticSize.XY;
+			};
+		end
+
+		IndicatorText.Position = UDim2.new(0, Mouse.X + 16, 0, Mouse.Y + 19);
+
+		if not NewTarget or NewTarget.Locked == true then
+			IndicatorText.TextTransparency = 1
+		else
+			IndicatorText.Text = Options.PartHintFunction(Core, NewTarget, game.Players.LocalPlayer)
+			IndicatorText.TextTransparency = 0
+		end
+	end
+
 	-- Register whether target has changed
 	if (self.LastTarget == NewTarget) and (not Force) then
 		return NewTarget, NewScopeTarget
@@ -132,14 +163,21 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	end
 
 	-- Make sure target is selectable
-	local Core = GetCore()
+
 	if not Core.IsSelectable({ NewTarget }) then
+		if Options.PartHintFunction ~= false then
+			IndicatorText.TextColor3 = Color3.new(1, 0, 0)
+		end
 		self.HighlightTarget(nil)
 		self.LastTarget = nil
 		self.LastScopeTarget = nil
 		self.TargetChanged:Fire(nil)
 		self.ScopeTargetChanged:Fire(nil)
 		return
+	end
+
+	if Options.PartHintFunction ~= false then
+		IndicatorText.TextColor3 = Color3.new(1, 1, 1)
 	end
 
 	-- Register whether scope target has changed
@@ -177,17 +215,12 @@ end
 
 -- Create target box pool
 local TargetBoxPool = InstancePool.new(60, function ()
-	return Make 'SelectionBox' {
-		Name = 'BTTargetBox',
-		Parent = GetCore().UI,
-		LineThickness = 0.025,
-		Transparency = 0.5,
-		Color = BrickColor.new 'Institutional white'
-	}
+	return Make('SelectionBox')(Options.TargetBoxMake(GetCore()))
 end)
 
 -- Define target box cleanup routine
 function TargetBoxPool.Cleanup(TargetBox)
+	local Target = TargetBox.Adornee
 	TargetBox.Adornee = nil
 	TargetBox.Visible = nil
 end
@@ -340,12 +373,22 @@ function TargetingModule.UpdateSelectionRectangle()
 		SelectionRectangle = Make 'Frame' {
 			Name = 'SelectionRectangle',
 			Parent = Core.UI,
-			BackgroundColor3 = Color3.fromRGB(100, 100, 100),
-			BorderColor3 = Color3.new(0, 0, 0),
-			BackgroundTransparency = 0.5,
-			BorderSizePixel = 1
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			BackgroundTransparency = 0.6,
+			BorderSizePixel = 0
+		};
+
+		UIStroke = Make 'UIStroke' {
+			Name = 'BTStroke',
+			Parent = SelectionRectangle,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Color = Color3.new(0, 0, 0);
+			Thickness = 2;
+			LineJoinMode = Enum.LineJoinMode.Miter,
 		};
 	end;
+
+	UIStroke.Color = Selection.Color.Color
 
 	local StartPoint = Vector2.new(
 		math.min(RectangleSelectStart.X, Mouse.X),
@@ -423,7 +466,10 @@ function TargetingModule.FinishRectangleSelecting()
 
 	-- Find items that lie within the rectangle
 	local ScopeParts = Support.GetDescendantsWhichAreA(TargetingModule.Scope, 'BasePart')
-	for _, Part in pairs(ScopeParts) do
+
+	local BreakFactor = 1
+
+	for i, Part in pairs(ScopeParts) do
 		local ScreenPoint, OnScreen = Workspace.CurrentCamera:WorldToScreenPoint(Part.Position)
 		if OnScreen then
 			local LeftCheck = ScreenPoint.X >= StartPoint.X
@@ -434,6 +480,10 @@ function TargetingModule.FinishRectangleSelecting()
 				local ScopeTarget = TargetingModule:FindTargetInScope(Part, TargetingModule.Scope)
 				SelectableItems[ScopeTarget] = true
 			end
+		end
+		if math.floor(i / (300 * BreakFactor)) ~= 0 then
+			task.wait()
+			BreakFactor += 1
 		end
 	end
 
@@ -462,7 +512,7 @@ function TargetingModule.PrismSelect()
 	-- Get region for selection items and find potential parts
 	local Extents = require(Core.Tool.Core.BoundingBox).CalculateExtents(Selection.Items, nil, true);
 	local Region = Region3.new(Extents.Min, Extents.Max);
-	local PotentialParts = Workspace:FindPartsInRegion3WithIgnoreList(Region, Selection.Items, math.huge);
+	local PotentialParts = game.Workspace:FindPartsInRegion3WithIgnoreList(Region, Selection.Items, math.huge);
 
 	-- Enable collision on all potential parts
 	local OriginalState = {};

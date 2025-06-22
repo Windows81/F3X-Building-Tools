@@ -393,6 +393,7 @@ Region.BoxSphereCollision	=BoxSphereCollision
 Region.BoxCollision			=BoxCollision
 Region.new					=NewRegion
 function Region.FromPart(Part)
+	print("we used me")
 	return NewRegion(Part.CFrame,Part.Size)
 end
 

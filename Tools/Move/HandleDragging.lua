@@ -76,16 +76,18 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		-- Freeze bounding box extents while dragging
 		if BoundingBox.GetBoundingBox() then
 			local InitialExtentsSize, InitialExtentsCFrame =
-				BoundingBox.CalculateExtents(Selection.Parts, BoundingBox.StaticExtents)
+				BoundingBox.CalculateExtents(Selection.Parts, Selection.Attachments, BoundingBox.StaticExtents)
 			self.InitialExtentsSize = InitialExtentsSize
 			self.InitialExtentsCFrame = InitialExtentsCFrame
 			BoundingBox.PauseMonitoring()
 		end
 
 		-- Stop parts from moving, and capture the initial state of the parts
-		local InitialPartStates, InitialModelStates, InitialFocusCFrame = self.Tool:PrepareSelectionForDragging()
+		local InitialPartStates, InitialModelStates, InitialAttachmentsStates, InitialFocusCFrame = self.Tool:PrepareSelectionForDragging()
 		self.InitialPartStates = InitialPartStates
 		self.InitialModelStates = InitialModelStates
+		self.InitialAttachmentsStates = InitialAttachmentsStates
+		
 		self.InitialFocusCFrame = InitialFocusCFrame
 
 		-- Track the change
@@ -110,13 +112,13 @@ function HandleDragging:AttachHandles(Part, Autofocus)
 		Distance = MoveUtil.GetIncrementMultiple(Distance, self.Tool.Increment)
 
 		-- Move the parts along the selected axes by the calculated distance
-		self.Tool:MovePartsAlongAxesByFace(Face, Distance, self.InitialPartStates, self.InitialModelStates, self.InitialFocusCFrame)
+		self.Tool:MovePartsAlongAxesByFace(Face, Distance, self.InitialPartStates, self.InitialModelStates, self.InitialAttachmentsStates, self.InitialFocusCFrame)
 
 		-- Make sure we're not entering any unauthorized private areas
 		if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
 			local Part, InitialPartState = next(self.InitialPartStates)
 			Part.CFrame = InitialPartState.CFrame
-			MoveUtil.TranslatePartsRelativeToPart(Part, self.InitialPartStates, self.InitialModelStates)
+			MoveUtil.TranslatePartsRelativeToPart(Part, self.InitialPartStates, self.InitialModelStates, self.InitialAttachmentsStates)
 			Distance = 0
 		end
 

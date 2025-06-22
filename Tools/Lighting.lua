@@ -1,14 +1,12 @@
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
 local Vendor = Tool:WaitForChild('Vendor')
-local UI = Tool:WaitForChild('UI')
 local Libraries = Tool:WaitForChild('Libraries')
 
 -- Libraries
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
 local Roact = require(Vendor:WaitForChild('Roact'))
-local ColorPicker = require(UI:WaitForChild('ColorPicker'))
-local Dropdown = require(UI:WaitForChild('Dropdown'))
 local Signal = require(Libraries:WaitForChild('Signal'))
 
 -- Import relevant references
@@ -26,7 +24,7 @@ local LightingTool = {
 	OnSideChanged = Signal.new();
 }
 
-LightingTool.ManualText = [[<font face="GothamBlack" size="16">Lighting Tool  🛠</font>
+LightingTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Lighting Tool  🛠</i></u></font>
 Lets you add point lights, surface lights, and spotlights to parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click on the surface of any part to change a light's side quickly.]]
@@ -71,7 +69,7 @@ function ShowUI()
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if LightingTool.UI then
+	if LightingTool.UI and LightingTool.UI.Parent ~= nil then
 
 		-- Reveal the UI
 		LightingTool.UI.Visible = true;
@@ -83,6 +81,10 @@ function ShowUI()
 		return;
 
 	end;
+	
+	if LightingTool.UI then
+		LightingTool.UI:Destroy()
+	end
 
 	-- Create the UI
 	LightingTool.UI = Core.Tool.Interfaces.BTLightingToolGUI:Clone();
@@ -126,6 +128,11 @@ function EnableLightSettingsUI(LightSettingsUI)
 
 	-- Get the type of light this settings UI is for
 	local LightType = LightSettingsUI.Name;
+	
+	local UI = Tool:WaitForChild('UI')
+	local ColorPicker = require(UI:WaitForChild('ColorPicker'))
+	
+	local Dropdown = require(UI:WaitForChild('Dropdown'))
 
 	-- Option input references
 	local Options = LightSettingsUI.Options;
@@ -174,16 +181,27 @@ function EnableLightSettingsUI(LightSettingsUI)
 	-- Enable shadows input
 	ShadowsCheckbox.MouseButton1Click:Connect(function ()
 		ToggleShadows(LightType);
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 	end);
 
 	-- Enable light addition button
 	AddButton.MouseButton1Click:Connect(function ()
 		AddLights(LightType);
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Add"))
+	end);
+	
+	AddButton.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Enable light removal button
 	RemoveButton.MouseButton1Click:Connect(function ()
 		RemoveLights(LightType);
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Remove"))
+	end);
+	
+	RemoveButton.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Enable light options UI show button
@@ -257,6 +275,10 @@ function GetLights(LightType)
 	-- Get any lights from any selected parts
 	for _, Part in pairs(Selection.Parts) do
 		table.insert(Lights, Support.GetChildOfClass(Part, LightType));
+	end;
+	
+	for _, Attachment in pairs(Selection.Attachments) do
+		table.insert(Lights, Support.GetChildOfClass(Attachment, LightType));
 	end;
 
 	-- Return the lights
@@ -432,7 +454,7 @@ function UpdateUI()
 			RemoveButton.Visible = false;
 
 		-- If only some selected parts have lights
-		elseif #Lights < #Selection.Parts then
+		elseif #Lights < #Selection.Parts + #Selection.Attachments then
 
 			-- Show both add and remove buttons
 			AddButton.Visible = true;
@@ -441,7 +463,7 @@ function UpdateUI()
 			RemoveButton.Position = UDim2.new(1, -AddButton.AbsoluteSize.X - 5 - RemoveButton.AbsoluteSize.X - 2, 0, 3);
 
 		-- If all selected parts have lights
-		elseif #Lights == #Selection.Parts then
+		elseif #Lights == #Selection.Parts + #Selection.Attachments then
 
 			-- Show remove button
 			RemoveButton.Visible = true;
@@ -533,6 +555,18 @@ function AddLights(LightType)
 
 			-- Queue a light to be created for this part
 			table.insert(Changes, { Part = Part, LightType = LightType });
+
+		end;
+
+	end;
+	
+	for _, Attachment in pairs(Selection.Attachments) do
+
+		-- Make sure this part doesn't already have a light
+		if not Support.GetChildOfClass(Attachment, LightType) then
+
+			-- Queue a light to be created for this part
+			table.insert(Changes, { Part = Attachment, LightType = LightType });
 
 		end;
 

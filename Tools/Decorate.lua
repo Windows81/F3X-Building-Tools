@@ -1,12 +1,14 @@
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
 local Vendor = Tool:WaitForChild('Vendor')
-local UI = Tool:WaitForChild('UI')
+local UI
+local Libraries = Tool:WaitForChild('Libraries')
 
 -- Libraries
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
 local Roact = require(Vendor:WaitForChild('Roact'))
-local ColorPicker = require(UI:WaitForChild('ColorPicker'))
+local Signal = require(Libraries:WaitForChild('Signal'))
 
 -- Import relevant references
 Selection = Core.Selection;
@@ -14,14 +16,21 @@ Support = Core.Support;
 Security = Core.Security;
 Support.ImportServices();
 
+local SoundService = game:GetService("SoundService")
+
 -- Initialize the tool
 local DecorateTool = {
 	Name = 'Decorate Tool';
 	Color = BrickColor.new 'Really black';
 }
 
-DecorateTool.ManualText = [[<font face="GothamBlack" size="16">Decorate Tool  🛠</font>
-Allows you to add smoke, fire, and sparkles to parts.]]
+DecorateTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Decorate Tool  🛠</i></u></font>
+Allows you to add smoke, fire, sparkles, particle emitter and other effects to parts.
+
+]]
+
+local Override -- Roblox hates HighlightDepthMode, so yea...
+local Drag
 
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
@@ -54,10 +63,11 @@ function ClearConnections()
 end;
 
 function ShowUI()
+	UI = Tool:WaitForChild('UI')
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if DecorateTool.UI then
+	if DecorateTool.UI and DecorateTool.UI.Parent ~= nil then
 
 		-- Reveal the UI
 		DecorateTool.UI.Visible = true;
@@ -69,6 +79,10 @@ function ShowUI()
 		return;
 
 	end;
+	
+	if DecorateTool.UI then
+		DecorateTool.UI:Destroy()
+	end
 
 	-- Create the UI
 	DecorateTool.UI = Core.Tool.Interfaces.BTDecorateToolGUI:Clone();
@@ -79,6 +93,9 @@ function ShowUI()
 	EnableOptionsUI(DecorateTool.UI.Smoke);
 	EnableOptionsUI(DecorateTool.UI.Fire);
 	EnableOptionsUI(DecorateTool.UI.Sparkles);
+	EnableOptionsUI(DecorateTool.UI.Highlight);
+	EnableOptionsUI(DecorateTool.UI.SelectionBox);
+	EnableOptionsUI(DecorateTool.UI.ParticleEmitter);
 
 	-- Hook up manual triggering
 	local SignatureButton = DecorateTool.UI:WaitForChild('Title'):WaitForChild('Signature')
@@ -90,7 +107,7 @@ function ShowUI()
 end;
 
 -- List of creatable decoration types
-local DecorationTypes = { 'Smoke', 'Fire', 'Sparkles' };
+local DecorationTypes = { 'Smoke', 'Fire', 'Sparkles', 'Highlight', 'SelectionBox', 'ParticleEmitter' };
 
 function UpdateUI()
 	-- Updates information on the UI
@@ -103,7 +120,7 @@ function UpdateUI()
 	-- Go through each decoration type and update each options UI
 	for _, DecorationType in pairs(DecorationTypes) do
 
-		local Decorations = GetDecorations(DecorationType);
+		local Decorations = GetDecorations(DecorationType, false);
 		local DecorationSettingsUI = DecorateTool.UI[DecorationType];
 
 		-- Option input references
@@ -131,7 +148,7 @@ function UpdateUI()
 			RemoveButton.Visible = false;
 
 		-- If only some selected parts have decorations
-		elseif #Decorations < #Selection.Parts then
+		elseif (#Decorations < #Selection.Parts) or (#Decorations < #Selection.Items) then
 
 			-- Show both add and remove buttons
 			AddButton.Visible = true;
@@ -140,7 +157,7 @@ function UpdateUI()
 			RemoveButton.Position = UDim2.new(1, -AddButton.AbsoluteSize.X - 5 - RemoveButton.AbsoluteSize.X - 2, 0, 3);
 
 		-- If all selected parts have decorations
-		elseif #Decorations == #Selection.Parts then
+		elseif (#Decorations == #Selection.Parts) or (#Decorations == #Selection.Items) then
 
 			-- Show remove button
 			RemoveButton.Visible = true;
@@ -189,13 +206,113 @@ function UpdateUI()
 
 		-- Update sparkle inputs
 		elseif DecorationType == 'Sparkles' then
-
 			-- Get the inputs
 			local ColorIndicator = Options.ColorOption.Indicator;
 
 			-- Update the inputs
 			UpdateColorIndicator(ColorIndicator, Support.IdentifyCommonProperty(Decorations, 'SparkleColor'));
+						
+		elseif DecorationType == 'ParticleEmitter' then
 
+			-- Get the inputs
+			local ColorIndicator = Options.ColorOption.Indicator;
+			local DragSwitch = Options.DragOption.Check;
+			local CountInput = Options.CountOption.Input.TextBox;
+			local SizeInput = Options.SizeOption.Input.TextBox;
+			local SpeedInput = Options.SpeedOption.Input.TextBox;
+			local RotationInput = Options.RotateOption.Input.TextBox;
+			local OpacityInput = Options.OpacityOption.Input.TextBox;
+			local SpreadInput = Options.SpreadOption.Input.TextBox;
+			local LifetimeInput = Options.LifetimeOption.Input.TextBox;
+			local ParticleIDInput = Options.ParticleIDOption.TextBox;
+			local OrientationOption = Options.OrientationOption;
+			local WeightInput = Options.WeightOption.Input.TextBox;
+			local RSpeedInput = Options.RSpeedOption.Input.TextBox;
+			
+			Drag = Support.IdentifyCommonProperty(Decorations, 'LockedToPart')
+
+			-- Update the inputs
+			UpdateColorIndicator(ColorIndicator, Support.IdentifyCommonProperty(Decorations, 'Color'));
+			UpdateToggleInput(DragSwitch, Support.IdentifyCommonProperty(Decorations, 'LockedToPart'));
+			UpdateDataInputs({
+				[SpeedInput] = Support.IdentifyCommonProperty(Decorations, 'Speed') or '*';
+				[SizeInput] = Support.IdentifyCommonProperty(Decorations, 'Size') or '*';
+				[CountInput] = Support.IdentifyCommonProperty(Decorations, 'Rate') or '*';
+				[OpacityInput] = Support.IdentifyCommonProperty(Decorations, 'Transparency') or '*';
+				[RotationInput] = Support.IdentifyCommonProperty(Decorations, 'Rotation') or '*';
+				[SpreadInput] = Support.IdentifyCommonProperty(Decorations, 'SpreadAngle') or '*';
+				[LifetimeInput] = Support.IdentifyCommonProperty(Decorations, 'Lifetime') or '*';
+				[WeightInput] = Support.IdentifyCommonProperty(Decorations, 'Acceleration') or '*';
+				[RSpeedInput] = Support.IdentifyCommonProperty(Decorations, 'RotSpeed') or '*';
+				[ParticleIDInput] = Support.IdentifyCommonProperty(Decorations, 'Texture') and ParseAssetId(Support.IdentifyCommonProperty(Decorations, 'Texture')) or Support.IdentifyCommonProperty(Decorations, 'Texture') or '*';
+			}, 2);
+			UpdateEnumInput(OrientationOption, Support.IdentifyCommonProperty(Decorations, 'Orientation'), false, nil)
+			
+		--[[	local TranslatedNumeralProperty
+			if OrientationInput.Text == "1" then
+				TranslatedNumeralProperty = "Camera"
+			elseif OrientationInput.Text == "2" then
+				TranslatedNumeralProperty = "Mixed"
+			elseif OrientationInput.Text == "3" then
+				TranslatedNumeralProperty = "VPar"
+			elseif OrientationInput.Text == "4" then
+				TranslatedNumeralProperty = "VPer"
+			elseif OrientationInput.Text == "*" then
+				TranslatedNumeralProperty = "None"
+			end
+			local OrientationOptions = Options.OrientationOption:GetChildren()
+			for i = 1, #OrientationOptions do
+				if OrientationOptions[i].Name == TranslatedNumeralProperty then
+					OrientationOptions[i].SelectedIndicator.BackgroundTransparency = 0
+					OrientationOptions[i].Background.Image = "http://www.roblox.com/asset/?id=127774197"
+				else
+					if OrientationOptions[i]:FindFirstChild("SelectedIndicator") then
+						OrientationOptions[i].SelectedIndicator.BackgroundTransparency = 1
+						OrientationOptions[i].Background.Image = "http://www.roblox.com/asset/?id=127772502"
+					end
+				end
+			end]]
+		elseif DecorationType == 'SelectionBox' then
+			
+			local NewDecorations = GetDecorations(DecorationType, true);
+
+			-- Get the inputs
+			local SizeInput = Options.SizeOption.Input.TextBox;
+			local OpacityInput = Options.OpacityOption.Input.TextBox;
+			local SurfaceOpacityInput = Options.SOOption.Input.TextBox;
+			local OutlineColorIndicator = Options.OCOption.Indicator;
+			local SurfaceColorIndicator = Options.ICOption.Indicator;
+
+			-- Update the inputs
+			UpdateColorIndicator(OutlineColorIndicator, Support.IdentifyCommonProperty(NewDecorations, 'Color3'));
+			UpdateColorIndicator(SurfaceColorIndicator, Support.IdentifyCommonProperty(NewDecorations, 'SurfaceColor3'));
+			UpdateDataInputs {
+				[OpacityInput] = Support.Round(Support.IdentifyCommonProperty(NewDecorations, 'Transparency'), 3) or '*';
+				[SizeInput] = Support.Round(Support.IdentifyCommonProperty(NewDecorations, 'LineThickness'), 3) or '*';
+				[SurfaceOpacityInput] = Support.Round(Support.IdentifyCommonProperty(NewDecorations, 'SurfaceTransparency'), 3) or '*';
+			};
+			elseif DecorationType == 'Highlight' then
+				
+			local NewDecorations = GetDecorations(DecorationType, true);
+
+			-- Get the inputs
+			local OpacityInput = Options.OpacityOption.Input.TextBox;
+			local SurfaceOpacityInput = Options.SOOption.Input.TextBox;
+			local OutlineColorIndicator = Options.OCOption.Indicator;
+			local SurfaceColorIndicator = Options.ICOption.Indicator;
+			local OverrideInput = Options.OverrideOption.Check;
+			
+			Override = Support.IdentifyCommonProperty(NewDecorations, 'DepthMode')
+			
+			-- Update the inputs
+			UpdateColorIndicator(OutlineColorIndicator, Support.IdentifyCommonProperty(NewDecorations, 'OutlineColor'));
+			UpdateColorIndicator(SurfaceColorIndicator, Support.IdentifyCommonProperty(NewDecorations, 'FillColor'));
+			UpdateToggleInput(OverrideInput, Override)
+	--		UpdateEnumInput(OverrideInput, Support.IdentifyCommonProperty(Decorations, 'DepthMode'), true, true)
+			UpdateDataInputs {
+				[OpacityInput] = Support.IdentifyCommonProperty(NewDecorations, 'OutlineTransparency', 3) or '*';
+				[SurfaceOpacityInput] = Support.Round(Support.IdentifyCommonProperty(NewDecorations, 'FillTransparency'), 3) or '*';
+			}; 
 		end;
 
 	end;
@@ -218,15 +335,40 @@ function HideUI()
 
 end;
 
+function UpdateToggleInput(Toggle, Data)
+	-- Updates the data in the given buttons
+
+	-- Go through the inputs and data
+	if Data == true then
+		Toggle.Mark.Visible = true
+		Toggle.Multiple.Visible = false
+	elseif Data == false then
+		Toggle.Mark.Visible = false
+		Toggle.Multiple.Visible = false
+	else
+		Toggle.Mark.Visible = false
+		Toggle.Multiple.Visible = true
+	end
+
+end;
+
 function GetDecorations(DecorationType)
 	-- Returns all the decorations of the given type in the selection
 
 	local Decorations = {};
 
 	-- Get any decorations from any selected parts
-	for _, Part in pairs(Selection.Parts) do
-		table.insert(Decorations, Support.GetChildOfClass(Part, DecorationType));
+	for _, Part in pairs(DecorationType ~= "Highlight" and DecorationType ~= "SelectionBox" and Selection.Parts or Selection.Items) do
+		if not Part:IsA("Attachment") then
+			table.insert(Decorations, Support.GetChildOfClass(Part, DecorationType));
+		end
 	end;
+
+	if DecorationType ~= "Highlight" and DecorationType ~= "SelectionBox" then
+		for _, Attachment in pairs(Selection.Attachments) do
+				table.insert(Decorations, Support.GetChildOfClass(Attachment, DecorationType));
+		end;
+	end
 
 	-- Return the decorations
 	return Decorations;
@@ -234,11 +376,10 @@ function GetDecorations(DecorationType)
 end;
 
 function UpdateColorIndicator(Indicator, Color)
-	-- Updates the given color indicator
-
+	
 	-- If there is a single color, just display it
 	if Color then
-		Indicator.BackgroundColor3 = Color;
+		Indicator.BackgroundColor3 = SimplifyValue(Color);
 		Indicator.Varies.Text = '';
 
 	-- If the colors vary, display a * on a gray background
@@ -249,7 +390,49 @@ function UpdateColorIndicator(Indicator, Color)
 
 end;
 
-function UpdateDataInputs(Data)
+function UpdateEnumInput(Input, Value, IsBoolean, PositiveValue)
+
+	if IsBoolean == false then
+		for _, Button in Input:GetChildren() do
+			if not Button:FindFirstChild("SelectedIndicator") then continue end
+			
+			if typeof(Value) == "EnumItem" and Value.Name == Button.Name then
+				Button.SelectedIndicator.BackgroundTransparency = 0
+				Button.Background.Image = "http://www.roblox.com/asset/?id=127774197"
+			else
+				Button.SelectedIndicator.BackgroundTransparency = 1
+				Button.Background.Image = "http://www.roblox.com/asset/?id=127772502"
+			end
+		end
+	elseif PositiveValue then	-- No need to check if IsBoolean is true since we checked it before.
+		UpdateToggleInput(Input, Value == PositiveValue and true or false)
+	end
+
+end;
+
+
+function SimplifyValue(Value)
+	-- Updates the given color indicator
+
+	if typeof(Value) == "ColorSequence"then
+		return Value.Keypoints[2].Value
+	elseif typeof(Value) == "NumberRange" then
+		return Value.Max == Value.Min and Value.Max or Value.Max .. "," .. Value.Min
+	elseif typeof(Value) == "NumberSequence" then
+		return Value.Keypoints[1].Value == Value.Keypoints[2].Value and Value.Keypoints[2].Value or Value.Keypoints[1].Value .. "," .. Value.Keypoints[2].Value
+	elseif typeof(Value) == "Vector2" then
+		return Value.X
+	elseif typeof(Value) == "Vector3" then
+		return Value.Y * -1
+	else
+		return Value
+	end
+
+end;
+
+
+
+function UpdateDataInputs(Data, Round)
 	-- Updates the data in the given TextBoxes when the user isn't typing in them
 
 	-- Go through the inputs and data
@@ -257,9 +440,15 @@ function UpdateDataInputs(Data)
 
 		-- Make sure the user isn't typing into the input
 		if not Input:IsFocused() then
+			
+			local UsedValue = SimplifyValue(UpdatedValue)
+			
+			if type(UsedValue) == "number" then
+				UsedValue = Support.Round(UsedValue, Round or 3)
+			end
 
 			-- Set the input's value
-			Input.Text = tostring(UpdatedValue);
+			Input.Text = tostring(UsedValue);
 
 		end;
 
@@ -319,10 +508,16 @@ function RegisterChange()
 end;
 
 function EnableOptionsUI(SettingsUI)
+	
+	local UIFolder = Tool:WaitForChild('UI')
+	
+	local Dropdown = require(UIFolder:WaitForChild('Dropdown'))
+	
 	-- Sets up the UI for the given decoration type settings UI
 
 	-- Get the type of decoration this options UI is for
 	local DecorationType = SettingsUI.Name;
+	local Decorations = GetDecorations(DecorationType, false);
 
 	-- Option input references
 	local Options = SettingsUI.Options;
@@ -331,6 +526,8 @@ function EnableOptionsUI(SettingsUI)
 	local AddButton = SettingsUI.AddButton;
 	local RemoveButton = SettingsUI.RemoveButton;
 	local ShowButton = SettingsUI.ArrowButton;
+	
+	local IncludeModels = false
 
 	-- Enable options for smoke decorations
 	if DecorationType == 'Smoke' then
@@ -349,22 +546,108 @@ function EnableOptionsUI(SettingsUI)
 	-- Enable options for sparkle decorations
 	elseif DecorationType == 'Sparkles' then
 		SyncInputToProperty('SparkleColor', DecorationType, 'Color', Options.ColorOption.HSVPicker);
+		
+	elseif DecorationType == 'ParticleEmitter' then
+		SyncInputToProperty('Color', DecorationType, 'Color', Options.ColorOption.HSVPicker);
+		SyncInputToProperty('Size', DecorationType, 'Number', Options.SizeOption.Input.TextBox);
+		SyncInputToProperty('Rate', DecorationType, 'Number', Options.CountOption.Input.TextBox);
+		SyncInputToProperty('Speed', DecorationType, 'Number', Options.SpeedOption.Input.TextBox);
+		SyncInputToProperty('Transparency', DecorationType, 'Number', Options.OpacityOption.Input.TextBox);
+		SyncInputToProperty('SpreadAngle', DecorationType, 'Number', Options.SpreadOption.Input.TextBox);
+		SyncInputToProperty('Rotation', DecorationType, 'Number', Options.RotateOption.Input.TextBox);
+		SyncInputToProperty('Lifetime', DecorationType, 'Number', Options.LifetimeOption.Input.TextBox);
+		SyncInputToProperty('Texture', DecorationType, 'Number', Options.ParticleIDOption.TextBox);
+--		SyncInputToProperty('Orientation', DecorationType, 'Number', Options.OrientationOption.TextBox);
+		SyncInputToProperty('Acceleration', DecorationType, 'Number', Options.WeightOption.Input.TextBox);
+		SyncInputToProperty('RotSpeed', DecorationType, 'Number', Options.RSpeedOption.Input.TextBox);
+		
+		for _, Button in Options.OrientationOption:GetChildren() do
+			if Button:FindFirstChild("Button") then
+				Button.Button.Activated:Connect(function()
+					SoundService:PlayLocalSound(Sounds:WaitForChild("Press"))
+					SetProperty("ParticleEmitter", "Orientation", Enum.ParticleOrientation[Button.Name]);
+				end)
+			end
+		end
+		
+		Options.DragOption.Check.Activated:Connect(function ()
+			SoundService:PlayLocalSound(Sounds:WaitForChild("Press"))
+			if Drag == false then
+				SetProperty("ParticleEmitter", "LockedToPart", true);
+			else
+				SetProperty("ParticleEmitter", "LockedToPart", false);	
+			end
+		end);
+		
+		-- Switches between camera options. I agree, my method is a little bit "potato", but at least it makes less unused functions.
+--[[		Options.OrientationOption.Camera.Button.MouseButton1Click:Connect(function ()
+			SetProperty(DecorationType, "Orientation", Enum.ParticleOrientation.FacingCamera)
+		end);
 
+		Options.OrientationOption.Mixed.Button.MouseButton1Click:Connect(function ()
+			SetProperty(DecorationType, "Orientation", Enum.ParticleOrientation.FacingCameraWorldUp)
+		end);
+
+		Options.OrientationOption.VPar.Button.MouseButton1Click:Connect(function ()
+			SetProperty(DecorationType, "Orientation", Enum.ParticleOrientation.VelocityParallel)
+		end);
+
+		Options.OrientationOption.VPer.Button.MouseButton1Click:Connect(function ()
+			SetProperty(DecorationType, "Orientation", Enum.ParticleOrientation.VelocityPerpendicular)
+		end);]]
+		
+		Options.ParticleIDOption.TextBox.FocusLost:Connect(function ()
+			SetProperty(DecorationType, "Texture", tonumber(ParseAssetId(Options.ParticleIDOption.TextBox.Text)) or Options.ParticleIDOption.TextBox.Text)
+		end)
+		
+	elseif DecorationType == 'SelectionBox' then
+		SyncInputToProperty('Color3', DecorationType, 'Color', Options.OCOption.HSVPicker);
+		SyncInputToProperty('SurfaceColor3', DecorationType, 'Color', Options.ICOption.HSVPicker);
+		SyncInputToProperty('Transparency', DecorationType, 'Number', Options.OpacityOption.Input.TextBox);
+		SyncInputToProperty('SurfaceTransparency', DecorationType, 'Number', Options.SOOption.Input.TextBox);
+		SyncInputToProperty('LineThickness', DecorationType, 'Number', Options.SizeOption.Input.TextBox);
+	elseif DecorationType == 'Highlight' then
+		IncludeModels = true
+		
+		SyncInputToProperty('OutlineColor', DecorationType, 'Color', Options.OCOption.HSVPicker);
+		SyncInputToProperty('FillColor', DecorationType, 'Color', Options.ICOption.HSVPicker);
+		SyncInputToProperty('OutlineTransparency', DecorationType, 'Number', Options.OpacityOption.Input.TextBox);
+		SyncInputToProperty('FillTransparency', DecorationType, 'Number', Options.SOOption.Input.TextBox);
+		
+		Options.OverrideOption.Check.Activated:Connect(function ()
+			SoundService:PlayLocalSound(Sounds:WaitForChild("Press"))
+			if Override == false then
+				SetProperty("Highlight", "DepthMode", Enum.HighlightDepthMode.AlwaysOnTop);
+			else
+				SetProperty("Highlight", "DepthMode", Enum.HighlightDepthMode.Occluded);	
+			end
+		end);
 	end;
 
 	-- Enable decoration addition button
 	AddButton.MouseButton1Click:Connect(function ()
-		AddDecorations(DecorationType);
+		AddDecorations(DecorationType, IncludeModels);
+		SoundService:PlayLocalSound(Sounds:WaitForChild("Add"))
+	end);
+	
+	AddButton.MouseEnter:Connect(function ()
+		SoundService:PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Enable decoration removal button
 	RemoveButton.MouseButton1Click:Connect(function ()
 		RemoveDecorations(DecorationType);
+		SoundService:PlayLocalSound(Sounds:WaitForChild("Remove"))
+	end);
+	
+	RemoveButton.MouseEnter:Connect(function ()
+		SoundService:PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Enable decoration options UI show button
 	ShowButton.MouseButton1Click:Connect(function ()
 		OpenOptions(DecorationType);
+		SoundService:PlayLocalSound(Sounds:WaitForChild("Press"))
 	end);
 
 end;
@@ -381,7 +664,6 @@ function OpenOptions(DecorationType)
 
 	-- Calculate how much to expand this options UI by
 	local HeightExpansion = UDim2.new(0, 0, 0, UITemplate.Options.Size.Y.Offset);
-
 	-- Start the options UI size from 0
 	UI.Options.Size = UDim2.new(UI.Options.Size.X.Scale, UI.Options.Size.X.Offset, UI.Options.Size.Y.Scale, 0);
 
@@ -390,24 +672,36 @@ function OpenOptions(DecorationType)
 
 	-- Perform the options UI resize animation
 	UI.Options:TweenSize(
-		UITemplate.Options.Size + HeightExpansion,
+		UI.Options.Size + HeightExpansion,
 		Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true,
 		function ()
 
 			-- Allow visibility of overflowing UIs within the options UI
-			UI.Options.ClipsDescendants = false;
+			if UI.Options:IsA("ScrollingFrame") then
+			UI.Options.ClipsDescendants = true;
+			else
+				UI.Options.ClipsDescendants = false;	
+			end
 
 		end
 	);
 
 	-- Expand the main UI to accommodate the expanded options UI
+--	if UI.Options:IsA("Frame") then
 	DecorateTool.UI:TweenSize(
 		Core.Tool.Interfaces.BTDecorateToolGUI.Size + HeightExpansion,
 		Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true
 	);
+--	else
+--		DecorateTool.UI:TweenSize(
+--			Core.Tool.Interfaces.BTDecorateToolGUI.Size + HeightExpansion + HeightExpansion,
+--			Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true
+--		);
+--	end
 
 	-- Push any UIs below this one downwards
 	local DecorationTypeIndex = Support.FindTableOccurrence(DecorationTypes, DecorationType);
+	-- Calculate how much to expand this options UI by
 	for DecorationTypeIndex = DecorationTypeIndex + 1, #DecorationTypes do
 
 		-- Get the UI
@@ -415,6 +709,7 @@ function OpenOptions(DecorationType)
 		local UI = DecorateTool.UI[DecorationType];
 
 		-- Perform the position animation
+--		if UI.Options:IsA("Frame") then
 		UI:TweenPosition(
 			UDim2.new(
 				UI.Position.X.Scale,
@@ -424,6 +719,17 @@ function OpenOptions(DecorationType)
 			),
 			Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true
 		);
+--		else
+--			UI:TweenPosition(
+--				UDim2.new(
+--					UI.Position.X.Scale,
+--					UI.Position.X.Offset,
+--					UI.Position.Y.Scale,
+--					30 + 30 * (DecorationTypeIndex - 1) + (HeightExpansion.Y.Offset * 2)
+--				),
+--				Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true
+--			);
+--		end
 
 	end;
 
@@ -490,7 +796,8 @@ end;
 
 function SyncInputToProperty(Property, DecorationType, InputType, Input)
 	-- Enables `Input` to change the given property
-
+	local ColorPicker = require(UI:WaitForChild('ColorPicker'))
+	
 	-- Enable inputs
 	if InputType == 'Color' then
 		local ColorPickerHandle = nil
@@ -517,9 +824,17 @@ function SyncInputToProperty(Property, DecorationType, InputType, Input)
 	-- Enable number inputs
 	elseif InputType == 'Number' then
 		Input.FocusLost:Connect(function ()
-			SetProperty(DecorationType, Property, tonumber(Input.Text));
+			
+			SetProperty(DecorationType, Property, Input.Text);
 		end);
-
+	 --[[ elseif InputType == 'NumberRange' then
+		Input.FocusLost:Connect(function ()
+			SetProperty(DecorationType, Property, NumberRange.new(tonumber(Input.Text), tonumber(Input.Text)));
+		end);
+	elseif InputType == 'NumberSequence' then
+		Input.FocusLost:Connect(function ()
+			SetProperty(DecorationType, Property, NumberSequence.new(tonumber(Input.Text), tonumber(Input.Text)));
+		end);]]
 	end;
 
 end;
@@ -527,10 +842,20 @@ end;
 local PreviewInitialState = nil
 
 function SetPreviewColor(DecorationType, Property, Color)
+	
+	local TheColor
 	-- Previews the given color on the selection
-
+	if DecorationType == "ParticleEmitter" and Color ~= nil then
+		TheColor = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color),
+			ColorSequenceKeypoint.new(1, Color),
+			}
+	else
+	TheColor = Color
+	end
+	
 	-- Reset colors to initial state if previewing is over
-	if not Color and PreviewInitialState then
+	if not TheColor and PreviewInitialState then
 		for Decoration, State in pairs(PreviewInitialState) do
 			Decoration[Property] = State[Property]
 		end
@@ -542,7 +867,7 @@ function SetPreviewColor(DecorationType, Property, Color)
 		return
 
 	-- Ensure valid color is given
-	elseif not Color then
+	elseif not TheColor then
 		return
 
 	-- Save initial state if first time previewing
@@ -555,16 +880,51 @@ function SetPreviewColor(DecorationType, Property, Color)
 
 	-- Apply preview color
 	for Decoration in pairs(PreviewInitialState) do
-		Decoration[Property] = Color
+		Decoration[Property] = TheColor
 	end
 end
+
+function ParseAssetId(Input)
+	-- Returns the intended asset ID for the given input
+
+	-- Get the ID number from the input
+	local Id = tonumber(Input)
+		or tonumber(Input:lower():match('%?id=([0-9]+)'))
+		or tonumber(Input:match('/([0-9]+)/'))
+		or tonumber(Input:lower():match('rbxassetid://([0-9]+)'))
+
+	-- Return the ID
+	return Id;
+end;
 
 function SetProperty(DecorationType, Property, Value)
 
 	-- Make sure the given value is valid
-	if not Value then
+	if not Value and Value ~= false then
 		return;
 	end;
+	
+	if Property == "Texture" then
+		local Changes
+		if tonumber(Value) == nil then
+			Changes = {
+				Texture = Value;
+			};
+		else
+			Changes = {
+				Texture = 'rbxassetid://' .. Value;
+			};
+		end
+
+	-- Attempt an image extraction on the given asset
+	 Core.Try(Core.SyncAPI.Invoke, Core.SyncAPI, 'ExtractImageFromDecal', Value)
+	 	:Then(function (ExtractedImage)
+			Changes.Texture = 'rbxassetid://' .. ExtractedImage;
+		end);
+	
+	Value = Changes.Texture
+	end
+	
 
 	-- Start a history record
 	TrackChange();
@@ -591,10 +951,10 @@ function AddDecorations(DecorationType)
 	local Changes = {};
 
 	-- Go through the selection
-	for _, Part in pairs(Selection.Parts) do
+	for _, Part in pairs(DecorationType ~= "Highlight" and DecorationType ~= "SelectionBox" and Selection.Parts or Selection.Items) do
 
 		-- Make sure this part doesn't already have a decoration
-		if not Support.GetChildOfClass(Part, DecorationType) then
+		if not Support.GetChildOfClass(Part, DecorationType) and not Part:IsA("Attachment") then
 
 			-- Queue a decoration to be created for this part
 			table.insert(Changes, { Part = Part, DecorationType = DecorationType });
@@ -602,6 +962,20 @@ function AddDecorations(DecorationType)
 		end;
 
 	end;
+	
+	if DecorationType ~= "Highlight" and DecorationType ~= "SelectionBox" then
+		for _, Attachment in pairs(Selection.Attachments) do
+	
+			-- Make sure this part doesn't already have a decoration
+			if not Support.GetChildOfClass(Attachment, DecorationType) then
+
+				-- Queue a decoration to be created for this part
+				table.insert(Changes, { Part = Attachment, DecorationType = DecorationType });
+	
+			end;
+
+		end;
+	end
 
 	-- Send the change request to the server
 	local Decorations = Core.SyncAPI:Invoke('CreateDecorations', Changes);

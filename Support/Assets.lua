@@ -1,7 +1,7 @@
 Assets = {
 	DarkSlantedRectangle	= 'rbxassetid://127774197';
 	LightSlantedRectangle	= 'rbxassetid://127772502';
-	ExpandArrow				= 'rbxassetid://134367382';
+	ExpandArrow				= 'rbxassetid://304689394';
 	UndoActiveDecal			= 'rbxassetid://141741408';
 	UndoInactiveDecal		= 'rbxassetid://142074557';
 	RedoActiveDecal			= 'rbxassetid://141741327';
@@ -12,7 +12,7 @@ Assets = {
 	ExportInactiveDecal		= 'rbxassetid://142074569';
 	CloneActiveDecal		= 'rbxassetid://142073926';
 	CloneInactiveDecal		= 'rbxassetid://142074563';
-	PluginIcon				= 'rbxassetid://142287521';
+	PluginIcon				= 'rbxassetid://2326685066';
 	GroupLockIcon			= 'rbxassetid://175396862';
 	GroupUnlockIcon			= 'rbxassetid://160408836';
 	GroupUpdateOKIcon		= 'rbxassetid://164421681';
@@ -35,6 +35,17 @@ Assets = {
 	TextureIcon				= 'rbxassetid://141805275';
 	WeldIcon				= 'rbxassetid://141741418';
 	ExplorerDockIcon		= 'rbxassetid://2326621485';
+	MarketplaceIcon			= 'rbxassetid://10893267086';
+	TextIcon				= 'rbxassetid://8216875770';
+	TransformationIcon		= 'rbxassetid://12120687742';
+	AttachmentIcon 			= 'rbxassetid://267733385';
+	ImportIcon 				= 'rbxassetid://9321840818';
+	PersonIcon				= 'rbxassetid://9211611888';
+	MagnifyingGlassIcon		= 'rbxassetid://9322179287';
+	GapfillIcon				= 'rbxassetid://9322178226';
+	AccessoryIcon			= 'rbxassetid://9882757239';
+	MultiselectIcon			= 'rbxassetid://16124331566';
+	ThemeIcon               = 'rbxassetid://17109876169';
 };
 
 return Assets;

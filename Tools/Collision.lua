@@ -1,5 +1,6 @@
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
 
 -- Libraries
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
@@ -16,7 +17,7 @@ local CollisionTool = {
 	Color = BrickColor.new 'Really black';
 }
 
-CollisionTool.ManualText = [[<font face="GothamBlack" size="16">Collision Tool  🛠</font>
+CollisionTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Collision Tool  🛠</i></u></font>
 Lets you change whether parts collide with one another.<font size="6"><br /></font>
 
 <b>TIP:</b> Press <b>Enter</b> to toggle collision quickly.]]
@@ -61,7 +62,7 @@ function ShowUI()
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if UI then
+	if UI and UI.Parent ~= nil then
 
 		-- Reveal the UI
 		UI.Visible = true;
@@ -73,7 +74,11 @@ function ShowUI()
 		return;
 
 	end;
-
+	
+	if UI then
+		UI:Destroy()
+	end
+	
 	-- Create the UI
 	UI = Core.Tool.Interfaces.BTCollisionToolGUI:Clone();
 	UI.Parent = Core.UI;
@@ -87,8 +92,14 @@ function ShowUI()
 	OnButton.MouseButton1Click:Connect(function ()
 		SetProperty('CanCollide', true);
 	end);
+	OnButton.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
+	end);
 	OffButton.MouseButton1Click:Connect(function ()
 		SetProperty('CanCollide', false);
+	end);
+	OffButton.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Hook up manual triggering
@@ -145,7 +156,7 @@ end;
 function SetProperty(Property, Value)
 
 	-- Make sure the given value is valid
-	if Value == nil then
+	if Value == nil or #Selection.Parts <= 0  then
 		return;
 	end;
 

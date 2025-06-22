@@ -4,6 +4,8 @@ local Vendor = Tool:WaitForChild('Vendor')
 local UI = Tool:WaitForChild('UI')
 local Libraries = Tool:WaitForChild('Libraries')
 
+local Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
+
 -- Services
 local CollectionService = game:GetService('CollectionService')
 local ContextActionService = game:GetService 'ContextActionService'
@@ -11,7 +13,6 @@ local ContextActionService = game:GetService 'ContextActionService'
 -- Libraries
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
 local Roact = require(Vendor:WaitForChild('Roact'))
-local Dropdown = require(UI:WaitForChild('Dropdown'))
 local Signal = require(Libraries:WaitForChild('Signal'))
 
 -- Import relevant references
@@ -32,7 +33,7 @@ local NewPartTool = {
 	OnTypeChanged = Signal.new();
 }
 
-NewPartTool.ManualText = [[<font face="GothamBlack" size="16">New Part Tool  🛠</font>
+NewPartTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>New Part Tool  🛠</i></u></font>
 Lets you create new parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click and drag where you want your part to be.]]
@@ -78,10 +79,14 @@ function ClearConnections()
 end;
 
 function NewPartTool:ShowUI()
+	UI = Tool:WaitForChild('UI')
+	
+	local Dropdown = require(UI:WaitForChild('Dropdown'))
+	
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if self.UI then
+	if self.UI and self.UI.Parent ~= nil then
 
 		-- Reveal the UI
 		self.UI.Visible = true;
@@ -90,6 +95,10 @@ function NewPartTool:ShowUI()
 		return;
 
 	end;
+	
+	if self.UI then
+		self.UI:Destroy()
+	end
 
 	-- Create the UI
 	self.UI = Core.Tool.Interfaces.BTNewPartToolGUI:Clone()
@@ -107,7 +116,19 @@ function NewPartTool:ShowUI()
 		'Seat';
 		'Vehicle Seat';
 		'Spawn';
+		'Tool';
 	}
+	
+	for _, Type in Options.InstanceBlacklist do
+		local Index = table.find(Types, Type)
+		if Index then
+			table.remove(Types, Index)
+		end
+	end
+	
+	for Type, _ in Options.CustomPartTypes do
+		table.insert(Types, Type)
+	end
 
 	-- Create type dropdown
 	local function BuildTypeDropdown()

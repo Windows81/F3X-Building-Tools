@@ -662,7 +662,7 @@ function SupportLibrary.ChainCall(...)
 		-- Get arguments
 		local Arguments = { ... };
 
-		-- Go through each function and store the returned data to reuse in the next function's arguments 
+		-- Go through each function and store the returned data to reuse in the next function's arguments
 		for _, Function in ipairs(Chain) do
 			Arguments = { Function(unpack(Arguments)) };
 		end;
@@ -848,7 +848,7 @@ function SupportLibrary.ToObjectSpace(objectCFrame: CFrame, cframe: CFrame): CFr
 	-- local identity = CFrame.identity -- {PATCH} CFrame.identity didn't exist in 2021E.
 	local identity = IDENTITY_CFRAME
 	local offset = objectCFrame:ToObjectSpace(cframe)
-	
+
 	local Position
 	if SupportLibrary.FuzzyEq(offset.Position, identity.Position) then
 		Position = identity.Position
@@ -876,14 +876,14 @@ function SupportLibrary.ToObjectSpace(objectCFrame: CFrame, cframe: CFrame): CFr
 	else
 		ZVector = offset.ZVector
 	end
-	
+
 	return CFrame.new(
 		Position.X, Position.Y, Position.Z,
 		XVector.X, XVector.Y, XVector.Z,
 		YVector.X, YVector.Y, YVector.Z,
 		ZVector.X, ZVector.Y, ZVector.Z
 	)
-	
+
 	--[[  {PATCH} This weird syntax didn't exist in 2021E.
 	local identity = CFrame.identity
 	local offset = objectCFrame:ToObjectSpace(cframe)
