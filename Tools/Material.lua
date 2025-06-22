@@ -149,16 +149,6 @@ function MaterialTool:ShowUI()
 		})
 	end
 
-	-- Enable the cast shadows switch
-	self.UI.CastShadowOption.Check.Activated:Connect(function()
-		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
-		if Support.IdentifyCommonProperty(Selection.Parts, "CastShadow") == false then
-			SetProperty("CastShadow", true)
-		else
-			SetProperty("CastShadow", false)
-		end
-	end)
-
 	-- Mount surface dropdown
 	local MaterialDropdownHandle = Roact.mount(BuildMaterialDropdown(), self.UI.MaterialOption, "Dropdown")
 	self.OnMaterialChanged:Connect(function()
@@ -276,12 +266,12 @@ end
 -- List of UI layouts
 local Layouts = {
 	EmptySelection = { "SelectNote" },
-	Normal = { "MaterialOption", "TransparencyOption", "ReflectanceOption", "CastShadowOption" },
+	Normal = { "MaterialOption", "TransparencyOption", "ReflectanceOption" },
 }
 
 -- List of UI elements
 local UIElements =
-	{ "SelectNote", "MaterialOption", "TransparencyOption", "ReflectanceOption", "CastShadowOption" }
+	{ "SelectNote", "MaterialOption", "TransparencyOption", "ReflectanceOption" }
 
 -- Current UI layout
 local CurrentLayout
@@ -352,12 +342,6 @@ function MaterialTool:UpdateUI()
 
 	-- Get the common properties
 	local Material = Support.IdentifyCommonProperty(Selection.Parts, "Material")
-	local MaterialVariant = Support.IdentifyCommonProperty(Selection.Parts, "MaterialVariant")
-
-	if MaterialVariant ~= "" then
-		Material = MaterialVariant
-	end
-
 	local Transparency = Support.IdentifyCommonProperty(Selection.Parts, "Transparency")
 	local Reflectance = Support.IdentifyCommonProperty(Selection.Parts, "Reflectance")
 	local Massless = Support.IdentifyCommonProperty(Selection.Parts, "Massless")
@@ -374,7 +358,6 @@ function MaterialTool:UpdateUI()
 		[TransparencyInput] = Transparency and Support.Round(Transparency, 2) or "*",
 		[ReflectanceInput] = Reflectance and Support.Round(Reflectance, 2) or "*",
 	})
-	UpdateToggleInput(self.UI.CastShadowOption.Check, CastShadow)
 end
 
 function UpdateToggleInput(Toggle, Data)

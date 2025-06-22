@@ -116,7 +116,6 @@ function NewPartTool:ShowUI()
 		'Seat';
 		'Vehicle Seat';
 		'Spawn';
-		'Tool';
 	}
 
 	for _, Type in pairs(Options.InstanceBlacklist) do

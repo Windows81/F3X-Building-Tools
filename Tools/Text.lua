@@ -39,8 +39,6 @@ Allows the player to create text on a part.
 
 &lt;b&gt;Hi!&lt;/b&gt;
 
-<font size="40">=</font>
-
 <b>Hi!</b>
 
 Here are some basic mark-ups:
@@ -63,7 +61,7 @@ Here are some basic mark-ups:
 
 YOUR TEXT HERE&lt;br /&gt;ANOTHER PART OF TEXT | Line break
 
-Remember mark-ups can be stacked! e. g. : &lt;b&gt;&lt;i&gt;&lt;u&gt;Hi!&lt;/b&gt;&lt;/i&gt;&lt;/u&gt;
+Remember mark-ups can be stacked! e.g. : &lt;b&gt;&lt;i&gt;&lt;u&gt;Hi!&lt;/b&gt;&lt;/i&gt;&lt;/u&gt;
 
 ]]
 
