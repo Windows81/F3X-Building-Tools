@@ -70,7 +70,7 @@ function SupportLibrary.Round(Number, Places)
 
 	-- Ensure that `Number` is a number
 	if type(Number) ~= 'number' then
-		return;
+			return;
 	end;
 
 	-- Round the number
@@ -378,7 +378,7 @@ function SupportLibrary.IdentifyCommonItem(Items)
 		-- Set the initial item to compare against
 		if ItemIndex == 1 then
 			CommonItem = Item;
-
+			
 		-- Check if this item is the same as the rest
 		else
 			-- If it isn't the same, there is no common item, so just stop right here
@@ -395,17 +395,32 @@ end;
 
 function SupportLibrary.IdentifyCommonProperty(Items, Property)
 	-- Returns the common `Property` value in the instances given in `Items`
-
+	
 	local PropertyVariations = {};
-
+	
 	-- Capture all the variations of the property value
+	-- @Vikko151: if some values are strange, don't worry. That means that they can bug when normally used, hence why I use some yet strange method for those.
+	
 	for _, Item in pairs(Items) do
-		table.insert(PropertyVariations, Item[Property]);
+		if Item:IsA("TextLabel") and Property == "Text" and Item:FindFirstChild("ActualText") then
+			table.insert(PropertyVariations, Item:FindFirstChild("ActualText").Value);
+		elseif Item:IsA("ParticleEmitter") and Property == "LockedToPart" then
+			table.insert(PropertyVariations, Item.LockedToPart);
+		elseif Item:IsA("Highlight") and Property == "DepthMode" then -- There are technical issues with DepthMode.
+			local Value
+			if Item.DepthMode == Enum.HighlightDepthMode.AlwaysOnTop then
+				Value = true
+			else
+				Value = false
+			end
+			table.insert(PropertyVariations, Value);	
+		else
+			table.insert(PropertyVariations, Item[Property]);
+		end
 	end;
-
+	
 	-- Return the common property value
 	return SupportLibrary.IdentifyCommonItem(PropertyVariations);
-
 end;
 
 function SupportLibrary.GetPartCorners(Part)
@@ -441,22 +456,22 @@ function SupportLibrary.ImportServices()
 	local CallingEnvironment = getfenv(2);
 
 	-- Add the services
-	CallingEnvironment.Workspace = Game:GetService 'Workspace';
-	CallingEnvironment.Players = Game:GetService 'Players';
-	CallingEnvironment.MarketplaceService = Game:GetService 'MarketplaceService';
-	CallingEnvironment.ContentProvider = Game:GetService 'ContentProvider';
-	CallingEnvironment.SoundService = Game:GetService 'SoundService';
-	CallingEnvironment.UserInputService = Game:GetService 'UserInputService';
-	CallingEnvironment.SelectionService = Game:GetService 'Selection';
-	CallingEnvironment.CoreGui = Game:GetService 'CoreGui';
-	CallingEnvironment.HttpService = Game:GetService 'HttpService';
-	CallingEnvironment.ChangeHistoryService = Game:GetService 'ChangeHistoryService';
-	CallingEnvironment.ReplicatedStorage = Game:GetService 'ReplicatedStorage';
-	CallingEnvironment.GroupService = Game:GetService 'GroupService';
-	CallingEnvironment.ServerScriptService = Game:GetService 'ServerScriptService';
-	CallingEnvironment.ServerStorage = Game:GetService 'ServerStorage';
-	CallingEnvironment.StarterGui = Game:GetService 'StarterGui';
-	CallingEnvironment.RunService = Game:GetService 'RunService';
+	CallingEnvironment.Workspace = game:GetService 'Workspace';
+	CallingEnvironment.Players = game:GetService 'Players';
+	CallingEnvironment.MarketplaceService = game:GetService 'MarketplaceService';
+	CallingEnvironment.ContentProvider = game:GetService 'ContentProvider';
+	CallingEnvironment.SoundService = game:GetService 'SoundService';
+	CallingEnvironment.UserInputService = game:GetService 'UserInputService';
+	CallingEnvironment.SelectionService = game:GetService 'Selection';
+	CallingEnvironment.CoreGui = game:GetService 'CoreGui';
+	CallingEnvironment.HttpService = game:GetService 'HttpService';
+	CallingEnvironment.ChangeHistoryService = game:GetService 'ChangeHistoryService';
+	CallingEnvironment.ReplicatedStorage = game:GetService 'ReplicatedStorage';
+	CallingEnvironment.GroupService = game:GetService 'GroupService';
+	CallingEnvironment.ServerScriptService = game:GetService 'ServerScriptService';
+	CallingEnvironment.ServerStorage = game:GetService 'ServerStorage';
+	CallingEnvironment.StarterGui = game:GetService 'StarterGui';
+	CallingEnvironment.RunService = game:GetService 'RunService';
 end;
 
 function SupportLibrary.GetListMembers(List, MemberName)
@@ -501,7 +516,7 @@ function SupportLibrary.AddUserInputListener(InputState, InputTypeFilter, CatchA
 	end
 
 	-- Create a UserInputService listener based on the given `InputState`
-	return Game:GetService('UserInputService')['Input' .. InputState]:Connect(function (Input, GameProcessedEvent)
+	return game:GetService('UserInputService')['Input' .. InputState]:Connect(function (Input, GameProcessedEvent)
 
 		-- Make sure this input was not captured by the client (unless `CatchAll` is enabled)
 		if GameProcessedEvent and not CatchAll then
@@ -514,7 +529,7 @@ function SupportLibrary.AddUserInputListener(InputState, InputTypeFilter, CatchA
 		end;
 
 		-- Make sure any key input did not occur while typing into a UI
-		if InputType == Enum.UserInputType.Keyboard and Game:GetService('UserInputService'):GetFocusedTextBox() then
+		if InputType == Enum.UserInputType.Keyboard and game:GetService('UserInputService'):GetFocusedTextBox() then
 			return;
 		end;
 
@@ -562,7 +577,7 @@ function SupportLibrary.AreKeysPressed(...)
 	local RequestedKeysPressed = 0;
 
 	-- Get currently pressed keys
-	local PressedKeys = SupportLibrary.GetListMembers(Game:GetService('UserInputService'):GetKeysPressed(), 'KeyCode');
+	local PressedKeys = SupportLibrary.GetListMembers(game:GetService('UserInputService'):GetKeysPressed(), 'KeyCode');
 
 	-- Go through each requested key
 	for _, Key in pairs({ ... }) do
@@ -742,7 +757,7 @@ function SupportLibrary.ScheduleRecurringTask(TaskFunction, Interval)
 	coroutine.wrap(function (Task)
 
 		-- Repeat the task
-		while wait(Task.Interval) and Task.Running do
+		while task.wait(Task.Interval) and Task.Running do
 			Task.TaskFunction();
 		end;
 

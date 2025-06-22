@@ -1,5 +1,6 @@
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
 local Vendor = Tool:WaitForChild('Vendor')
 local UI = Tool:WaitForChild('UI')
 local Libraries = Tool:WaitForChild('Libraries')
@@ -8,7 +9,6 @@ local Libraries = Tool:WaitForChild('Libraries')
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
 local Roact = require(Vendor:WaitForChild('Roact'))
 local ColorPicker = require(UI:WaitForChild('ColorPicker'))
-local Dropdown = require(UI:WaitForChild('Dropdown'))
 local Signal = require(Libraries:WaitForChild('Signal'))
 
 -- Import relevant references
@@ -29,7 +29,7 @@ local MeshTool = {
 	OnTypeChanged = Signal.new();
 }
 
-MeshTool.ManualText = [[<font face="GothamBlack" size="16">Mesh Tool  🛠</font>
+MeshTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Mesh Tool  🛠</i></u></font>
 Lets you add meshes to parts.<font size="6"><br /></font>
 
 <b>TIP:</b> You can paste the link to anything with a mesh (e.g. a hat, gear, etc) and it will automatically find the right mesh and texture IDs.<font size="6"><br /></font>
@@ -67,6 +67,10 @@ function ClearConnections()
 end;
 
 function ShowUI()
+	
+	UI = Tool:WaitForChild('UI')
+	local Dropdown = require(UI:WaitForChild('Dropdown'))
+	
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
@@ -196,10 +200,18 @@ function ShowUI()
 
 	-- Enable the mesh adding button
 	AddButton.Button.MouseButton1Click:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Add"))
 		AddMeshes();
 	end);
+	AddButton.Button.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
+	end);
 	RemoveButton.Button.MouseButton1Click:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Remove"))
 		RemoveMeshes();
+	end);
+	RemoveButton.Button.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
 
 	-- Hook up manual triggering
@@ -231,7 +243,7 @@ function UpdateUI()
 	-- Check if there's a file mesh in the selection
 	local FileMeshInSelection = false;
 	for _, Mesh in pairs(GetMeshes()) do
-		if Mesh.MeshType == Enum.MeshType.FileMesh then
+		if Mesh:IsA("SpecialMesh") and Mesh.MeshType == Enum.MeshType.FileMesh then
 			FileMeshInSelection = true;
 			break;
 		end;

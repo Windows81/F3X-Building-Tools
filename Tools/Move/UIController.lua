@@ -1,5 +1,6 @@
 local Tool = script.Parent.Parent.Parent
 local Libraries = Tool:WaitForChild('Libraries')
+local Sounds = Tool:WaitForChild("Sounds");
 
 -- API
 local Core = require(Tool.Core)
@@ -30,12 +31,16 @@ function UIController:ShowUI()
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if self.UI then
+	if self.UI and self.UI.Parent ~= nil then
 		self.UI.Visible = true
-        self.Maid.UIUpdater = Support.Loop(0.1, self.UpdateUI, self)
-        self:AttachDragListener()
-        self:AttachAxesListener()
+		self.Maid.UIUpdater = Support.Loop(0.1, self.UpdateUI, self)
+		self:AttachDragListener()
+		self:AttachAxesListener()
 		return
+	end
+
+	if self.UI then
+		self.UI:Destroy()
 	end
 
 	-- Create the UI
@@ -46,13 +51,25 @@ function UIController:ShowUI()
 	-- Add functionality to the axes option switch
 	local AxesSwitch = self.UI.AxesOption
 	AxesSwitch.Global.Button.MouseButton1Down:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 		self.Tool:SetAxes('Global')
 	end)
+	AxesSwitch.Global.Button.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
+	end)
 	AxesSwitch.Local.Button.MouseButton1Down:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 		self.Tool:SetAxes('Local')
 	end)
+	AxesSwitch.Local.Button.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
+	end)
 	AxesSwitch.Last.Button.MouseButton1Down:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 		self.Tool:SetAxes('Last')
+	end)
+	AxesSwitch.Last.Button.MouseEnter:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end)
 
 	-- Add functionality to the increment input
@@ -107,6 +124,11 @@ function UIController:AttachDragListener()
     end)
 end
 
+function UIController:AttachmentsOnlyWarning()
+		-- Update the "distance moved" indicator
+		self.UI.Changes.Text.Text = "Global axis doesn't work when only attachments are selected. Use local or last instead."
+end
+
 function UIController:AttachAxesListener()
     self.Maid.AxesListener = self.Tool.AxesChanged:Connect(function (AxesMode)
 
@@ -141,7 +163,7 @@ function UIController:UpdateUI()
 	end
 
 	-- Only show and calculate selection info if it's not empty
-	if #Selection.Parts == 0 then
+	if #Selection.Parts == 0 and #Selection.Attachments == 0 then
 		self.UI.Info.Visible = false
 		self.UI.Size = UDim2.new(0, 245, 0, 90)
 		return
@@ -160,6 +182,11 @@ function UIController:UpdateUI()
 		table.insert(XVariations, Support.Round(Part.Position.X, 3))
 		table.insert(YVariations, Support.Round(Part.Position.Y, 3))
 		table.insert(ZVariations, Support.Round(Part.Position.Z, 3))
+	end
+	for _, Attachment in pairs(Selection.Attachments) do
+		table.insert(XVariations, Support.Round(Attachment.WorldPosition.X, 3))
+		table.insert(YVariations, Support.Round(Attachment.WorldPosition.Y, 3))
+		table.insert(ZVariations, Support.Round(Attachment.WorldPosition.Z, 3))
 	end
 	local CommonX = Support.IdentifyCommonItem(XVariations)
 	local CommonY = Support.IdentifyCommonItem(YVariations)

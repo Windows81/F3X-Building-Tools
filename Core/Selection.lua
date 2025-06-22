@@ -39,6 +39,7 @@ Selection.AttachmentsRemoved = Signal.new()
 Selection.FocusChanged = Signal.new()
 Selection.Cleared = Signal.new()
 Selection.Changed = Signal.new()
+Selection.MultiselectToggle = Signal.new()
 
 function Selection.IsSelected(Item)
 	-- Returns whether `Item` is selected or not
@@ -502,13 +503,7 @@ end
 
 -- Create target box pool
 local SelectionBoxPool = InstancePool.new(60, function ()
-	return Make 'SelectionBox' {
-		Name = 'BTSelectionBox',
-		Parent = GetCore().UI,
-		LineThickness = 0.025,
-		Transparency = 0.5,
-		Color = Selection.Color
-	}
+	return Make('SelectionBox')(Options.SelectionBoxMake(GetCore()))
 end)
 
 
@@ -737,6 +732,7 @@ function Selection.EnableMultiselectionHotkeys()
 	Core.Connections.MultiselectionHotkeys = Support.AddUserInputListener('Began', 'Keyboard', false, function (Input)
 		if Hotkeys[Input.KeyCode.Name] then
 			Selection.Multiselecting = true;
+			Selection.MultiselectToggle:Fire()
 		end;
 	end);
 
@@ -755,6 +751,7 @@ function Selection.EnableMultiselectionHotkeys()
 
 		-- Disable multiselection if matching key not found
 		Selection.Multiselecting = false;
+		Selection.MultiselectToggle:Fire()
 
 	end);
 

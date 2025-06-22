@@ -1,13 +1,12 @@
 -- Services
-MarketplaceService = Game:GetService 'MarketplaceService';
-HttpService = Game:GetService 'HttpService';
-Workspace = Game:GetService 'Workspace';
+MarketplaceService = game:GetService 'MarketplaceService';
+HttpService = game:GetService 'HttpService';
 
 -- References
 Tool = script.Parent.Parent
 Libraries = Tool:WaitForChild 'Libraries'
 Support = require(Libraries:WaitForChild 'SupportLibrary')
-RegionModule = require(Libraries:WaitForChild 'Region')
+Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
 
 -- Determine whether we're in tool or plugin mode
 local ToolMode = (Tool.Parent:IsA 'Plugin') and 'Plugin' or 'Tool'
@@ -22,16 +21,16 @@ Security.AreaHeight = 500;
 Security.AllowPublicBuilding = true;
 
 -- Allowed locations in the hierarchy (descendants of which are authorized)
-Security.AllowedLocations = { Workspace };
+Security.AllowedLocations = { game.Workspace };
 
 -- Track the enabling of areas
-Security.Areas = Workspace:FindFirstChild('[Private Building Areas]');
-Workspace.ChildAdded:Connect(function (Child)
+Security.Areas = game.Workspace:FindFirstChild('[Private Building Areas]');
+game.Workspace.ChildAdded:Connect(function (Child)
 	if not Security.Areas and Child.Name == '[Private Building Areas]' then
 		Security.Areas = Child;
 	end;
 end);
-Workspace.ChildRemoved:Connect(function (Child)
+game.Workspace.ChildRemoved:Connect(function (Child)
 	if Security.Areas and Child.Name == '[Private Building Areas]' then
 		Security.Areas = nil;
 	end;
@@ -172,8 +171,26 @@ function Security.IsItemAllowed(Item, Player)
 		Item:IsA 'DataModelMesh' or
 		Item:IsA 'Decal' or
 		Item:IsA 'Texture' or
-		Item:IsA 'Light'
+		Item:IsA 'ParticleEmitter' or
+		Item:IsA 'Highlight' or
+		Item:IsA 'SelectionBox' or
+		Item:IsA 'TextLabel' or
+		Item:IsA 'SurfaceGui' or
+		Item:IsA 'Light' or
+		Item:IsA 'Attachment'
 	if not IsItemClassAllowed then
+		return false
+	end
+	
+	if Item:FindFirstAncestorWhichIsA("Model") and game.Players:GetPlayerFromCharacter(Item:FindFirstAncestorWhichIsA("Model")) then
+		if Options.PlayerTolerance == 1 and game.Players:GetPlayerFromCharacter(Item:FindFirstAncestorWhichIsA("Model")) == Player then
+			return true
+		elseif Options.PlayerTolerance == 2 then
+			return false
+		end
+	end
+	
+	if Options.CheckPermission(Item, Player) == false then
 		return false
 	end
 
@@ -183,7 +200,7 @@ function Security.IsItemAllowed(Item, Player)
 			return true
 		end
 	end
-
+	
 	-- Deny if `Item` is not a descendant of any allowed location
 	return false
 

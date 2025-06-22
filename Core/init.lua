@@ -17,6 +17,9 @@ History = require(script.History)
 Selection = require(script.Selection)
 Targeting = require(script.Targeting)
 
+local CurrentProfile = "CementDark"
+local UseGigsDarkWithPlugin = false
+
 -- Libraries
 Region = require(Tool.Libraries.Region)
 Signal = require(Tool.Libraries.Signal)
@@ -47,6 +50,7 @@ Assets = require(Tool:WaitForChild("Assets"))
 
 -- Core events
 ToolChanged = Signal.new()
+ProfileUpdate = Signal.new()
 
 function EquipTool(Tool)
 	-- Equips and switches to the given tool
@@ -174,8 +178,15 @@ function Enable(Mouse)
 	-- If tool is disabling, enable it once fully disabled
 	elseif IsDisabling then
 		Disabled:Wait();
-		return Enable(Mouse);
+		return Enable(Mouse, CheckNewUI);
 	end;
+	
+	local UILoaded = false
+	
+	-- Wait for UI to initialize asynchronously
+	if UI then
+		UILoaded = InitializeUI()
+	end
 
 	-- Indicate that tool is enabling
 	IsEnabling = true;
@@ -194,9 +205,8 @@ function Enable(Mouse)
 			DataStoresEnabled = SyncAPI:Invoke('CheckDataStores')
 		end))
 	end
-
-	-- Wait for UI to initialize asynchronously
-	while not UI do
+	
+	while not UI or UILoaded ~= true do
 		wait(0.1);
 	end;
 
@@ -305,52 +315,6 @@ function ClearConnections()
 	end;
 end;
 
-function InitializeUI()
-	-- Sets up the UI
-
-	-- Ensure UI has not yet been initialized
-	if UI then
-		return;
-	end;
-
-	-- Create the root UI
-	UI = Instance.new('ScreenGui')
-	UI.Name = 'Building Tools by F3X (UI)'
-
-	-- Create dock
-	local ToolList = {}
-	local DockComponent = require(Tool:WaitForChild('UI'):WaitForChild('Dock'))
-	local DockElement = Roact.createElement(DockComponent, {
-		Core = Core;
-		Tools = ToolList;
-	})
-	local DockHandle = Roact.mount(DockElement, UI, 'Dock')
-
-	-- Provide API for adding tool buttons to dock
-	local function AddToolButton(IconAssetId, HotkeyLabel, Tool)
-		table.insert(ToolList, {
-			IconAssetId = IconAssetId;
-			HotkeyLabel = HotkeyLabel;
-			Tool = Tool;
-		})
-
-		-- Update dock
-		Roact.update(DockHandle, Roact.createElement(DockComponent, {
-			Core = Core;
-			Tools = Cryo.List.join(ToolList);
-		}))
-	end
-	Core.AddToolButton = AddToolButton
-
-	-- Clean up UI on tool teardown
-	UIMaid = Maid.new()
-	Tool.AncestryChanged:Connect(function (Item, Parent)
-		if Parent == nil then
-			UIMaid:Destroy()
-		end
-	end)
-end
-
 local UIElements = Tool:WaitForChild 'UI'
 local ExplorerTemplate = require(UIElements:WaitForChild 'Explorer')
 Core.ExplorerVisibilityChanged = Signal.new()
@@ -439,16 +403,25 @@ AssignHotkey({ 'RightShift', 'H' }, ToggleExplorer)
 
 -- Enable tool or plugin
 if Mode == 'Plugin' then
-
+	
 	-- Set the UI root
 	UIContainer = CoreGui;
 
 	-- Create the toolbar button
-	PluginButton = Plugin:CreateToolbar('Fork3X Building Tools by Vikko151'):CreateButton(
-		'Building Tools by F3X',
-		'Building Tools by F3X',
-		Assets.PluginIcon
+	PluginToolbar = Plugin:CreateToolbar('Fork3X Building Tools by Vikko151')
+	
+	PluginButton = PluginToolbar:CreateButton(
+			'Building Tools by F3X',
+			'Building Tools by F3X',
+			Assets.PluginIcon
 	);
+	
+	ThemeButton = PluginToolbar:CreateButton(
+		'Change Theme',
+		'Change Theme',
+		Assets.ThemeIcon
+	);
+
 
 	-- Connect the button to the system
 	PluginButton.Click:Connect(function ()
@@ -462,6 +435,19 @@ if Mode == 'Plugin' then
 		else
 			Disable();
 		end;
+	end);
+	
+	ThemeButton.Click:Connect(function ()
+		UseGigsDarkWithPlugin = not UseGigsDarkWithPlugin
+		if IsEnabled then
+			Disable()
+			if IsDisabling then
+				Disabled:Wait()
+			end
+			Enable(Plugin:GetMouse())
+		else
+			InitializeUI()
+		end
 	end);
 
 	-- Disable the tool upon plugin deactivation
@@ -484,12 +470,13 @@ if Mode == 'Plugin' then
 
 	-- Add plugin action for toggling tool
 	local ToggleAction = Plugin:CreatePluginAction(
-		'F3X/ToggleBuildingTools',
+		'Fork3X/ToggleBuildingTools',
 		'Toggle Building Tools',
 		'Toggles the Building Tools by F3X plugin.',
 		Assets.PluginIcon,
 		true
 	)
+	
 	ToggleAction.Triggered:Connect(function ()
 		PluginEnabled = not PluginEnabled
 		PluginButton:SetActive(PluginEnabled)
@@ -907,7 +894,6 @@ end
 
 Core.SaveLoadVisibilityChanged = Signal.new()
 Core.SaveLoadVisible = false
-Core.SaveLoadCreated = false
 Core.CanLoad = true
 
 function ToggleSaveLoad()
@@ -940,7 +926,7 @@ function ToggleSaveLoad()
 		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
 		return 
 			
-	elseif RunService:IsStudio() then
+	elseif Mode == 'Plugin' then
 		
 		local DialogHandle
 		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
@@ -956,9 +942,8 @@ function ToggleSaveLoad()
 		
 	end
 	
-	if not Core.SaveLoadCreated then
+	if not UI:FindFirstChild("SaveInterface") then
 		CreateSaveAndLoad()
-		Core.SaveLoadCreated = true
 		Core.SaveLoadVisible = true
 		Core.SaveLoadVisibilityChanged:Fire()
 	elseif not Core.SaveLoadVisible then
@@ -1003,7 +988,7 @@ function CreateSaveAndLoad()
 		end;
 		SyncAPI:Invoke('LoadBuild', "1")
 		Core.CanLoad = false
-		task.delay(240, function() Core.CanLoad = true end)
+		task.delay(Options.LoadDelay, function() Core.CanLoad = true end)
 	end
 	
 	local SecondLoadCallback = function ()	
@@ -1012,7 +997,7 @@ function CreateSaveAndLoad()
 		end;
 		SyncAPI:Invoke('LoadBuild', "2")
 		Core.CanLoad = false
-		task.delay(240, function() Core.CanLoad = true end)
+		task.delay(Options.LoadDelay, function() Core.CanLoad = true end)
 	end
 	
 	local ThirdLoadCallback = function ()	
@@ -1021,7 +1006,7 @@ function CreateSaveAndLoad()
 		end;
 		SyncAPI:Invoke('LoadBuild', "3")
 		Core.CanLoad = false
-		task.delay(240, function() Core.CanLoad = true end)
+		task.delay(Options.LoadDelay, function() Core.CanLoad = true end)
 	end
 
 	local DialogElement = Roact.createElement(DialogComponent, {
@@ -1033,7 +1018,7 @@ function CreateSaveAndLoad()
 		ThirdSaveLoad = ThirdLoadCallback;
 		ThirdSave = ThirdSaveCallback;
 	})
-	DialogHandle = Roact.mount(DialogElement, UI, 'ExportDialog')
+	DialogHandle = Roact.mount(DialogElement, UI, 'SaveInterface')
 end 
 
 function GetPartsFromSelection(Selection)
@@ -1075,6 +1060,10 @@ function IsSelectable(Items)
 		if not Security.IsItemAllowed(Item, Player) then
 			return false
 		end
+		
+		if not Options.ConsiderPart(Item, Player) then
+			return false
+		end
 	end
 
 	-- Check if parts intruding into private areas
@@ -1112,10 +1101,10 @@ function ExportSelection()
 	Try(SyncAPI.Invoke, SyncAPI, 'Export', Selection.Items)
 
 	-- Display creation ID on success
-	:Then(function (CreationId)
+		:Then(function (CreationId)
 		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
 			Text = 'Your creation\'s ID:<font size="5"><br /></font>\n' ..
-				'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' ..
+				'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' .. 
 				'<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>';
 			OnDismiss = DialogDismissCallback;
 		}))
@@ -1141,6 +1130,12 @@ function ExportSelection()
 			OnDismiss = DialogDismissCallback;
 		}))
 	end)
+	:Catch('Blacklisted content', function ()
+		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
+			Text = 'Unable to export.';
+			OnDismiss = DialogDismissCallback;
+		}))
+	end)
 	:Catch(function (Error, Stack, Attempt)
 		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
 			Text = 'An unknown error occurred — please try again.';
@@ -1148,6 +1143,7 @@ function ExportSelection()
 		}))
 		warn('❌ [Building Tools by F3X] Failed to export selection', '\n\nError:\n', Error, '\n\nStack:\n', Stack)
 	end)
+
 
 end;
 
@@ -1197,6 +1193,7 @@ function ToggleMultiSelect()
 	elseif Selection.Multiselecting == true then
 		Selection.Multiselecting = false
 	end
+	Selection.MultiselectToggle:Fire()
 end
 
 --[[function Import()
@@ -1438,8 +1435,185 @@ function PreserveJoints(Part, Whitelist)
 
 end;
 
+local ToolList = {}
+
+function InitializeUI()
+	-- Sets up the UI
+	
+	-- Ensure UI has not yet been initialized
+	local ProfilesFolder = Mode == "Plugin" and not UseGigsDarkWithPlugin and game.ReplicatedStorage:FindFirstChild("Fork3XProfile") or Tool:WaitForChild("Profiles")
+
+	if ProfilesFolder then
+		
+		local Profile = UseGigsDarkWithPlugin and "GigsDark" or Mode == "Plugin" and ProfilesFolder.Name == "Fork3XProfile" and ProfilesFolder:GetChildren()[1].Name or Options.CheckProfile(Player)
+		
+		if Profile ~= CurrentProfile and Profile ~= nil then
+			CurrentProfile = Profile
+			local NewProfile = ProfilesFolder:FindFirstChild(CurrentProfile)
+
+			if NewProfile then
+				local NewProfile = NewProfile:Clone()
+
+				if UI then
+					UI:Destroy()
+					UI = nil
+				end
+
+				local OldItemsHierarchy = {}
+
+				for _, Item in Tool:WaitForChild("Interfaces"):GetDescendants() do		
+					if Item:GetAttribute("IsNegligible") == true then continue end
+					OldItemsHierarchy[Item] = {}
+					local CurrentParent = Item.Parent
+
+					if Item.Parent == Tool.Interfaces then
+						table.insert(OldItemsHierarchy[Item], CurrentParent)
+						continue
+					end
+
+					repeat
+						table.insert(OldItemsHierarchy[Item], CurrentParent)
+						CurrentParent = CurrentParent.Parent
+					until CurrentParent == Tool.Interfaces
+					table.insert(OldItemsHierarchy[Item], Tool.Interfaces)
+				end
+
+				for _, Item in Tool:WaitForChild("UI"):GetDescendants() do			
+					OldItemsHierarchy[Item] = {}
+					local CurrentParent = Item.Parent
+
+					if Item.Parent == Tool.UI then
+						table.insert(OldItemsHierarchy[Item], CurrentParent)
+						continue
+					end
+
+					repeat
+						table.insert(OldItemsHierarchy[Item], CurrentParent)
+						CurrentParent = CurrentParent.Parent
+					until CurrentParent == Tool.UI
+					table.insert(OldItemsHierarchy[Item], Tool.UI)
+				end
+
+				for MainItem, Item in OldItemsHierarchy do
+					local Count = #Item
+					local KnownParent = NewProfile
+
+					local Ended = false
+
+					repeat
+						local ItemToFind
+
+						if Count == 0 then
+							ItemToFind = MainItem
+						else
+							ItemToFind = Item[Count]
+						end
+
+						if KnownParent:FindFirstChild(ItemToFind.Name) and ItemToFind:GetAttribute("ChangeAnyway") ~= true then
+							KnownParent = KnownParent[ItemToFind.Name]
+						elseif KnownParent:FindFirstChild(ItemToFind.Name) and ItemToFind:GetAttribute("ChangeAnyway") == true then
+							break
+						else
+							ItemToFind:Clone().Parent = KnownParent
+							Ended = true
+							break
+						end
+
+						if Count == 0 then
+							Ended = true
+							break
+						end
+
+						Count -= 1
+					until Ended == true
+				end
+
+				Tool.Interfaces:Destroy()
+				NewProfile.Interfaces.Parent = Tool
+
+				Tool.UI:Destroy()
+				NewProfile.UI.Parent = Tool
+				
+				UIElements = Tool:WaitForChild("UI")
+
+				NewProfile:Destroy()
+			end
+		end
+
+	end
+
+	if UI then
+		return true;
+	end;
+
+	-- Create the root UI
+	UI = Instance.new('ScreenGui')
+	UI.Name = 'Building Tools by F3X (UI)'
+
+	-- Create dock
+	local DockComponent = require(Tool:WaitForChild('UI'):WaitForChild('Dock'))
+	local DockElement = Roact.createElement(DockComponent, {
+		Core = Core;
+		Tools = ToolList;
+	})
+	local DockHandle = Roact.mount(DockElement, UI, 'Dock')
+
+	-- Provide API for adding tool buttons to dock
+	local function AddToolButton(IconAssetId, HotkeyLabel, Tool, Position, Size)
+		table.insert(ToolList, {
+			IconAssetId = IconAssetId;
+			HotkeyLabel = HotkeyLabel;
+			Tool = Tool;
+			Position = Position;
+			Size = Size;
+		})
+		
+		ProfileUpdate:Fire(DockHandle, DockComponent)
+		-- Update dock
+		--[[
+		Roact.update(DockHandle, Roact.createElement(DockComponent, {
+			Core = Core;
+			Tools = Cryo.List.join(ToolList);
+		}))]]
+	end
+	
+	Core.AddToolButton = AddToolButton
+
+	-- Clean up UI on tool teardown
+	UIMaid = Maid.new()
+	Tool.AncestryChanged:Connect(function (Item, Parent)
+		if Parent == nil then
+			UIMaid:Destroy()
+		end
+	end)
+	
+	ProfileUpdate:Fire(DockHandle, DockComponent)
+	
+	return true
+end
+
 -- Initialize the UI
 InitializeUI();
+
+ProfileUpdate:Connect(function(DockHandle, DockComponent)
+	Roact.update(DockHandle, Roact.createElement(DockComponent, {
+		Core = Core;
+		Tools = Cryo.List.join(ToolList);
+	}))
+end)
+
+-- Set up external connections
+Options.CustomCoreConnections(Core)
+
+for FunctionName, Arguments in Options.CustomCoreFunctions do
+	Core[FunctionName] = function(...)
+		return Arguments[1](Core, ...)
+	end
+	
+	if Arguments[2] then
+		AssignHotkey(Arguments[2], Core[FunctionName])
+	end
+end
 
 -- Return core
 return getfenv(0);

@@ -127,17 +127,18 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	local NewScopeTarget = self:FindTargetInScope(NewTarget, Scope)
 	
 	local Core = GetCore()
-	
+
 	if Options.PartHintFunction ~= false then
 		if not IndicatorText then
 			IndicatorText = Make 'TextLabel' {
 				Name = "IndicatorText";
+				Font = Enum.Font.MontserratMedium;
 				Parent = Core.UI;
 				Size = UDim2.new(0, 0, 0, 0);
 				TextColor3 = Color3.new(1, 1, 1);
 				TextTransparency = 0;
-				TextStrokeTransparency = 0;
-				TextSize = 8;
+				TextStrokeTransparency = 0.4;
+				TextSize = 12;
 				BackgroundTransparency = 1;
 				--		Position = UDim2.new(0, Mouse.X + 20, 0, Mouse.Y - 26);
 				AutomaticSize = Enum.AutomaticSize.XY;
@@ -145,11 +146,11 @@ function TargetingModule:UpdateTarget(Scope, Force)
 		end
 
 		IndicatorText.Position = UDim2.new(0, Mouse.X + 16, 0, Mouse.Y + 19);
-	
-		if NewTarget == nil or NewTarget.Locked == true then
+
+		if not NewTarget or NewTarget.Locked == true then
 			IndicatorText.TextTransparency = 1
 		else
-			IndicatorText.Text = Options.PartHintFunction(NewTarget, game.Players.LocalPlayer)
+			IndicatorText.Text = Options.PartHintFunction(Core, NewTarget, game.Players.LocalPlayer)
 			IndicatorText.TextTransparency = 0
 		end
 	end
@@ -215,13 +216,7 @@ end
 
 -- Create target box pool
 local TargetBoxPool = InstancePool.new(60, function ()
-	return Make 'SelectionBox' {
-		Name = 'BTTargetBox',
-		Parent = GetCore().UI,
-		LineThickness = 0.025,
-		Transparency = 0.5,
-		Color = BrickColor.new 'Institutional white'
-	}
+	return Make('SelectionBox')(Options.TargetBoxMake(GetCore()))
 end)
 
 -- Define target box cleanup routine
@@ -379,12 +374,22 @@ function TargetingModule.UpdateSelectionRectangle()
 		SelectionRectangle = Make 'Frame' {
 			Name = 'SelectionRectangle',
 			Parent = Core.UI,
-			BackgroundColor3 = Color3.fromRGB(100, 100, 100),
-			BorderColor3 = Color3.new(0, 0, 0),
-			BackgroundTransparency = 0.5,
-			BorderSizePixel = 1
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			BackgroundTransparency = 0.6,
+			BorderSizePixel = 0
+		};
+		
+		UIStroke = Make 'UIStroke' {
+			Name = 'BTStroke',
+			Parent = SelectionRectangle,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Color = Color3.new(0, 0, 0);
+			Thickness = 2;
+			LineJoinMode = Enum.LineJoinMode.Miter,
 		};
 	end;
+	
+	UIStroke.Color = Selection.Color.Color
 
 	local StartPoint = Vector2.new(
 		math.min(RectangleSelectStart.X, Mouse.X),
@@ -462,7 +467,10 @@ function TargetingModule.FinishRectangleSelecting()
 
 	-- Find items that lie within the rectangle
 	local ScopeParts = Support.GetDescendantsWhichAreA(TargetingModule.Scope, 'BasePart')
-	for _, Part in pairs(ScopeParts) do
+	
+	local BreakFactor = 1
+	
+	for i, Part in pairs(ScopeParts) do
 		local ScreenPoint, OnScreen = Workspace.CurrentCamera:WorldToScreenPoint(Part.Position)
 		if OnScreen then
 			local LeftCheck = ScreenPoint.X >= StartPoint.X
@@ -473,6 +481,10 @@ function TargetingModule.FinishRectangleSelecting()
 				local ScopeTarget = TargetingModule:FindTargetInScope(Part, TargetingModule.Scope)
 				SelectableItems[ScopeTarget] = true
 			end
+		end
+		if math.floor(i / (300 * BreakFactor)) ~= 0 then
+			task.wait()
+			BreakFactor += 1
 		end
 	end
 

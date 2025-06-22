@@ -247,7 +247,7 @@ function Serialization.SerializeModel(Items)
 	end;
 
 	-- Return the serialized data
-	return HttpService:JSONEncode(Data);
+	return game:GetService("HttpService"):JSONEncode(Data);
 
 end;
 
@@ -428,7 +428,8 @@ function Serialization.InflateBuildData(Data)
 			-- Register the folder
 			Instances[Index] = Item
 		end
-
+		
+		task.wait(1 / 150)
 	end;
 
 	-- Set object values on each instance

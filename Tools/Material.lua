@@ -1,13 +1,13 @@
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
+
 local Vendor = Tool:WaitForChild('Vendor')
-local UI = Tool:WaitForChild('UI')
 local Libraries = Tool:WaitForChild('Libraries')
 
 -- Libraries
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
 local Roact = require(Vendor:WaitForChild('Roact'))
-local Dropdown = require(UI:WaitForChild('Dropdown'))
 local Signal = require(Libraries:WaitForChild('Signal'))
 
 -- Import relevant references
@@ -28,8 +28,34 @@ local MaterialTool = {
 	OnMaterialChanged = Signal.new();
 }
 
-MaterialTool.ManualText = [[<font face="GothamBlack" size="16">Material Tool  🛠</font>
-Lets you change the material, transparency, and reflectance of parts.]]
+MaterialTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Material Tool  🛠</i></u></font>
+Lets you change the material, transparency, and reflectance of parts.
+
+<font size="12" color="rgb(150, 150, 150)"><b>Transparency</b></font>
+Sets if the part is opaque, transparent or invisible.
+
+<font size="11" color="rgb(200, 200, 200)"><i>- Properties</i></font>
+<font color="rgb(150, 150, 150)">•</font>  A part that has over 0.01 of transparency will get occulted by other parts that are made of glass.
+<font color="rgb(150, 150, 150)">•</font>  When the transparency of a part with forcefield as a material is set to -inf, it'll be invisible, but it'll act like an opaque part otherwisely.
+<font color="rgb(150, 150, 150)">•</font>  You can apply a highlight to a glass part with over 1 of transparency to create faux reflections.
+<font color="rgb(150, 150, 150)">•</font>  A glass part with its transparency to -inf will show strange artifacts.
+
+<font size="12" color="rgb(150, 150, 150)"><b>Reflectance</b></font>
+Makes the part reflecting the sky depending on the value. The higher it is, the more visible the sky is.
+
+<font size="11" color="rgb(200, 200, 200)"><i>- Properties</i></font>
+<font color="rgb(150, 150, 150)">•</font>  Reflectance can go above 1. Values over one will create strange high-contrasted effects
+<font color="rgb(150, 150, 150)">•</font>  A part with its reflectance set to inf will be dark and won't be influenced.
+
+<font size="12" color="rgb(150, 150, 150)"><b>Material</b></font>
+Gives the part a texture that sometimes has special properties.
+
+<font size="11" color="rgb(200, 200, 200)"><i>- Properties</i></font>
+<font color="rgb(150, 150, 150)">•</font>  If the game allows it and on quality 3+, metal can slightly reflect the sky and even sometimes a part of the world.
+<font color="rgb(150, 150, 150)">•</font>  On quality 6+, neon glows.
+<font color="rgb(150, 150, 150)">•</font>  Forcefield will create a filter effect, making a mesh's texture "alive".
+
+]]
 
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
@@ -85,13 +111,44 @@ local Materials = {
 	[Enum.Material.Wood] = 'Wood';
 	[Enum.Material.WoodPlanks] = 'Wood Planks';
 	[Enum.Material.Glass] = 'Glass';
+	[Enum.Material.Asphalt] = 'Asphalt';
+	[Enum.Material.Basalt] = 'Basalt';
+	[Enum.Material.CrackedLava] = 'Cracked Lava';
+	[Enum.Material.Glacier] = 'Glacier';
+	[Enum.Material.Ground] = 'Ground';
+	[Enum.Material.LeafyGrass] = 'Leafy Grass';
+	[Enum.Material.Limestone] = 'Limestone';
+	[Enum.Material.Mud] = 'Mud';
+	[Enum.Material.Pavement] = 'Pavement';
+	[Enum.Material.Rock] = 'Rock';
+	[Enum.Material.Salt] = 'Salt';
+	[Enum.Material.Sandstone] = 'Sandstone';
+	[Enum.Material.Snow] = 'Snow';
+	[Enum.Material.Cardboard] = 'Cardboard';
+	[Enum.Material.Carpet] = 'Carpet';
+	[Enum.Material.CeramicTiles] = 'Ceramic Tiles';
+	[Enum.Material.ClayRoofTiles] = 'Clay Roof Tiles';
+	[Enum.Material.Leather] = 'Leather';
+	[Enum.Material.RoofShingles] = 'Roof Shingles';
+	[Enum.Material.Plaster] = 'Plaster';
+	[Enum.Material.Rubber] = 'Rubber';
 };
 
+for _, MaterialVariant in game:GetService("MaterialService"):GetDescendants() do
+	if MaterialVariant:IsA("MaterialVariant") then
+		Materials[MaterialVariant.Name] = MaterialVariant.Name
+	end
+end
+
 function MaterialTool:ShowUI()
+	local UI = Tool:WaitForChild('UI')
+	
+	local Dropdown = require(UI:WaitForChild('Dropdown'))
+	
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if self.UI then
+	if self.UI and self.UI.Parent ~= nil then
 
 		-- Reveal the UI
 		self.UI.Visible = true;
@@ -105,6 +162,11 @@ function MaterialTool:ShowUI()
 		return;
 
 	end;
+	
+	if self.UI then
+		self.UI:Destroy()
+	end
+
 
 	-- Create the UI
 	self.UI = Core.Tool.Interfaces.BTMaterialToolGUI:Clone();
@@ -126,12 +188,33 @@ function MaterialTool:ShowUI()
 			Size = UDim2.new(0, 130, 0, 25);
 			Options = MaterialList;
 			MaxRows = 6;
-			CurrentOption = self.CurrentMaterial and self.CurrentMaterial.Name;
+			CurrentOption = self.CurrentMaterial and typeof(self.CurrentMaterial) == "EnumItem" and self.CurrentMaterial.Name or self.CurrentMaterial;
+			ImagePreview = true;
 			OnOptionSelected = function (Option)
 				SetProperty('Material', Support.FindTableOccurrence(Materials, Option))
 			end;
 		})
 	end
+	
+	-- Enable the massless switch
+	self.UI.MasslessOption.Check.Activated:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
+		if Support.IdentifyCommonProperty(Selection.Parts, "Massless") == false then
+			SetProperty("Massless", true);
+		else
+			SetProperty("Massless", false);	
+		end
+	end);
+	
+	-- Enable the cast shadows switch
+	self.UI.CastShadowOption.Check.Activated:Connect(function ()
+		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
+		if Support.IdentifyCommonProperty(Selection.Parts, "CastShadow") == false then
+			SetProperty("CastShadow", true);
+		else
+			SetProperty("CastShadow", false);	
+		end
+	end);
 
 	-- Mount surface dropdown
 	local MaterialDropdownHandle = Roact.mount(BuildMaterialDropdown(), self.UI.MaterialOption, 'Dropdown')
@@ -227,11 +310,11 @@ end;
 -- List of UI layouts
 local Layouts = {
 	EmptySelection = { 'SelectNote' };
-	Normal = { 'MaterialOption', 'TransparencyOption', 'ReflectanceOption' };
+	Normal = { 'MaterialOption', 'TransparencyOption', 'ReflectanceOption', 'MasslessOption', 'CastShadowOption' };
 };
 
 -- List of UI elements
-local UIElements = { 'SelectNote', 'MaterialOption', 'TransparencyOption', 'ReflectanceOption' };
+local UIElements = { 'SelectNote', 'MaterialOption', 'TransparencyOption', 'ReflectanceOption', 'MasslessOption', 'CastShadowOption' };
 
 -- Current UI layout
 local CurrentLayout;
@@ -310,8 +393,16 @@ function MaterialTool:UpdateUI()
 
 	-- Get the common properties
 	local Material = Support.IdentifyCommonProperty(Selection.Parts, 'Material');
+	local MaterialVariant = Support.IdentifyCommonProperty(Selection.Parts, 'MaterialVariant');
+	
+	if MaterialVariant ~= "" then
+		Material = MaterialVariant
+	end
+	
 	local Transparency = Support.IdentifyCommonProperty(Selection.Parts, 'Transparency');
 	local Reflectance = Support.IdentifyCommonProperty(Selection.Parts, 'Reflectance');
+	local Massless = Support.IdentifyCommonProperty(Selection.Parts, 'Massless');
+	local CastShadow = Support.IdentifyCommonProperty(Selection.Parts, 'CastShadow');
 
 	-- Update the material dropdown
 	if self.CurrentMaterial ~= Material then
@@ -324,6 +415,25 @@ function MaterialTool:UpdateUI()
 		[TransparencyInput] = Transparency and Support.Round(Transparency, 2) or '*';
 		[ReflectanceInput] = Reflectance and Support.Round(Reflectance, 2) or '*';
 	};
+	UpdateToggleInput(self.UI.MasslessOption.Check, Massless);
+	UpdateToggleInput(self.UI.CastShadowOption.Check, CastShadow);
+
+end;
+
+function UpdateToggleInput(Toggle, Data)
+	-- Updates the data in the given buttons
+
+	-- Go through the inputs and data
+	if Data == true then
+		Toggle.Mark.Visible = true
+		Toggle.Multiple.Visible = false
+	elseif Data == false then
+		Toggle.Mark.Visible = false
+		Toggle.Multiple.Visible = false
+	else
+		Toggle.Mark.Visible = false
+		Toggle.Multiple.Visible = true
+	end
 
 end;
 

@@ -15,6 +15,9 @@
           "$className": "Folder",
           "$path": "Tools"
         },
+        "Profiles": {
+          "$path": "Profiles"
+        },
         "Loader": {
           "$path": "Loader"
         },
@@ -34,20 +37,20 @@
           }
         },
         "Libraries": {
-          "$path": "Libraries",
-          "Signal": {
-            "$path": "node_modules/@quenty/signal/src/Shared/GoodSignal.lua"
-          }
+          "$path": "Libraries"
         },
         "Vendor": {
           "$className": "Folder",
           "$ignoreUnknownInstances": false,
           "Roact": {
-            "$path": "Vendor/Roact/src"
+            "$path": "Vendor/Roact"
           }
         },
         "Assets": {
           "$path": "Support/Assets.lua"
+        },
+        "Options": {
+          "$path": "Support/Options.lua"
         },
         "AutoUpdate": {
           "$className": "BoolValue",

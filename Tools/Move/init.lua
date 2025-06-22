@@ -123,7 +123,7 @@ function MoveTool:SetAxes(AxisMode)
 	-- Disable any unnecessary bounding boxes
 	BoundingBox.ClearBoundingBox();
 
-	-- For global mode, use bounding box handles
+	-- For global mode, use bounding box handles if there are parts, or focused part if it's an attachment
 	if AxisMode == 'Global' then
 		BoundingBox.StartBoundingBox(function (BoundingBox)
 			self.HandleDragging:AttachHandles(BoundingBox)
@@ -141,7 +141,7 @@ function MoveTool:SetAxes(AxisMode)
 end
 
 --- Moves the given parts in `InitialStates`, along the given axis mode, in the given face direction, by the given distance.
-function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, InitialModelStates, InitialFocusCFrame)
+function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, InitialModelStates, InitialAttachmentsStates, InitialFocusCFrame)
 
 	-- Calculate the shift along the direction of the face
 	local Shift = Vector3.FromNormalId(Face) * Distance
@@ -154,11 +154,17 @@ function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, In
 		for Model, InitialState in pairs(InitialModelStates) do
 			Model.WorldPivot = InitialState.Pivot + Shift
 		end
+		for Attachment, InitialState in pairs(InitialAttachmentsStates) do
+			Attachment.WorldCFrame = InitialState.WorldCFrame + Shift
+		end
 
 	-- Move along individual items' axes
 	elseif self.Axes == 'Local' then
 		for Part, InitialState in pairs(InitialPartStates) do
 			Part.CFrame = InitialState.CFrame * CFrame.new(Shift)
+		end
+		for Attachment, InitialState in pairs(InitialAttachmentsStates) do
+			Attachment.WorldCFrame = InitialState.WorldCFrame * CFrame.new(Shift)
 		end
 		-- for Model, InitialState in pairs(InitialModelStates) do
 		-- 	Model.WorldPivot = InitialState.Pivot * CFrame.new(Shift)
@@ -178,6 +184,10 @@ function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, In
 		for Model, InitialState in pairs(InitialModelStates) do
 			local FocusOffset = InitialFocusCFrame:ToObjectSpace(InitialState.Pivot)
 			Model.WorldPivot = FocusCFrame * FocusOffset
+		end
+		for Attachment, InitialState in pairs(InitialAttachmentsStates) do
+			local FocusOffset = InitialFocusCFrame:ToObjectSpace(InitialState.WorldCFrame)
+			Attachment.WorldCFrame = FocusCFrame * FocusOffset
 		end
 
 	end
@@ -371,10 +381,10 @@ function MoveTool:NudgeSelectionByFace(Face)
 	self:TrackChange()
 
 	-- Prepare parts to be moved
-	local InitialPartStates, InitialModelStates, InitialFocusCFrame = self:PrepareSelectionForDragging()
+	local InitialPartStates, InitialModelStates, InitialAttachmentsStates, InitialFocusCFrame = self:PrepareSelectionForDragging()
 
 	-- Perform the movement
-	self:MovePartsAlongAxesByFace(Face, NudgeAmount, InitialPartStates, InitialModelStates, InitialFocusCFrame)
+	self:MovePartsAlongAxesByFace(Face, NudgeAmount, InitialPartStates, InitialModelStates, InitialAttachmentsStates, InitialFocusCFrame)
 
 	-- Indicate updated drag distance
 	self.DragChanged:Fire(NudgeAmount)
@@ -408,6 +418,7 @@ function MoveTool:TrackChange()
 	self.HistoryRecord = {
 		Parts = Support.CloneTable(Selection.Parts);
 		Models = Support.CloneTable(Selection.Models);
+		Attachments = Support.CloneTable(Selection.Attachments);
 		BeforeCFrame = {};
 		AfterCFrame = {};
 		Selection = Selection.Items;
@@ -424,6 +435,12 @@ function MoveTool:TrackChange()
 				table.insert(Changes, {
 					Part = Part;
 					CFrame = Record.BeforeCFrame[Part];
+				})
+			end
+			for _, Attachment in ipairs(Record.Attachments) do
+				table.insert(Changes, {
+					Attachment = Attachment;
+					WorldCFrame = Record.BeforeCFrame[Attachment];
 				})
 			end
 			for _, Model in ipairs(Record.Models) do
@@ -452,6 +469,12 @@ function MoveTool:TrackChange()
 					CFrame = Record.AfterCFrame[Part];
 				})
 			end
+			for _, Attachment in ipairs(Record.Attachments) do
+				table.insert(Changes, {
+					Attachment = Attachment;
+					WorldCFrame = Record.AfterCFrame[Attachment];
+				})
+			end
 			for _, Model in ipairs(Record.Models) do
 				table.insert(Changes, {
 					Model = Model;
@@ -469,6 +492,9 @@ function MoveTool:TrackChange()
 	-- Collect the selection's initial state
 	for _, Part in pairs(self.HistoryRecord.Parts) do
 		self.HistoryRecord.BeforeCFrame[Part] = Part.CFrame
+	end
+	for _, Attachment in pairs(self.HistoryRecord.Attachments) do
+		self.HistoryRecord.BeforeCFrame[Attachment] = Attachment.WorldCFrame
 	end
 	pcall(function ()
 		for _, Model in ipairs(self.HistoryRecord.Models) do
@@ -495,6 +521,13 @@ function MoveTool:RegisterChange()
 			CFrame = Part.CFrame;
 		})
 	end;
+	for _, Attachment in pairs(self.HistoryRecord.Attachments) do
+		self.HistoryRecord.AfterCFrame[Attachment] = Attachment.WorldCFrame
+		table.insert(Changes, {
+			Attachment = Attachment;
+			WorldCFrame = Attachment.WorldCFrame;
+		})
+	end;
 	pcall(function ()
 		for _, Model in pairs(self.HistoryRecord.Models) do
 			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
@@ -514,16 +547,18 @@ function MoveTool:RegisterChange()
 
 end
 
+
+
 --- Prepares selection for dragging, and returns the initial state of the selection.
 function MoveTool:PrepareSelectionForDragging()
 	local InitialPartStates = {}
 	local InitialModelStates = {}
+	local InitialAttachmentsStates = {}
 
 	-- Get index of parts
 	local PartIndex = Support.FlipTable(Selection.Parts)
-
-	-- Stop parts from moving, and capture the initial state of the parts
-	for _, Part in pairs(Selection.Parts) do
+	
+	local function SetUpPart(Part)
 		InitialPartStates[Part] = {
 			Anchored = Part.Anchored;
 			CanCollide = Part.CanCollide;
@@ -535,13 +570,35 @@ function MoveTool:PrepareSelectionForDragging()
 		Part:BreakJoints();
 		Part.Velocity = Vector3.new();
 		Part.RotVelocity = Vector3.new();
+	end
+
+	-- Stop parts from moving, and capture the initial state of the parts
+	for _, Part in pairs(Selection.Parts) do
+		SetUpPart(Part)
 	end;
+	
+	for _, Model in ipairs(Selection.Models) do
+		for _, Part in Model:GetChildren() do
+			if Part:IsA("BasePart") then
+				SetUpPart(Part)
+			end
+		end
+	end
 
 	-- Get initial model states (temporarily pcalled due to pivot API being in beta)
-	pcall(function ()
+--[[	pcall(function ()
 		for _, Model in ipairs(Selection.Models) do
+			
 			InitialModelStates[Model] = {
 				Pivot = Model:GetPivot();
+			}
+		end
+	end)]]
+	
+	pcall(function ()
+		for _, Attachment in ipairs(Selection.Attachments) do
+			InitialAttachmentsStates[Attachment] = {
+				WorldCFrame = Attachment.WorldCFrame;
 			}
 		end
 	end)
@@ -553,6 +610,8 @@ function MoveTool:PrepareSelectionForDragging()
 		InitialFocusCFrame = nil
 	elseif Focus:IsA 'BasePart' then
 		InitialFocusCFrame = Focus.CFrame
+	elseif Focus:IsA 'Attachment' then
+		InitialFocusCFrame = Focus.WorldCFrame
 	elseif Focus:IsA 'Model' then
 		InitialFocusCFrame = Focus:GetModelCFrame()
 		pcall(function ()
@@ -560,7 +619,7 @@ function MoveTool:PrepareSelectionForDragging()
 		end)
 	end
 
-	return InitialPartStates, InitialModelStates, InitialFocusCFrame
+	return InitialPartStates, InitialModelStates, InitialAttachmentsStates, InitialFocusCFrame
 end;
 
 -- Return the tool

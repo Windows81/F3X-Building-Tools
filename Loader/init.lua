@@ -82,4 +82,21 @@ local DecorateTool = require(CoreTools:WaitForChild 'Decorate')
 Core.AssignHotkey('P', Core.Support.Call(Core.EquipTool, DecorateTool));
 Core.AddToolButton(Core.Assets.DecorateIcon, 'P', DecorateTool)
 
+-- Initialize marketplace tool
+local MarketplaceTool = require(CoreTools:WaitForChild 'Marketplace')
+Core.AssignHotkey('L', Core.Support.Call(Core.EquipTool, MarketplaceTool));
+Core.AddToolButton(Core.Assets.MarketplaceIcon, 'L', MarketplaceTool, UDim2.new(0.225, 0, 0.175, 0), UDim2.new(0.55, 0, 0.55, 0))
+
+local TextTool = require(CoreTools:WaitForChild 'Text')
+Core.AssignHotkey('T', Core.Support.Call(Core.EquipTool, TextTool));
+Core.AddToolButton(Core.Assets.TextIcon, 'T', TextTool, UDim2.new(0.275, 0, 0.275, 0), UDim2.new(0.45, 0, 0.45, 0))
+
+local TransformationTool = require(CoreTools:WaitForChild 'Transformation')
+Core.AssignHotkey('Q', Core.Support.Call(Core.EquipTool, TransformationTool));
+Core.AddToolButton(Core.Assets.TransformationIcon, 'Q', TransformationTool, UDim2.new(0.225, 0, 0.175, 0), UDim2.new(0.55, 0, 0.55, 0))
+
+local AttachmentTool = require(CoreTools:WaitForChild 'Attachment')
+Core.AssignHotkey('Y', Core.Support.Call(Core.EquipTool, AttachmentTool));
+Core.AddToolButton(Core.Assets.AttachmentIcon, 'Y', AttachmentTool, UDim2.new(0.225, 0, 0.175, 0), UDim2.new(0.55, 0, 0.55, 0))
+
 return Core

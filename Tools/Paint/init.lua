@@ -1,6 +1,7 @@
 
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
+Sounds = Tool:WaitForChild("Sounds");
 local Vendor = Tool:WaitForChild('Vendor')
 local UI = Tool:WaitForChild('UI')
 
@@ -27,8 +28,22 @@ local PaintTool = {
 	BrickColor = nil;
 }
 
-PaintTool.ManualText = [[<font face="GothamBlack" size="16">Paint Tool  🛠</font>
+PaintTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Paint Tool  🛠</i></u></font>
 Lets you paint parts in different colors.<font size="6"><br /></font>
+
+<font size="12" color="rgb(150, 150, 150)"><b>Palette</b></font>
+This is what's shown directly when opening the Paint Tool. You can choose a color by clicking on one of the squares found in this window.<font size="6"><br /></font>
+
+<font size="12" color="rgb(150, 150, 150)"><b>Color picker</b></font>
+This is the most advanced way to pick a specific color. You can set your color:<font size="6"><br /></font>
+
+ <font color="rgb(150, 150, 150)">•</font>  With the 3 sliders — the first for the hue (tint), second for the saturation (white or colorful) and third for the brightness/value.
+ <font color="rgb(150, 150, 150)">•</font>  With HSV values — they work the same way as the sliders, this time with values.
+ <font color="rgb(150, 150, 150)">•</font>  With RGB values — 0 is dark, 255 is colorful. Input 3 values which are respectively red, green and blue.
+ 
+<font size="12" color="rgb(150, 150, 150)"><b>Coloring</b></font>
+
+You can apply the selected color by selecting the part you want to color.
 
 <b>TIP:</b> Press <b><i>R</i></b> while hovering over a part to copy its color.]]
 
@@ -37,7 +52,7 @@ function PaintTool:Equip()
 
 	-- Set up maid for cleanup
 	self.Maid = Maid.new()
-
+	
 	-- Start up our interface
 	ShowUI();
 	self:BindShortcutKeys()
@@ -57,10 +72,13 @@ function PaintTool:Unequip()
 end;
 
 function ShowUI()
+	
+	UI = Tool:WaitForChild('UI')
+	ColorPicker = require(UI:WaitForChild('ColorPicker'))
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
-	if PaintTool.UI then
+	if PaintTool.UI and PaintTool.UI.Parent ~= nil then
 
 		-- Reveal the UI
 		PaintTool.UI.Visible = true;
@@ -72,6 +90,10 @@ function ShowUI()
 		return;
 
 	end;
+	
+	if PaintTool.UI then
+		PaintTool.UI:Destroy()
+	end
 
 	-- Create the UI
 	PaintTool.UI = Core.Tool.Interfaces.BTPaintToolGUI:Clone();
@@ -88,6 +110,7 @@ function ShowUI()
 
 				-- Recolor the selection when the button is clicked
 				Button.MouseButton1Click:Connect(function ()
+					game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 					SetColor(BrickColor.new(Button.Name).Color);
 				end);
 
@@ -233,7 +256,7 @@ function PreviewColor(Color)
 			Part.Color = State.Color;
 
 			-- Update union coloring options
-			if Part.ClassName == 'UnionOperation' then
+			if Part:IsA() then
 				Part.UsePartColor = State.UsePartColor;
 			end;
 		end;

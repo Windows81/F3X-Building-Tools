@@ -46,7 +46,7 @@ end
 function InstancePool:Get()
 
     -- Get free instance, or generate a new one
-    local Instance = next(self.Free) or self.Generate()
+	local Instance = next(self.Free) and next(self.Free).Parent ~= nil and next(self.Free) or self.Generate()
 
     -- Reserve instance
     self.Free[Instance] = nil
