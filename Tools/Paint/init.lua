@@ -28,7 +28,7 @@ local PaintTool = {
 	BrickColor = nil;
 }
 
-PaintTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Paint Tool  🛠</i></u></font>
+PaintTool.ManualText = [[<font face="GothamBlack" size="16">Paint Tool  🛠</font>
 Lets you paint parts in different colors.<font size="6"><br /></font>
 
 <font size="12" color="rgb(150, 150, 150)"><b>Palette</b></font>
@@ -40,7 +40,7 @@ This is the most advanced way to pick a specific color. You can set your color:<
  <font color="rgb(150, 150, 150)">•</font>  With the 3 sliders — the first for the hue (tint), second for the saturation (white or colorful) and third for the brightness/value.
  <font color="rgb(150, 150, 150)">•</font>  With HSV values — they work the same way as the sliders, this time with values.
  <font color="rgb(150, 150, 150)">•</font>  With RGB values — 0 is dark, 255 is colorful. Input 3 values which are respectively red, green and blue.
- 
+
 <font size="12" color="rgb(150, 150, 150)"><b>Coloring</b></font>
 
 You can apply the selected color by selecting the part you want to color.
@@ -57,7 +57,7 @@ function PaintTool:Equip()
 
 	-- Set up maid for cleanup
 	self.Maid = Maid.new()
-	
+
 	-- Start up our interface
 	ShowUI();
 	self:BindShortcutKeys()
@@ -77,7 +77,7 @@ function PaintTool:Unequip()
 end;
 
 function ShowUI()
-	
+
 	UI = Tool:WaitForChild('UI')
 	ColorPicker = require(UI:WaitForChild('ColorPicker'))
 	-- Creates and reveals the UI
@@ -95,7 +95,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if PaintTool.UI then
 		PaintTool.UI:Destroy()
 	end

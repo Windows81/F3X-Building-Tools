@@ -27,7 +27,7 @@ local TransformationTool = {
 
 local NegativeParts = {}
 
-TransformationTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Union Tool  🛠</i></u></font>
+TransformationTool.ManualText = [[<font face="GothamBlack" size="16">Union Tool  🛠</font>
 Allows you to create unions with this tool.<font size="6"><br /></font>
 
 <font size="12" color="rgb(150, 150, 150)"><b>Negate</b></font>
@@ -38,6 +38,11 @@ When pressing the negate button, every selected parts will turn slightly red. Th
 
 Once the union button is pressed, every parts that intersect will turn into one single part, truncated by the negative parts.
 ]]
+
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+TransformationTool.ManualText = TransformationTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
 
 function TransformationTool.Equip()
 	-- Enables the tool's equipped functionality
@@ -116,7 +121,7 @@ function HideUI()
 
 	UIUpdater:Stop();
 
-	for _, Highlight in pairs(script.Highlights:GetChildren()) do
+	for _, Highlight in pairs(HighlightsFolder:GetChildren()) do
 		Highlight.Enabled = false
 	end
 
@@ -184,7 +189,7 @@ function NegateParts()
 		if Support.GetChildOfClass(Part, "SpecialMesh") then continue end
 		if table.find(NegativeParts, Part) then
 			NegativeParts[table.find(NegativeParts, Part)] = nil
-			for _, Highlight in pairs(script.Highlights:GetChildren()) do
+			for _, Highlight in pairs(HighlightsFolder:GetChildren()) do
 				if Highlight.Adornee == Part then
 					Highlight:Destroy()
 				end
@@ -202,14 +207,14 @@ function UpdateNegativePartsDisplay()
 	for i, Part in pairs(NegativeParts) do
 		if Support.GetChildOfClass(Part, "SpecialMesh") or Part.Parent == nil or Part == nil then
 			NegativeParts[Part] = nil
-			for _, Highlight in pairs(script.Highlights:GetChildren()) do
+			for _, Highlight in pairs(HighlightsFolder:GetChildren()) do
 				if Highlight.Adornee == Part then
 					Highlight:Destroy()
 				end
 			end
 			continue
 		end
-		for _, Highlight in pairs(script.Highlights:GetChildren()) do
+		for _, Highlight in pairs(HighlightsFolder:GetChildren()) do
 			if Highlight.Adornee == Part then
 				Highlight.Enabled = true
 			elseif Highlight.Adornee == nil or Highlight.Adornee.Parent == nil then
@@ -217,7 +222,7 @@ function UpdateNegativePartsDisplay()
 			end
 		end
 	end
-	for _, Highlight in pairs(script.Highlights:GetChildren()) do
+	for _, Highlight in pairs(HighlightsFolder:GetChildren()) do
 		if Highlight.Adornee == nil or Highlight.Adornee.Parent == nil then
 			Highlight:Destroy()
 		end

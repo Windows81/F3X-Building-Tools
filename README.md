@@ -52,5 +52,7 @@ RFD serialise --method rbxl --load "./Build/Building Tools.rbxm" --save "./Build
 
 ---
 
-Designed and built by [the F3X team](http://www.roblox.com/Groups/Group.aspx?gid=831895); patches added by [VisualPlugin](https://github.com/Windows81) et al.
+- Designed and built by [the F3X team](http://www.roblox.com/Groups/Group.aspx?gid=831895);
+- Patches added from from [Fork3X](https://devforum.roblox.com/t/beta-fork3x-an-open-source-complete-and-patched-fork-of-the-f3x-building-tools/3622698/1);
+- Additional compatibility adjustments by [VisualPlugin](https://github.com/Windows81) et al.
 ```

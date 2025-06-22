@@ -31,7 +31,7 @@ local ResizeTool = {
 	IncludeMeshes = true;
 }
 
-ResizeTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Resize Tool  🛠</i></u></font>
+ResizeTool.ManualText = [[<font face="GothamBlack" size="16">Resize Tool  🛠</font>
 Allows you to resize parts.<font size="12"><br /></font>
 <font size="12" color="rgb(150, 150, 150)"><b>Directions</b></font>
 Lets you choose in which directions to resize the part.<font size="6"><br /></font>
@@ -109,7 +109,7 @@ function ClearConnection(ConnectionKey)
 end;
 
 function ShowUI()
-	
+
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
@@ -125,7 +125,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if ResizeTool.UI then
 		ResizeTool.UI:Destroy()
 	end
@@ -158,14 +158,14 @@ function ShowUI()
 	DirectionsSwitch.Scale.Button.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end)
-	
+
 	local MeshToggle = ResizeTool.UI.MeshOption.Check
 
 	MeshToggle.Activated:Connect(function()
 		ResizeTool.IncludeMeshes = not ResizeTool.IncludeMeshes
 		UpdateToggleInput(MeshToggle, ResizeTool.IncludeMeshes)
 	end)
-	
+
 	UpdateToggleInput(MeshToggle, ResizeTool.IncludeMeshes)
 
 	-- Add functionality to the increment input
@@ -278,16 +278,16 @@ function SetDirections(DirectionMode)
 	-- Sets the given resizing direction mode
 
 	-- Update setting
-	
+
 	local OldDirectionMode = ResizeTool.Directions
-	
+
 	ResizeTool.Directions = DirectionMode;
-	
+
 	--	HideHandles()
 	if OldDirectionMode ~= DirectionMode then
 		BoundingBox.ClearBoundingBox();
 	end
-	
+
 	if OldDirectionMode ~= "Scale" and DirectionMode == "Scale" or OldDirectionMode == "Scale" and DirectionMode ~= "Scale" then
 		ShowHandles()
 	end
@@ -353,14 +353,14 @@ function ShowHandles()
 	if not Connections.AutofocusHandle then
 		Connections.AutofocusHandle = Selection.FocusChanged:Connect(ShowHandles);
 	end;
-	
+
 
 	if Selection.Focus and Selection.Focus:IsA("Attachment") then
 		return
 	end
-	
+
 --	BoundingBox.ClearBoundingBox();
-	
+
 	-- If handles already exist, only show them
 	if ResizeTool.Handles then
 		if ResizeTool.Directions ~= "Scale" or Selection.Focus == nil then
@@ -375,7 +375,7 @@ function ShowHandles()
 		end
 		return
 	end
-	
+
 	local NewInitialState
 	local InitialBoundingBoxSize
 	local InitialBoundingBoxPosition
@@ -393,7 +393,7 @@ function ShowHandles()
 		-- Stop parts from moving, and capture the initial state of the parts
 
 		NewInitialState = PreparePartsForResizing();
-		
+
 		if ResizeTool.Directions == "Scale" then
 			local BoundingBoxPart = BoundingBox.GetBoundingBox()
 			InitialBoundingBoxSize = BoundingBoxPart.Size
@@ -419,7 +419,7 @@ function ShowHandles()
 
 		-- Calculate the increment-aligned drag distance
 		Distance = GetIncrementMultiple(Distance, ResizeTool.Increment);
-		
+
 		-- Resize the parts on the selected faces by the calculated distance
 		local Success, Adjustment = ResizePartsByFace(Face, Distance, ResizeTool.Directions, NewInitialState, InitialBoundingBoxSize, InitialBoundingBoxPosition);
 
@@ -437,7 +437,7 @@ function ShowHandles()
 		if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
 			for Part, State in pairs(NewInitialState) do
 				Part.Size = State.Size;
-				Part.CFrame = State.CFrame; 
+				Part.CFrame = State.CFrame;
 			end;
 		end;
 
@@ -466,10 +466,10 @@ function ShowHandles()
 		-- Register the change
 		RegisterChange();
 	end
-	
+
 	-- Create the handles
 	local Handles = require(Libraries:WaitForChild 'Handles')
-	
+
 	local function AttachHandles(Adornee)
 		ResizeTool.Handles = Handles.new({
 			Color = ResizeTool.Color.Color,
@@ -480,7 +480,7 @@ function ShowHandles()
 			OnDragEnd = OnHandleDragEnd
 		})
 	end
-	
+
 	if ResizeTool.Directions ~= "Scale" or Selection.Focus == nil then
 		AttachHandles(Selection.Focus)
 	else
@@ -524,7 +524,7 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 
 	-- Check for any potential undersizing or oversizing
 	local ShortestSize, ShortestPart, LongestSize, LongestPart;
-	
+
 	local ScaleFactor
 
 	if Directions == "Scale" and BoundingBoxInitialSize then
@@ -532,7 +532,7 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 		local ScaledValue = BoundingBoxInitialSize[AxisName] + Distance
 		ScaleFactor = ScaledValue / BoundingBoxInitialSize[AxisName]
 	end
- 
+
 	for Part, InitialState in pairs(InitialStates) do
 		if Part:IsA("BasePart") then
 		-- Calculate target size for this resize
@@ -546,7 +546,7 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 		elseif TargetSize > 2048 and (not LongestSize or (LongestSize and TargetSize > LongestSize)) then
 			LongestSize, LongestPart = TargetSize, Part;
 		end;
-			
+
 		end
 
 	end;
@@ -564,7 +564,7 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 		local TargetSize = ResizeTool.Increment * tonumber((tostring(2048 / ResizeTool.Increment):gsub('%..+', '')));
 		return false, Distance + TargetSize - LongestSize;
 	end;
-	
+
 	--print(Distance)
 
 	-- Resize each part
@@ -580,9 +580,9 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 
 					-- Resize cylinders on both Y & Z axes for circle sides
 				elseif Item.Shape == Enum.PartType.Cylinder and AxisName ~= 'X' then
-					
+
 				--	print(Distance)
-					
+
 					Item.Size = InitialState.Size + Vector3.new(0, Distance, Distance);
 
 					-- Resize block parts and cylinder lengths normally
@@ -599,7 +599,7 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 				end
 		elseif Item:IsA("DataModelMesh") and Item.MeshType == Enum.MeshType.FileMesh then
 				local MeshRatio = Item.Parent.Size[AxisName] / InitialStates[Item.Parent].Size[AxisName]
-			
+
 				if Directions == "Scale" then
 					Item.Scale = InitialState.Scale * MeshRatio
 				else
@@ -615,7 +615,7 @@ function ResizePartsByFace(Face, Distance, Directions, InitialStates, BoundingBo
 				-- Keep the part centered when resizing in both directions
 			elseif Directions == 'Both' then
 				Item.CFrame = InitialState.CFrame;
-				
+
 			elseif Directions == 'Scale' then
 				Item.CFrame = (CFrame.new(AxisPositioningMultipliers[Face] * Distance / 2) + BoundingBoxInitialPosition:Lerp(InitialState.CFrame.Position, ScaleFactor)) * (Item.CFrame - Item.CFrame.Position);
 
@@ -737,7 +737,7 @@ function SetAxisSize(Axis, Size)
 
 	-- Update each part
 	for Item, InitialState in pairs(InitialStates) do
-		
+
 		if Item:IsA("BasePart") then
 		-- Set the part's new size
 		Item.Size = Vector3.new(
@@ -758,7 +758,7 @@ function SetAxisSize(Axis, Size)
 		end
 
 	end;
-	
+
 	-- Cache up permissions for all private areas
 	local AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player);
 
@@ -801,17 +801,17 @@ function NudgeSelectionByFace(Face)
 
 	-- Prepare parts to be resized
 	InitialState = PreparePartsForResizing();
-	
+
 	local BoundingBoxPart
 	local BoundingBoxSize
 	local BoundingBoxCFrame
-	
+
 	if ResizeTool.Directions == "Scale" then
 		BoundingBoxPart = BoundingBox.GetBoundingBox()
 		BoundingBoxSize = BoundingBoxPart.Size
 		BoundingBoxCFrame = BoundingBoxPart.CFrame
 	end
-	
+
 	-- Perform the resizing
 	local Success, Adjustment = ResizePartsByFace(Face, NudgeAmount, ResizeTool.Directions, InitialState, BoundingBoxSize, BoundingBoxCFrame);
 
@@ -926,7 +926,7 @@ function TrackChange()
 		HistoryRecord.BeforeSize[Part] = Part.Size;
 		HistoryRecord.BeforeCFrame[Part] = Part.CFrame;
 	end;
-	
+
 	for _, Mesh in pairs(HistoryRecord.Meshes) do
 		HistoryRecord.BeforeScale[Mesh] = Mesh.Scale;
 		HistoryRecord.BeforeOffset[Mesh] = Mesh.Offset;
@@ -949,7 +949,7 @@ function RegisterChange()
 		HistoryRecord.AfterCFrame[Part] = Part.CFrame;
 		table.insert(Changes, { Part = Part, Size = Part.Size, CFrame = Part.CFrame });
 	end;
-	
+
 	for _, Mesh in pairs(HistoryRecord.Meshes) do
 		HistoryRecord.AfterScale[Mesh] = Mesh.Scale;
 		HistoryRecord.AfterOffset[Mesh] = Mesh.Offset;
@@ -969,7 +969,7 @@ function PreparePartsForResizing()
 	-- Prepares parts for resizing and returns the initial state of the parts
 
 	local InitialState = {};
-	
+
 	-- Stop parts from moving, and capture the initial state of the parts
 	for _, Part: BasePart in pairs(Selection.Parts) do
 		InitialState[Part] = { Anchored = Part.Anchored, CanCollide = Part.CanCollide, Size = Part.Size, CFrame = Part.CFrame };
@@ -978,13 +978,13 @@ function PreparePartsForResizing()
 		Part:BreakJoints();
 		Part.AssemblyLinearVelocity = Vector3.new();
 		Part.AssemblyAngularVelocity = Vector3.new();
-		
+
 		if ResizeTool.IncludeMeshes == true then
 			if Part:FindFirstChildWhichIsA("DataModelMesh") then
 				local Mesh = Part:FindFirstChildWhichIsA("DataModelMesh")
 				InitialState[Mesh] = { Scale = Mesh.Scale, Offset = Mesh.Offset };
 			end
-		end	
+		end
 	end;
 
 	return InitialState;
@@ -1044,7 +1044,7 @@ function StartSnapping()
 
 	-- Listen for when the user starts dragging while in snap mode
 	Connections.SnapDragStart = Support.AddUserInputListener('Began', 'MouseButton1', false, function (Input)
-		
+
 		if SnapTracking.Target == nil then
 			return;
 		end;
@@ -1054,9 +1054,9 @@ function StartSnapping()
 		SnappingStartAim = Vector2.new(Input.Position.X, Input.Position.Y);
 		SnappingStartPoint = SnappedPoint;
 		SnappingStartTarget = SnapTracking.Target;
-		
+
 		SnappingStartDirections = GetFaceOffsetsFromCorner(SnappingStartTarget, SnappingStartPoint);
-		
+
 		SnappingStartSelectionState = PreparePartsForResizing();
 		AreaPermissions = Security.GetPermissions(Security.GetSelectionAreas(Selection.Parts), Core.Player);
 
@@ -1189,7 +1189,7 @@ function StartSnapping()
 					BoundingBoxSize = BoundingBoxPart.Size
 					BoundingBoxCFrame = BoundingBoxPart.CFrame
 				end
-				
+
 				local Direction = (SnappingDirectionOffset - SnappingStartPoint).unit;
 				local Distance = (SnappedPoint - SnappingStartPoint):Dot(Direction);
 

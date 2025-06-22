@@ -24,7 +24,7 @@ local LightingTool = {
 	OnSideChanged = Signal.new();
 }
 
-LightingTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Lighting Tool  🛠</i></u></font>
+LightingTool.ManualText = [[<font face="GothamBlack" size="16">Lighting Tool  🛠</font>
 Lets you add point lights, surface lights, and spotlights to parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click on the surface of any part to change a light's side quickly.]]
@@ -81,7 +81,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if LightingTool.UI then
 		LightingTool.UI:Destroy()
 	end
@@ -128,10 +128,10 @@ function EnableLightSettingsUI(LightSettingsUI)
 
 	-- Get the type of light this settings UI is for
 	local LightType = LightSettingsUI.Name;
-	
+
 	local UI = Tool:WaitForChild('UI')
 	local ColorPicker = require(UI:WaitForChild('ColorPicker'))
-	
+
 	local Dropdown = require(UI:WaitForChild('Dropdown'))
 
 	-- Option input references
@@ -189,7 +189,7 @@ function EnableLightSettingsUI(LightSettingsUI)
 		AddLights(LightType);
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Add"))
 	end);
-	
+
 	AddButton.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
@@ -199,7 +199,7 @@ function EnableLightSettingsUI(LightSettingsUI)
 		RemoveLights(LightType);
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Remove"))
 	end);
-	
+
 	RemoveButton.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
@@ -276,7 +276,7 @@ function GetLights(LightType)
 	for _, Part in pairs(Selection.Parts) do
 		table.insert(Lights, Support.GetChildOfClass(Part, LightType));
 	end;
-	
+
 	for _, Attachment in pairs(Selection.Attachments) do
 		table.insert(Lights, Support.GetChildOfClass(Attachment, LightType));
 	end;
@@ -559,7 +559,7 @@ function AddLights(LightType)
 		end;
 
 	end;
-	
+
 	for _, Attachment in pairs(Selection.Attachments) do
 
 		-- Make sure this part doesn't already have a light

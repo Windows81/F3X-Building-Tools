@@ -33,7 +33,7 @@ local NewPartTool = {
 	OnTypeChanged = Signal.new();
 }
 
-NewPartTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>New Part Tool  🛠</i></u></font>
+NewPartTool.ManualText = [[<font face="GothamBlack" size="16">New Part Tool  🛠</font>
 Lets you create new parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click and drag where you want your part to be.]]
@@ -80,9 +80,9 @@ end;
 
 function NewPartTool:ShowUI()
 	UI = Tool:WaitForChild('UI')
-	
+
 	local Dropdown = require(UI:WaitForChild('Dropdown'))
-	
+
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created
@@ -95,7 +95,7 @@ function NewPartTool:ShowUI()
 		return;
 
 	end;
-	
+
 	if self.UI then
 		self.UI:Destroy()
 	end
@@ -118,15 +118,15 @@ function NewPartTool:ShowUI()
 		'Spawn';
 		'Tool';
 	}
-	
-	for _, Type in Options.InstanceBlacklist do
+
+	for _, Type in pairs(Options.InstanceBlacklist) do
 		local Index = table.find(Types, Type)
 		if Index then
 			table.remove(Types, Index)
 		end
 	end
-	
-	for Type, _ in Options.CustomPartTypes do
+
+	for Type, _ in pairs(Options.CustomPartTypes) do
 		table.insert(Types, Type)
 	end
 

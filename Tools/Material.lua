@@ -149,16 +149,6 @@ function MaterialTool:ShowUI()
 		})
 	end
 
-	-- Enable the massless switch
-	self.UI.MasslessOption.Check.Activated:Connect(function()
-		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
-		if Support.IdentifyCommonProperty(Selection.Parts, "Massless") == false then
-			SetProperty("Massless", true)
-		else
-			SetProperty("Massless", false)
-		end
-	end)
-
 	-- Enable the cast shadows switch
 	self.UI.CastShadowOption.Check.Activated:Connect(function()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
@@ -286,12 +276,12 @@ end
 -- List of UI layouts
 local Layouts = {
 	EmptySelection = { "SelectNote" },
-	Normal = { "MaterialOption", "TransparencyOption", "ReflectanceOption", "MasslessOption", "CastShadowOption" },
+	Normal = { "MaterialOption", "TransparencyOption", "ReflectanceOption", "CastShadowOption" },
 }
 
 -- List of UI elements
 local UIElements =
-	{ "SelectNote", "MaterialOption", "TransparencyOption", "ReflectanceOption", "MasslessOption", "CastShadowOption" }
+	{ "SelectNote", "MaterialOption", "TransparencyOption", "ReflectanceOption", "CastShadowOption" }
 
 -- Current UI layout
 local CurrentLayout
@@ -384,7 +374,6 @@ function MaterialTool:UpdateUI()
 		[TransparencyInput] = Transparency and Support.Round(Transparency, 2) or "*",
 		[ReflectanceInput] = Reflectance and Support.Round(Reflectance, 2) or "*",
 	})
-	UpdateToggleInput(self.UI.MasslessOption.Check, Massless)
 	UpdateToggleInput(self.UI.CastShadowOption.Check, CastShadow)
 end
 

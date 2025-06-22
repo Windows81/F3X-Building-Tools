@@ -29,7 +29,7 @@ local MeshTool = {
 	OnTypeChanged = Signal.new();
 }
 
-MeshTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Mesh Tool  🛠</i></u></font>
+MeshTool.ManualText = [[<font face="GothamBlack" size="16">Mesh Tool  🛠</font>
 Lets you add meshes to parts.<font size="6"><br /></font>
 
 <b>TIP:</b> You can paste the link to anything with a mesh (e.g. a hat, gear, etc) and it will automatically find the right mesh and texture IDs.<font size="6"><br /></font>
@@ -72,10 +72,10 @@ function ClearConnections()
 end;
 
 function ShowUI()
-	
+
 	UI = Tool:WaitForChild('UI')
 	local Dropdown = require(UI:WaitForChild('Dropdown'))
-	
+
 	-- Creates and reveals the UI
 
 	-- Reveal UI if already created

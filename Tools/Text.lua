@@ -32,7 +32,7 @@ local TextTool = {
 	OnFontChanged = Signal.new();
 }
 
-TextTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Text Tool  🛠</i></u></font>
+TextTool.ManualText = [[<font face="GothamBlack" size="16">Text Tool  🛠</font>
 Allows the player to create text on a part.
 
 <b>TIP: Rich text</b> allows you to modify your text with more flexibility. To use them, you must <b>mark</b> the text lik ine the following example:
@@ -66,6 +66,11 @@ YOUR TEXT HERE&lt;br /&gt;ANOTHER PART OF TEXT | Line break
 Remember mark-ups can be stacked! e. g. : &lt;b&gt;&lt;i&gt;&lt;u&gt;Hi!&lt;/b&gt;&lt;/i&gt;&lt;/u&gt;
 
 ]]
+
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+TextTool.ManualText = TextTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
 
 local Fonts = {
 	[Enum.Font.Legacy] = "Legacy";

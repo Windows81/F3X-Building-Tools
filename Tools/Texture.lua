@@ -31,7 +31,7 @@ local TextureTool = {
 	OnFaceChanged = Signal.new();
 }
 
-TextureTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Texture Tool  🛠</i></u></font>
+TextureTool.ManualText = [[<font face="GothamBlack" size="16">Texture Tool  🛠</font>
 Lets you add decals and textures to parts. Decals are one image fitting the whole surface, whereas textures are repeated images.<font size="6"><br /></font>
 
 <b>TIP: </b>IDs are codes you can find on Roblox's Creator Marketplace or with the marketplace tool<font size="6"><br /></font>
@@ -87,7 +87,7 @@ end;
 function TextureTool:ShowUI()
 	UI = Tool:WaitForChild('UI')
 	ColorPicker = require(UI:WaitForChild('ColorPicker'))
-	
+
 	local Dropdown = require(UI:WaitForChild('Dropdown'))
 	-- Creates and reveals the UI
 
@@ -106,7 +106,7 @@ function TextureTool:ShowUI()
 		return;
 
 	end;
-	
+
 	if self.UI then
 		self.UI:Destroy()
 	end
@@ -164,7 +164,7 @@ function TextureTool:ShowUI()
 	self.OnFaceChanged:Connect(function ()
 		Roact.update(FaceDropdownHandle, BuildFaceDropdown())
 	end)
-	
+
 	FastLoadToggle.Activated:Connect(function()
 		self.FastLoad = not self.FastLoad
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
@@ -196,7 +196,7 @@ function TextureTool:ShowUI()
 	RemoveButton.Button.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
-	
+
 	local ColorPickerHandle = nil
 	ColorButton.MouseButton1Click:Connect(function ()
 		local CommonColor = Support.IdentifyCommonProperty(GetTextures(TextureTool.Type, TextureTool.Face), "Color3")
@@ -467,9 +467,9 @@ function TextureTool:UpdateUI()
 		[ImageIdInput] = ImageId and ParseAssetId(ImageId) or ImageId or '*';
 		[TransparencyInput] = Transparency and Support.Round(Transparency, 3) or '*';
 	};
-	
+
 	local BoundingBox = self.UI.ImageIDOption.TextInput.BoundingBox
-	
+
 	BoundingBox.Text = ImageIdInput.Text
 
 	-- Update texture-specific information on UI
@@ -596,10 +596,10 @@ function SetTextureId(TextureType, Face, AssetId)
 	if not AssetId then
 		return;
 	end;
-	
+
 	local Changes
 	local SearchForImage = false
-	
+
 	-- Prepare the change request
 	if tonumber(AssetId) == nil then
 		Changes = {

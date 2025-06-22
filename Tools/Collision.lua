@@ -17,7 +17,7 @@ local CollisionTool = {
 	Color = BrickColor.new 'Really black';
 }
 
-CollisionTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Collision Tool  🛠</i></u></font>
+CollisionTool.ManualText = [[<font face="GothamBlack" size="16">Collision Tool  🛠</font>
 Lets you change whether parts collide with one another.<font size="6"><br /></font>
 
 <b>TIP:</b> Press <b>Enter</b> to toggle collision quickly.]]
@@ -74,11 +74,11 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if UI then
 		UI:Destroy()
 	end
-	
+
 	-- Create the UI
 	UI = Core.Tool.Interfaces.BTCollisionToolGUI:Clone();
 	UI.Parent = Core.UI;

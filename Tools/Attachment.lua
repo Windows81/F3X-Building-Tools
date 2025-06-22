@@ -36,7 +36,7 @@ local AttachmentTool = {
 	OnTypeChanged = Signal.new();
 }
 
-AttachmentTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Attachment Tool  🛠</i></u></font>
+AttachmentTool.ManualText = [[<font face="GothamBlack" size="16">Attachment Tool  🛠</font>
 The attachment tool allows you to create attachments. These are positions that can be used for constraints, particle emitters and for pivots.<font size="6"><br /></font>
 
 <b>TIP:</b> The coordinates indicated with this tool are related to the part's position.
@@ -89,7 +89,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if AttachmentTool.UI then
 		AttachmentTool.UI:Destroy()
 	end
@@ -187,13 +187,13 @@ function UpdateUI()
 		-- Each selected part has a mesh
 	elseif #Attachments == #Selection.Items then
 		DisplayedItems = { AttachmentTool.UI.PositionOption, RemoveButton };
-		
+
 		-- Only some selected parts have meshes
 	elseif #Attachments ~= #Selection.Items then
 		DisplayedItems = { AttachmentTool.UI.PositionOption, AddButton, RemoveButton };
 
 	end;
-	
+
 	UpdateDataInputs {
 		[XPositionInput] = CommonXPosition or '*';
 		[YPositionInput] = CommonYPosition or '*';

@@ -17,10 +17,15 @@ local MarketplaceTool = {
 	Color = BrickColor.new 'Pink';
 }
 
-MarketplaceTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Marketplace Tool  🛠</i></u></font>
+MarketplaceTool.ManualText = [[<font face="GothamBlack" size="16">Marketplace Tool  🛠</font>
 Opens a catalog of images, allowing you to get image IDs quickly.<font size="6"><br /></font>
 
 <b>TIP:</b> You can <b>Hit</b> the image you want to get their ID.]]
+
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+MarketplaceTool.ManualText = MarketplaceTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
 
 local SearchItem = "Decal";
 local Page = 1;
@@ -64,7 +69,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if MarketplaceTool.UI then
 		MarketplaceTool.UI:Destroy()
 	end
@@ -98,19 +103,19 @@ function ShowUI()
 	DecalButton.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
-	
+
 	SearchBox.Focused:Connect(function ()
 		SearchBox.FocusLost:Connect(function ()
 			Page = 1
 			Search(tostring(SearchBox.Text) or "", Page, false)
 		end);
 	end);
-	
+
 
 	-- Hook up manual triggering
 	local SignatureButton = UI:WaitForChild('Title'):WaitForChild('Signature')
 	ListenForManualWindowTrigger(MarketplaceTool.ManualText, MarketplaceTool.Color.Color, SignatureButton)
-	
+
 	-- Update the UI every 0.1 seconds
 	UIUpdater = Support.ScheduleRecurringTask(UpdateUI, 0.1);
 
@@ -157,11 +162,11 @@ function HideUI(Toggle)
 end;
 
 function Search(Input, Page, Cumulate)
-	
+
 	local Content, IDWasLoaded = {}, true;
-	
+
 	IsSearching = true
-	
+
 	if Cumulate == false then
 		local OtherButtons = UI.Search.Images:GetChildren()
 		for _, OtherElement in pairs(OtherButtons) do
@@ -170,16 +175,16 @@ function Search(Input, Page, Cumulate)
 			end
 		end
 	end
-	
-	Content, IDWasLoaded = Core.SyncAPI:Invoke('SearchAsset', SearchItem, Input, Page) 
-	
+
+	Content, IDWasLoaded = Core.SyncAPI:Invoke('SearchAsset', SearchItem, Input, Page)
+
 	local ItemLoaded = ElementsNumber
-	
+
 	if type(Content) == "table" then --> The value returned was a table
 		for _, Data in pairs(Content) do
-			
-			
-			
+
+
+
 			if IsSearching == false then return end
 
 			--> Also remove short audios to further avoid loading sound effects:
@@ -195,15 +200,15 @@ function Search(Input, Page, Cumulate)
 			button:WaitForChild("Preview").Activated:Connect(function()
 
 				--> Disable any other hover.
-				
+
 				local EveryOtherButtons = UI.Search.Images:GetChildren()
-				
+
 				for _, Hover in pairs(EveryOtherButtons) do
 					if Hover.Name ~= "Example" and Hover:IsA("Frame") then
 						Hover.ID.Visible = false
 					end
 				end
-				
+
 				button.ID.Visible = true
 
 			end)
@@ -211,7 +216,7 @@ function Search(Input, Page, Cumulate)
 			--> Toggle audio as favourite:
 
 			ItemLoaded += 1
-			
+
 			if ItemLoaded / 4 * 50 > UI.Search.Images.CanvasSize.Y.Offset then
 --				UI.Search.Images.CanvasSize = UDim2.new(UI.Search.Images.CanvasSize.X.Scale, UI.Search.Images.CanvasSize.X.Offset, UI.Search.Images.CanvasSize.Y.Scale, UI.Search.Images.CanvasSize.Y.Offset + 50)
 			end
@@ -219,21 +224,21 @@ function Search(Input, Page, Cumulate)
 		end
 
 		ElementsNumber += ItemLoaded
-		
+
 		IsSearching = false
 
 --[[	if (ElementsNumber < math.round(UI.Search.Images.AbsoluteSize.Y * 4 * 50) and not IDWasLoaded and ItemLoaded > 0) then
 			canLoad = true
 			checkIfPageHasEnded()
-		end ]]	
+		end ]]
 
-		
+
 
 		return ElementsNumber --> Return the number of Content loaded
 
 	else
 		warn(Content) --> Print error message to console
-		
+
 		IsSearching = false
 	end
 end

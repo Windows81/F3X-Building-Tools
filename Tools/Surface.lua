@@ -31,7 +31,7 @@ local SurfaceTool = {
 	OnSurfaceTypeChanged = Signal.new();
 }
 
-SurfaceTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Surface Tool  🛠</i></u></font>
+SurfaceTool.ManualText = [[<font face="GothamBlack" size="16">Surface Tool  🛠</font>
 Lets you change the surfaces of parts. The appearance only applies to non-mesh parts with material set to plastic.<font size="6"><br /></font>
 
 <font size="12" color="rgb(150, 150, 150)"><b>Surfaces & Properties</b></font>
@@ -87,9 +87,9 @@ end;
 
 function ShowUI()
 	UI = Tool:WaitForChild('UI')
-	
+
 	local Dropdown = require(UI:WaitForChild('Dropdown'))
-	
+
 	-- Creates and reveals the UI
 
 	local self = SurfaceTool
@@ -107,7 +107,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if SurfaceTool.UI then
 		SurfaceTool.UI:Destroy()
 	end

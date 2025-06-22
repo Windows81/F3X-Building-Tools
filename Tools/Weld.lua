@@ -33,7 +33,7 @@ local ActionList = {
 	[Enum.ActuatorType.Servo] = "Servo"
 }
 
-WeldTool.ManualText = [[<font face="GothamBlack" size="24"><u><i>Constraint Tool  🛠</i></u></font>
+WeldTool.ManualText = [[<font face="GothamBlack" size="16">Constraint Tool  🛠</font>
 Allows you to attach parts to hold them together.<font size="6"><br /></font>
 
 The constraint tool allows you to create 4 kinds of attachments:
@@ -91,9 +91,9 @@ end;
 
 function ShowUI()
 	UIFolder = Tool:WaitForChild('UI')
-	
+
 	local ColorPicker = require(UIFolder:WaitForChild('ColorPicker'))
-	
+
 	local Dropdown = require(UIFolder:WaitForChild('Dropdown'))
 	-- Creates and reveals the UI
 
@@ -102,7 +102,7 @@ function ShowUI()
 
 		-- Reveal the UI
 		UI.Visible = true;
-		
+
 		-- Make the UI refreshing again
 		WeldTool.StopUpdatingUI = Support.Loop(0.1, function ()
 			WeldTool:UpdateUI()
@@ -112,7 +112,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if WeldTool.UI then
 		WeldTool.UI:Destroy()
 	end
@@ -137,10 +137,10 @@ function ShowUI()
 	UI.Interface.BreakWeldsButton.MouseEnter:Connect(function()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
-	
+
 	local ActuatorTypeList = Support.Values(ActionList);
 	table.sort(ActionList);
-	
+
 	local ConstraintList = {
 		"Weld",
 		"RopeConstraint",
@@ -160,7 +160,7 @@ function ShowUI()
 			end;
 		})
 	end
-	
+
 	local function BuildActionDropdown()
 		return Roact.createElement(Dropdown, {
 			Position = UDim2.new(0, 30, 0, 0);
@@ -199,13 +199,13 @@ function ShowUI()
 	SyncInputToProperty('Speed', SpeedInput);
 	SyncInputToProperty('MaxSpeed', MaxSpeedInput);
 	SyncInputToProperty('TargetAngle', AngleInput);
-	
+
 	VisibleToggle.Activated:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Press"))
 		if Support.IdentifyCommonProperty(GetConstraints(WeldTool.CurrentType), "Visible") == false then
 			SetProperty(WeldTool.CurrentType, "Visible", true);
 		else
-			SetProperty(WeldTool.CurrentType, "Visible", false);	
+			SetProperty(WeldTool.CurrentType, "Visible", false);
 		end
 	end);
 
@@ -314,7 +314,7 @@ function GetPartConstraint(Part, Type)
 	end;
 
 	-- Get welds stored inside connected parts
-	
+
 	if Type == "Weld" then
 	for _, ConnectedPart in pairs(GetConnectedParts(Part)) do
 		for Constraint in pairs(SearchConstraints(ConnectedPart, Part, Type)) do
@@ -465,7 +465,7 @@ function GetConstraints(Type)
 			end
 		end;
 	end;
-	
+
 	for _, Attachment in pairs(Selection.Attachments) do
 		for _, Child in pairs(Attachment:GetChildren()) do
 			if Child.ClassName == Type then
@@ -502,7 +502,7 @@ function WeldTool:ChangeLayout(Layout)
 	if CurrentLayout == Layout and UpdatesBeforeLayout > 0 then
 		return;
 	end;
-	
+
 	UpdatesBeforeLayout = 3
 
 	-- Set this as the current layout
@@ -550,7 +550,7 @@ function WeldTool:UpdateUI()
 	if not UI then
 		return;
 	end;
-	
+
 	UpdatesBeforeLayout -= 1
 
 	local Interface = UI.Interface
@@ -614,7 +614,7 @@ function WeldTool:UpdateUI()
 	------------------------
 
 	-- Get the common properties
-	
+
 	local Actuator = self.CurrentType == "HingeConstraint" and Support.IdentifyCommonProperty(Constraints, 'ActuatorType');
 	local Radius = self.CurrentType == "HingeConstraint" and Support.IdentifyCommonProperty(Constraints, 'Radius');
 	local Visible = self.CurrentType == "HingeConstraint" and Support.IdentifyCommonProperty(Constraints, 'Visible');
@@ -623,7 +623,7 @@ function WeldTool:UpdateUI()
 	local Length = self.CurrentType ~= "HingeConstraint" and Support.IdentifyCommonProperty(Constraints, 'Length');
 	local MaxSpeed = self.CurrentType == "HingeConstraint" and (self.CurrentAction == Enum.ActuatorType.Motor and Support.IdentifyCommonProperty(Constraints, 'MotorMaxTorque') or self.CurrentAction == Enum.ActuatorType.Servo and Support.IdentifyCommonProperty(Constraints, 'ServoMaxTorque'));
 	local TargetAngle = self.CurrentType == "HingeConstraint" and self.CurrentAction == Enum.ActuatorType.Servo and Support.IdentifyCommonProperty(Constraints, 'TargetAngle');
-	
+
 	if Actuator and self.CurrentAction ~= Actuator then
 		self.CurrentAction = Actuator
 		self.OnActionChanged:Fire(Actuator)
@@ -651,7 +651,7 @@ function UpdateColorIndicator(Indicator, Brickcolor)
 
 		-- If the colors vary, display a * on a gray background
 	else
-		Indicator.BackgroundColor3 = Color3.new(222/255, 222/255, 222/255); 
+		Indicator.BackgroundColor3 = Color3.new(222/255, 222/255, 222/255);
 		Indicator.Varies.Text = '*';
 	end;
 
@@ -733,9 +733,9 @@ function SetProperty(Type, Property, Value)
 
 	-- Go through each texture
 	for _, Constraint in pairs(GetConstraints(Type)) do
-		
+
 		local BeforeProperty
-		
+
 		if Property == "Speed" then
 			BeforeProperty = (WeldTool.CurrentAction == Enum.ActuatorType.Motor and Constraint.AngularVelocity) or Constraint.AngularSpeed
 		elseif Property == "MaxSpeed" then
