@@ -3,16 +3,21 @@ Core = require(Tool.Core);
 Sounds = Tool:WaitForChild("Sounds");
 
 -- Libraries
+local Libraries = Tool:WaitForChild("Libraries")
 local ListenForManualWindowTrigger = require(Tool.Core:WaitForChild('ListenForManualWindowTrigger'))
+local Make = require(Libraries:WaitForChild("Make"))
 
 -- Import relevant references
-Selection = Core.Selection;
-Support = Core.Support;
-Security = Core.Security;
-Support.ImportServices();
+Selection = Core.Selection
+Support = Core.Support
+Security = Core.Security
+Support.ImportServices()
 
-local NegateHighlight = script:WaitForChild("NegateHighlight")
-local HighlightsFolder = script:WaitForChild("Highlights")
+local NegateHighlight = Make 'SelectionBox' {
+	SurfaceTransparency = 0.5;
+	Transparency = 1;
+}
+local HighlightsFolder = Instance.new("Folder", script)
 
 -- Initialize the tool
 local TransformationTool = {
@@ -27,7 +32,7 @@ Allows you to create unions with this tool.<font size="6"><br /></font>
 
 <font size="12" color="rgb(150, 150, 150)"><b>Negate</b></font>
 
-When pressing the negate button, every selected parts will turn slightly red. This means that once the union will be created, every other non-negative selected parts in the negative parts will get truncated. 
+When pressing the negate button, every selected parts will turn slightly red. This means that once the union will be created, every other non-negative selected parts in the negative parts will get truncated.
 
 <font size="12" color="rgb(150, 150, 150)"><b>Union</b></font>
 
@@ -65,7 +70,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if TransformationTool.UI then
 		TransformationTool.UI:Destroy()
 	end
@@ -90,7 +95,7 @@ function ShowUI()
 	UI.Interface.UnionButton.MouseEnter:Connect(function()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
-	
+
 	-- Hook up manual triggering
 	local SignatureButton = UI:WaitForChild('Title'):WaitForChild('Signature')
 	ListenForManualWindowTrigger(TransformationTool.ManualText, TransformationTool.Color.Color, SignatureButton)
@@ -108,9 +113,9 @@ function HideUI()
 
 	-- Hide the UI
 	UI.Visible = false;
-	
+
 	UIUpdater:Stop();
-	
+
 	for _, Highlight in pairs(script.Highlights:GetChildren()) do
 		Highlight.Enabled = false
 	end
@@ -120,7 +125,7 @@ end;
 function CreateUnion()
 	local NormalParts = {}
 	local Negative = {}
-	
+
 	for _, Part in pairs(Selection.Parts) do								-- Let's class parts in two sections: Negative ones and normal ones.
 		if table.find(NegativeParts, Part) then
 			table.insert(Negative, Part)
@@ -128,20 +133,20 @@ function CreateUnion()
 			table.insert(NormalParts, Part)
 		end
 	end
-	
+
 	local Unions = Core.SyncAPI:Invoke('CreateUnion', NormalParts, NegativeParts);
-	
+
 	for _, Union in pairs(Unions) do
 		if NormalParts[Union] then
 			NormalParts[Union] = nil
 		end
 	end
-	
+
 	local HistoryRecord = {
 		Unions = Unions;
 		NormalParts = NormalParts;
 		Negative = Negative;
-		
+
 		Unapply = function (HistoryRecord)
 			-- Reverts this change
 
@@ -161,16 +166,16 @@ function CreateUnion()
 		end;
 
 	};
-	
+
 	Core.History.Add(HistoryRecord);
-	
+
 	Core.SyncAPI:Invoke('Remove', Negative);
 	Core.SyncAPI:Invoke('Remove', NormalParts);
-	
+
 	UI.Changes.Text.Text = "The union has been successfully created."
-	
+
 	Selection.Replace(Unions);
-	
+
 	table.clear(NegativeParts)
 end
 

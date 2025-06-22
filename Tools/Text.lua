@@ -103,8 +103,6 @@ local Fonts = {
 	[Enum.Font.SpecialElite] = "Special Elite";
 	[Enum.Font.TitilliumWeb] = "Titillium Web";
 	[Enum.Font.Ubuntu] = "Ubuntu";
-	[Enum.Font.BuilderSans] = "Builder";
-	[Enum.Font.Arimo] = "Arimo";
 };
 
 -- Container for temporary connections (disconnected automatically)
@@ -144,7 +142,7 @@ end;
 function TextTool:ShowUI()
 	UI = Tool:WaitForChild('UI')
 	ColorPicker = require(UI:WaitForChild('ColorPicker'))
-	
+
 	local Dropdown = require(UI:WaitForChild('Dropdown'))
 	-- Creates and reveals the UI
 
@@ -163,7 +161,7 @@ function TextTool:ShowUI()
 		return;
 
 	end;
-	
+
 	if self.UI then
 		self.UI:Destroy()
 	end
@@ -181,7 +179,7 @@ function TextTool:ShowUI()
 	local RichTextToggle = self.UI.RichOption
 	local ColorButton = self.UI.ColorOption.HSVPicker
 	local ColorIndicator = self.UI.ColorOption.Indicator
-	
+
 	local FontList = Support.Values(Fonts);
 	table.sort(FontList);
 
@@ -191,7 +189,7 @@ function TextTool:ShowUI()
 		if Support.IdentifyCommonProperty(GetTexts("TextLabel", TextTool.Face), "RichText") == false then
 			SetProperty("TextLabel", TextTool.Face, "RichText", true);
 		else
-			SetProperty("TextLabel", TextTool.Face, "RichText", false);	
+			SetProperty("TextLabel", TextTool.Face, "RichText", false);
 		end
 	end);
 
@@ -216,7 +214,7 @@ function TextTool:ShowUI()
 			end;
 		})
 	end
-	
+
 	local function BuildFontDropdown()
 		return Roact.createElement(Dropdown, {
 			Position = UDim2.new(0, 30, 0, 0);
@@ -237,7 +235,7 @@ function TextTool:ShowUI()
 	self.OnFaceChanged:Connect(function ()
 		Roact.update(FaceDropdownHandle, BuildFaceDropdown())
 	end)
-	
+
 	local FontDropdownHandle = Roact.mount(BuildFontDropdown(), self.UI.FontOption, 'Dropdown')
 	self.OnFontChanged:Connect(function ()
 		Roact.update(FontDropdownHandle, BuildFontDropdown())
@@ -251,7 +249,7 @@ function TextTool:ShowUI()
 	AddButton.Button.MouseButton1Click:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Add"))
 		AddTexts("TextLabel", TextTool.Face);
-	end); 
+	end);
 	AddButton.Button.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
@@ -283,7 +281,7 @@ function TextTool:ShowUI()
 			Roact.update(ColorPickerHandle, ColorPickerElement) or
 			Roact.mount(ColorPickerElement, Core.UI, 'ColorPicker')
 		end)
- 
+
 	-- Hook up manual triggering
 	local SignatureButton = self.UI:WaitForChild('Title'):WaitForChild('Signature')
 	ListenForManualWindowTrigger(TextTool.ManualText, TextTool.Color.Color, SignatureButton)
@@ -472,7 +470,7 @@ function TextTool:UpdateUI()
 	if not self.UI then
 		return;
 	end;
-	
+
 	-- Get the texts in the selection
 	local SurfaceGUIs = GetTexts("SurfaceGui", TextTool.Face);
 	local Texts = GetTexts("TextLabel", TextTool.Face);
@@ -521,12 +519,12 @@ function TextTool:UpdateUI()
 	local RichText = Support.IdentifyCommonProperty(Texts, 'RichText');
 	local Font = Support.IdentifyCommonProperty(Texts, 'Font');
 	local Face = Support.IdentifyCommonProperty(SurfaceGUIs, 'Face');
-	
+
 	if self.Face ~= Face then
 		self.Face = Face
 		self.OnFaceChanged:Fire(Face)
 	end
-	
+
 	if self.Font ~= Font then
 		self.Font = Font
 		self.OnFontChanged:Fire(Font)
@@ -539,7 +537,7 @@ function TextTool:UpdateUI()
 		[TextInput] = Text or "*";
 		[TransparencyInput] = Transparency and Support.Round(Transparency, 3) or '*';
 	};
-	
+
 	BoundingBox.Text = TextInput.Text
 
 end;
@@ -768,7 +766,7 @@ function TrackChange()
 
 		Apply = function (Record)
 			-- Applies this change
-			
+
 			-- Select the changed parts
 			Selection.Replace(Record.Selection)
 

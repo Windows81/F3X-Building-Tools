@@ -287,12 +287,6 @@ Settings = {
 
 	LoadDelay = 0;
 
-	-- NOTE ABOUT MATERIALS:
-	-- Any MaterialVariant added in your game will show up in the material tool.
-	-- The only issue is that the MaterialService is extremely protected and doesn't allow previews.
-	-- You can add a "ColorMap" attribute to your MaterialVariant in order to support previews.
-	-- Otherwisely, if you still use the old textures, you can make the previews previewing the old textures by putting a "UsesNewMaterials" attribute in MaterialService
-
 	--------------------------------------
 	--	CLASSIC F3X SETTINGS
 	--------------------------------------

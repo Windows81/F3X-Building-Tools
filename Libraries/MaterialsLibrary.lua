@@ -1,7 +1,9 @@
 local Tool = script.Parent.Parent
 local IsPlugin = Tool.Parent:IsA("Plugin") and true or false
 
-local UsesNewMaterials = game.MaterialService:GetAttribute("UsesNewMaterials") or true					-- We'll proceed that way because letting us access Use2022Materials is a pain for Raw Blocks.
+-- {PATCH} 2021E doesn't even have MaterialService.
+-- local UsesNewMaterials = game.MaterialService:GetAttribute("UsesNewMaterials") or true					-- We'll proceed that way because letting us access Use2022Materials is a pain for Raw Blocks.
+local UsesNewMaterials = false
 
 local MaterialsDecal = {
 	["SmoothPlastic"] = 0;
@@ -45,15 +47,5 @@ local MaterialsDecal = {
 	["Plaster"] = 14108671255;
 	["Rubber"] = 14108673018;
 }
-
-for _, MaterialVariant in game:GetService("MaterialService"):GetDescendants() do
-	if MaterialVariant:IsA("MaterialVariant") then
-		if MaterialVariant:GetAttribute("ColorMap") then
-			MaterialsDecal[MaterialVariant.Name] = MaterialVariant:GetAttribute("ColorMap")
-		elseif IsPlugin then
-			MaterialsDecal[MaterialVariant.Name] = MaterialVariant.ColorMap
-		end
-	end
-end
 
 return MaterialsDecal

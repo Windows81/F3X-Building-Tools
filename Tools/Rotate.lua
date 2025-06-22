@@ -1,6 +1,6 @@
 --[[
 To maintain compatibility with 2021E, lines ~125+ are taken from F3X version 3.0.2.
-Lines prior to ~125 are kept from the current 3.1.0.  
+Lines prior to ~125 are kept from the current 3.1.0.
 ]]
 
 Tool = script.Parent.Parent;
@@ -74,7 +74,7 @@ function RotateTool.Equip()
 	-- Start up our interface
 	ShowUI();
 	BindShortcutKeys();
-	
+
 	-- Set our current pivot mode
 	SetPivot(RotateTool.Pivot);
 
@@ -131,7 +131,7 @@ function ShowUI()
 		return;
 
 	end;
-	
+
 	if RotateTool.UI then
 		RotateTool.UI:Destroy()
 	end
@@ -164,7 +164,7 @@ function ShowUI()
 	PivotSwitch.Last.Button.MouseEnter:Connect(function ()
 		game:GetService("SoundService"):PlayLocalSound(Sounds:WaitForChild("Hover"))
 	end);
-	
+
 	-- Add functionality to the increment input
 	local IncrementInput = RotateTool.UI.IncrementOption.Increment.TextBox;
 	IncrementInput.FocusLost:Connect(function (EnterPressed)
@@ -294,7 +294,7 @@ function SetPivot(PivotMode)
 
 	-- For local mode, use focused part handles
 	elseif PivotMode == 'Local' then
-		AttachHandles(Selection.Focus, true); 
+		AttachHandles(Selection.Focus, true);
 
 	-- For last mode, use focused part handles
 	elseif PivotMode == 'Last' then
@@ -304,21 +304,21 @@ function SetPivot(PivotMode)
 end;
 
 function AttachHandles(Part, Autofocus, IsGlobal)
-	
+
 	if not UIUpdater or UIUpdater.Running ~= true then return end
 	-- Creates and attaches handles to `Part`, and optionally automatically attaches to the focused part
 
 	-- Enable autofocus if requested and not already on
 	if Autofocus and not Connections.AutofocusHandle then
 		Connections.AutofocusHandle = Selection.FocusChanged:Connect(function ()
-			
+
 			if RotateTool.Pivot == "Center" and #Selection.Attachments > 0 and Selection.Focus:IsA("Attachment") then
 				AttachHandles(Selection.Focus, true, true)
 			elseif RotateTool.Pivot == "Center" then
 				AttachHandles(BoundingBox.GetBoundingBox(), true, false)
 				return
 			end
-			
+
 			AttachHandles(Selection.Focus, true, false);
 		end);
 
@@ -366,13 +366,13 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 
 		-- Set the pivot point to the center of the selection if in Center mode
 		if RotateTool.Pivot == 'Center' and #Selection.Parts > 0 and BoundingBox.GetBoundingBox() then
-			
+
 			PivotPoint = BoundingBox.GetBoundingBox().CFrame;
-			
+
 		elseif RotateTool.Pivot == 'Center' and #Selection.Attachments > 0 and Selection.Focus:IsA("Attachment") then
-			
+
 			PivotPoint = CFrame.new(Selection.Focus.WorldCFrame.Position);
-			
+
 		-- Set the pivot point to the center of the focused part if in Last mode
 		elseif RotateTool.Pivot == 'Last' and not CustomPivotPoint then
 			if Selection.Focus:IsA 'BasePart' then
@@ -528,7 +528,7 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 
 	-- Rotate each model's pivot
 	for Model, InitialState in pairs(InitialModelStates) do
-		
+
 		-- Rotate around the selection's center, or the currently focused part
 		if (PivotMode == 'Center') or (PivotMode == 'Last') then
 
@@ -542,7 +542,7 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 			Model.WorldPivot = RelativeTo * Offset
 		end
 	end
-	
+
 	for Attachment, InitialState in pairs(InitialAttachmentsStates) do
 
 		-- Rotate around the selection's center, or the currently focused part
@@ -562,7 +562,7 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 			Attachment.WorldCFrame = InitialState.WorldCFrame * RotationCFrame;
 
 		end;
-		
+
 	end
 
 end;
@@ -616,7 +616,7 @@ function GetHandleDisplayDelta(HandleRotation)
 	LastDisplayedRotation = DisplayedRotation;
 
 	-- Return updated display delta
-	
+
 	print(DisplayedRotation)
 	return DisplayedRotation;
 
@@ -774,7 +774,7 @@ function SetAxisAngle(Axis, Angle)
 		);
 
 	end;
-	
+
 	for Attachment, State in pairs(InitialAttachmentsStates) do
 
 		-- Set the part's new CFrame
@@ -871,7 +871,7 @@ function NudgeSelectionByAxis(Axis, Direction)
 			Model.WorldPivot = State.Pivot;
 		end;
 		for Attachment, State in pairs(InitialAttachmentsStates) do
-			Attachment.WorldCFrame = State.WorldCFrame;;
+			Attachment.WorldCFrame = State.WorldCFrame;
 		end;
 	end;
 
@@ -908,7 +908,7 @@ function TrackChange()
 			-- Put together the change request
 			local Changes = {};
 			for _, Part in pairs(Record.Parts) do
-				table.insert(Changes, { 
+				table.insert(Changes, {
 					Part = Part;
 					CFrame = Record.BeforeCFrame[Part];
 				});
@@ -1052,7 +1052,7 @@ function PreparePartsForRotating()
 			}
 		end
 	end)
-	
+
 	for _, Attachment in pairs(Selection.Attachments) do
 		InitialAttachmentsStates[Attachment] = {
 			WorldCFrame = Attachment.WorldCFrame;

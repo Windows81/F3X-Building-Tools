@@ -1152,14 +1152,12 @@ if Mode == "Tool" then
 	AssignHotkey({ "RightControl", "P" }, ExportSelection)
 end
 
--- {PATCH} no need to check for outdatedness if we're using outdated Rōblox anyways.
---[[
 function IsVersionOutdated()
-
 	-- Returns whether this version of Building Tools is out of date
 
+	--[[ {PATCH} skips to always returning false that no updating will be needed.
 	-- Check most recent version number
-	local AssetInfo = game.MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
+	local AssetInfo = MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
 	local LatestMajorVersion, LatestMinorVersion, LatestPatchVersion = AssetInfo.Description:match '%[Version: ([0-9]+)%.([0-9]+)%.([0-9]+)%]';
 	local CurrentMajorVersion, CurrentMinorVersion, CurrentPatchVersion = Tool.Version.Value:match '([0-9]+)%.([0-9]+)%.([0-9]+)';
 
@@ -1179,12 +1177,12 @@ function IsVersionOutdated()
 			return LatestPatchVersion > CurrentPatchVersion;
 		end;
 	end;
+	]]
 
 	-- Return an up-to-date status if not oudated
 	return false;
 
 end;
-]]
 
 function ToggleMultiSelect()
 	if Selection.Multiselecting == false then

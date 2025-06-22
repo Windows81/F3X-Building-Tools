@@ -69,56 +69,29 @@ end
 
 -- Designate a friendly name to each material
 local Materials = {
-	[Enum.Material.SmoothPlastic] = "Smooth Plastic",
-	[Enum.Material.Plastic] = "Plastic",
-	[Enum.Material.Brick] = "Brick",
-	[Enum.Material.Cobblestone] = "Cobblestone",
-	[Enum.Material.Concrete] = "Concrete",
-	[Enum.Material.CorrodedMetal] = "Corroded Metal",
-	[Enum.Material.DiamondPlate] = "Diamond Plate",
-	[Enum.Material.Fabric] = "Fabric",
-	[Enum.Material.Foil] = "Foil",
-	[Enum.Material.ForceField] = "Forcefield",
-	[Enum.Material.Granite] = "Granite",
-	[Enum.Material.Grass] = "Grass",
-	[Enum.Material.Ice] = "Ice",
-	[Enum.Material.Marble] = "Marble",
-	[Enum.Material.Metal] = "Metal",
-	[Enum.Material.Neon] = "Neon",
-	[Enum.Material.Pebble] = "Pebble",
-	[Enum.Material.Sand] = "Sand",
-	[Enum.Material.Slate] = "Slate",
-	[Enum.Material.Wood] = "Wood",
-	[Enum.Material.WoodPlanks] = "Wood Planks",
-	[Enum.Material.Glass] = "Glass",
-	[Enum.Material.Asphalt] = "Asphalt",
-	[Enum.Material.Basalt] = "Basalt",
-	[Enum.Material.CrackedLava] = "Cracked Lava",
-	[Enum.Material.Glacier] = "Glacier",
-	[Enum.Material.Ground] = "Ground",
-	[Enum.Material.LeafyGrass] = "Leafy Grass",
-	[Enum.Material.Limestone] = "Limestone",
-	[Enum.Material.Mud] = "Mud",
-	[Enum.Material.Pavement] = "Pavement",
-	[Enum.Material.Rock] = "Rock",
-	[Enum.Material.Salt] = "Salt",
-	[Enum.Material.Sandstone] = "Sandstone",
-	[Enum.Material.Snow] = "Snow",
-	[Enum.Material.Cardboard] = "Cardboard",
-	[Enum.Material.Carpet] = "Carpet",
-	[Enum.Material.CeramicTiles] = "Ceramic Tiles",
-	[Enum.Material.ClayRoofTiles] = "Clay Roof Tiles",
-	[Enum.Material.Leather] = "Leather",
-	[Enum.Material.RoofShingles] = "Roof Shingles",
-	[Enum.Material.Plaster] = "Plaster",
-	[Enum.Material.Rubber] = "Rubber",
+	[Enum.Material.SmoothPlastic] = 'Smooth Plastic';
+	[Enum.Material.Plastic] = 'Plastic';
+	[Enum.Material.Brick] = 'Brick';
+	[Enum.Material.Cobblestone] = 'Cobblestone';
+	[Enum.Material.Concrete] = 'Concrete';
+	[Enum.Material.CorrodedMetal] = 'Corroded Metal';
+	[Enum.Material.DiamondPlate] = 'Diamond Plate';
+	[Enum.Material.Fabric] = 'Fabric';
+	[Enum.Material.Foil] = 'Foil';
+	[Enum.Material.ForceField] = 'Forcefield';
+	[Enum.Material.Granite] = 'Granite';
+	[Enum.Material.Grass] = 'Grass';
+	[Enum.Material.Ice] = 'Ice';
+	[Enum.Material.Marble] = 'Marble';
+	[Enum.Material.Metal] = 'Metal';
+	[Enum.Material.Neon] = 'Neon';
+	[Enum.Material.Pebble] = 'Pebble';
+	[Enum.Material.Sand] = 'Sand';
+	[Enum.Material.Slate] = 'Slate';
+	[Enum.Material.Wood] = 'Wood';
+	[Enum.Material.WoodPlanks] = 'Wood Planks';
+	[Enum.Material.Glass] = 'Glass';
 }
-
-for _, MaterialVariant in game:GetService("MaterialService"):GetDescendants() do
-	if MaterialVariant:IsA("MaterialVariant") then
-		Materials[MaterialVariant.Name] = MaterialVariant.Name
-	end
-end
 
 function MaterialTool:ShowUI()
 	local UI = Tool:WaitForChild("UI")
