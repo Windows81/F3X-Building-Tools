@@ -482,7 +482,7 @@ function TargetingModule.FinishRectangleSelecting()
 			end
 		end
 		if math.floor(i / (300 * BreakFactor)) ~= 0 then
-			task.wait()
+			wait()
 			BreakFactor += 1
 		end
 	end

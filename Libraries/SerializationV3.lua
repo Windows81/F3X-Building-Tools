@@ -428,8 +428,10 @@ function Serialization.InflateBuildData(Data)
 			-- Register the folder
 			Instances[Index] = Item
 		end
-		
-		task.wait(1 / 150)
+
+		if Index % 30 == 0 then
+			wait();
+		end;
 	end;
 
 	-- Set object values on each instance

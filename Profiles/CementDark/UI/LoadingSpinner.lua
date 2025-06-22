@@ -24,7 +24,7 @@ function LoadingSpinner:didMount()
         while self.Running and self.instance.current do
             local Spinner = self.instance.current
             Spinner.Rotation = (Spinner.Rotation + 12) % 360
-            task.wait(0.01)
+            wait()
         end
     end)()
 end

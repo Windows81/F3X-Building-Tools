@@ -54,9 +54,9 @@ local function CollectPartsAndModelsAndAttachments(Item, PartTable, ModelTable, 
 	-- Collect item if it's a part
 	if Item:IsA('BasePart') then
 		table.insert(PartTable, Item)
-	
+
 	elseif Item:IsA('Attachment') then
-		
+
 		table.insert(AttachmentsTable, Item)
 
 	else
@@ -87,12 +87,12 @@ function Selection.Add(Items, RegisterHistory)
 	-- Go through and validate each given item
 	local SelectableItems = {};
 	for _, Item in pairs(Items) do
-		
+
 		local ItemToInspect = Item:IsA("Attachment") and Item.Parent or Item
 
 		-- Make sure each item is valid and not already selected
 		if Item.Parent and (not Selection.ItemIndex[Item]) then
-			
+
 			if Item:FindFirstAncestorWhichIsA("Model") and game.Players:GetPlayerFromCharacter(Item:FindFirstAncestorWhichIsA("Model")) then
 				if Options.PlayerTolerance == 1 and game.Players:GetPlayerFromCharacter(Item:FindFirstAncestorWhichIsA("Model")) ~= game.Players.LocalPlayer then
 					continue
@@ -106,14 +106,14 @@ function Selection.Add(Items, RegisterHistory)
 					continue
 				end
 			end
-			
+
 			if Options.CheckPermission(ItemToInspect, game.Players.LocalPlayer) == true then
 				table.insert(SelectableItems, Item);
 			end
 		end;
 
 	end;
-	
+
 
 
 	local OldSelection = Selection.Items;
@@ -122,7 +122,7 @@ function Selection.Add(Items, RegisterHistory)
 	local Parts = {}
 	local Models = {}
 	local Attachments = {}
-	
+
 	if Options.PartSelectionLimit ~= 0 and #SelectableItems + #Selection.Items > Options.PartSelectionLimit then return end
 
 	-- Go through the valid new selection items
@@ -217,7 +217,7 @@ function Selection.Add(Items, RegisterHistory)
 			table.insert(NewParts, Part)
 		end
 	end
-	
+
 	local NewAttachments = {}
 	for _, Attachment in pairs(Attachments) do
 		if Attachment == nil then
@@ -245,7 +245,7 @@ function Selection.Add(Items, RegisterHistory)
 		Selection.Parts = Support.Keys(Selection.PartIndex)
 		Selection.PartsAdded:Fire(NewParts)
 	end
-	
+
 	if #NewAttachments > 0 then
 		Selection.Attachments = Support.Keys(Selection.AttachmentsIndex)
 		Selection.AttachmentsAdded:Fire(NewAttachments)
@@ -324,7 +324,7 @@ function Selection.Remove(Items, RegisterHistory)
 			table.insert(RemovingParts, Part)
 		end
 	end
-	
+
 	local RemovingAttachments = {}
 	for _, Attachment in pairs(Attachments) do
 		local NewRefCount = (Selection.AttachmentsIndex[Attachment] or 0) - 1
@@ -583,7 +583,7 @@ function CreateLookDirectionBeam(Item)
 
 	-- Create selection box for each targetable item
 	local Beams = {}
-	
+
 	for Item in pairs(Items) do
 
 		-- Create the selection box
@@ -591,22 +591,22 @@ function CreateLookDirectionBeam(Item)
 		Beam.Adornee = Item:FindFirstAncestorWhichIsA("BasePart")
 		Beam.CFrame = Item.CFrame * CFrame.fromEulerAnglesXYZ(0, math.rad(-90), 0)
 		Beam.Visible = true
-		
+
 		coroutine.wrap(function()
-			
-			repeat 
-				task.wait(0.1)
+
+			repeat
+				wait(0.1)
 			until Selection.Beams[Item]
-			
+
 			while Beam and Selection.Beams[Item] do
 				Beam.CFrame = Item.CFrame * CFrame.fromEulerAnglesXYZ(0, math.rad(-90), 0)
-				task.wait(1 / 30)																	
+				wait(1 / 30)
 			end
-			
+
 		end)()
 
 		-- Register the outline
-		Beams[Item] = Beam  
+		Beams[Item] = Beam
 
 	end
 

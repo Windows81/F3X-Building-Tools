@@ -571,39 +571,23 @@ function CloneSelection()
 
 		-- Listen for clones yet to arrive
 		if #Clones < StreamingCloneCount then
-			local thread = coroutine.running()
-
-			-- If streaming takes too long, ignore remaining clones and resume thread early
-			local CLONE_STREAMING_TIMEOUT = 3
-			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function ()
-				local warning = string.format(
-					"[Building Tools by F3X] Cloning operation only received %d/%d items after %d seconds, ignoring rest",
-					#Clones,
-					StreamingCloneCount,
-					CLONE_STREAMING_TIMEOUT
-				)
-				warn(warning)
-				coroutine.resume(thread)
-			end)
 
 			-- Track incoming clones from this cloning operation
-			local replicationListener = game:GetService("CollectionService")
+			local replicationSignal = game:GetService("CollectionService")
 				:GetInstanceAddedSignal("BTStreamingClone")
-				:Connect(function(clone)
-					if clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
-						table.insert(Clones, clone)
 
-						-- Once all clones have arrived, resume thread
-						if #Clones == StreamingCloneCount then
-							task.cancel(timeoutThread)
-							coroutine.resume(thread)
-						end
-					end
-				end)
+			while true do
+				local clone = replicationSignal:Wait()
+				if clone:GetAttribute("BTStreamingCloneID") ~= StreamingCloneId then
+					return
+				end
+				table.insert(Clones, clone)
 
-			-- Yield until resumed by replication completion, or timeout thread
-			coroutine.yield()
-			replicationListener:Disconnect()
+				-- Once all clones have arrived, break
+				if #Clones == StreamingCloneCount then
+					break
+				end
+			end
 		end
 	end
 
@@ -967,7 +951,7 @@ function CreateSaveAndLoad()
 		end
 		SyncAPI:Invoke("LoadBuild", "1")
 		Core.CanLoad = false
-		task.delay(Options.LoadDelay, function()
+		delay(Options.LoadDelay, function()
 			Core.CanLoad = true
 		end)
 	end
@@ -978,7 +962,7 @@ function CreateSaveAndLoad()
 		end
 		SyncAPI:Invoke("LoadBuild", "2")
 		Core.CanLoad = false
-		task.delay(Options.LoadDelay, function()
+		delay(Options.LoadDelay, function()
 			Core.CanLoad = true
 		end)
 	end
@@ -989,7 +973,7 @@ function CreateSaveAndLoad()
 		end
 		SyncAPI:Invoke("LoadBuild", "3")
 		Core.CanLoad = false
-		task.delay(Options.LoadDelay, function()
+		delay(Options.LoadDelay, function()
 			Core.CanLoad = true
 		end)
 	end
