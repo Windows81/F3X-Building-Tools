@@ -513,9 +513,11 @@ Actions = {
 			-- Set the part's CFrame
 			Part.CFrame = Change.CFrame
 		end
+		--[[ {PATCH} GetPivot didn't exist in 2021E.
 		for Model, Pivot in pairs(ModelChangeSet) do
 			Model.WorldPivot = Pivot
 		end
+		]]
 
 		-- Make sure the player is authorized to move parts into this area
 		if Security.ArePartsViolatingAreas(Parts, Player, false, AreaPermissions) then
@@ -654,9 +656,11 @@ Actions = {
 			-- Set the part's CFrame
 			Part.CFrame = Change.CFrame
 		end
+		--[[ {PATCH} GetPivot didn't exist in 2021E.
 		for Model, Pivot in pairs(ModelChangeSet) do
 			Model.WorldPivot = Pivot
 		end
+		]]
 
 		-- Make sure the player is authorized to move parts into this area
 		if Security.ArePartsViolatingAreas(Parts, Player, false, AreaPermissions) then

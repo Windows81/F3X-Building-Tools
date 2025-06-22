@@ -416,9 +416,11 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 			for Part, State in pairs(InitialState) do
 				Part.CFrame = State.CFrame;
 			end;
+			--[[ {PATCH} GetPivot didn't exist in 2021E.
 			for Model, State in pairs(InitialModelStates) do
 				Model.WorldPivot = State.Pivot;
 			end;
+			]]
 			for Attachment, State in pairs(InitialAttachmentsStates) do
 				Attachment.WorldCFrame = State.WorldCFrame;
 			end;
@@ -528,6 +530,7 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 
 	end;
 
+	--[[ {PATCH} GetPivot didn't exist in 2021E.
 	-- Rotate each model's pivot
 	for Model, InitialState in pairs(InitialModelStates) do
 
@@ -544,6 +547,7 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 			Model.WorldPivot = RelativeTo * Offset
 		end
 	end
+	]]
 
 	for Attachment, InitialState in pairs(InitialAttachmentsStates) do
 
@@ -871,9 +875,11 @@ function NudgeSelectionByAxis(Axis, Direction)
 		for Part, State in pairs(InitialState) do
 			Part.CFrame = State.CFrame;
 		end;
+		--[[ {PATCH} GetPivot didn't exist in 2021E.
 		for Model, State in pairs(InitialModelStates) do
 			Model.WorldPivot = State.Pivot;
 		end;
+		]]
 		for Attachment, State in pairs(InitialAttachmentsStates) do
 			Attachment.WorldCFrame = State.WorldCFrame;
 		end;

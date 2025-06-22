@@ -157,9 +157,11 @@ function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, In
 		for Part, InitialState in pairs(InitialPartStates) do
 			Part.CFrame = InitialState.CFrame + Shift
 		end
+		--[[ {PATCH} GetPivot didn't exist in 2021E.
 		for Model, InitialState in pairs(InitialModelStates) do
 			Model.WorldPivot = InitialState.Pivot + Shift
 		end
+		]]
 		for Attachment, InitialState in pairs(InitialAttachmentsStates) do
 			Attachment.WorldCFrame = InitialState.WorldCFrame + Shift
 		end
@@ -172,9 +174,11 @@ function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, In
 		for Attachment, InitialState in pairs(InitialAttachmentsStates) do
 			Attachment.WorldCFrame = InitialState.WorldCFrame * CFrame.new(Shift)
 		end
-		-- for Model, InitialState in pairs(InitialModelStates) do
-		-- 	Model.WorldPivot = InitialState.Pivot * CFrame.new(Shift)
-		-- end
+		--[[
+		for Model, InitialState in pairs(InitialModelStates) do
+			Model.WorldPivot = InitialState.Pivot * CFrame.new(Shift)
+		end
+		]]
 
 	-- Move along focused item's axes
 	elseif self.Axes == 'Last' then
@@ -187,10 +191,12 @@ function MoveTool:MovePartsAlongAxesByFace(Face, Distance, InitialPartStates, In
 			local FocusOffset = Support.ToObjectSpace(InitialFocusCFrame, InitialState.CFrame)
 			Part.CFrame = FocusCFrame * FocusOffset
 		end
+		--[[ {PATCH} GetPivot didn't exist in 2021E.
 		for Model, InitialState in pairs(InitialModelStates) do
 			local FocusOffset = Support.ToObjectSpace(InitialFocusCFrame, InitialState.Pivot)
 			Model.WorldPivot = FocusCFrame * FocusOffset
 		end
+		]]
 		for Attachment, InitialState in pairs(InitialAttachmentsStates) do
 			local FocusOffset = InitialFocusCFrame:ToObjectSpace(InitialState.WorldCFrame)
 			Attachment.WorldCFrame = FocusCFrame * FocusOffset
