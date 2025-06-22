@@ -101,10 +101,10 @@ function AboutPane:render()
 			Text = [[<font weight="900"><u>FORK</u><br/>3X</font>]];
 			TextStrokeTransparency = 0.8;
 			TextScaled = true;
-			RichText = true; 
+			RichText = true;
 			TextYAlignment = Enum.TextYAlignment.Bottom;
 			TextColor3 = Color3.new(1, 1, 1);
-			Font = Enum.Font.MontserratBlack;
+			Font = Enum.Font.SourceSansBold;
             Position = UDim2.new(0.05, 0, 0.5, 0);
         }, {
             AspectRatio = new('UIAspectRatioConstraint', {

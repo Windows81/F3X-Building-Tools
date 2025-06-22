@@ -8,10 +8,10 @@ local new = Roact.createElement
 
 -- Text sizes
 local TextBoundaries = Vector2.new(math.huge, math.huge)
-local TITLE_SIZE = TextService:GetTextSize('Selection mode', 24/2, Enum.Font.Montserrat, TextBoundaries)
-local HOTKEY_SIZE = TextService:GetTextSize('SHIFT-T', 24/2, Enum.Font.Montserrat, TextBoundaries)
-local SCOPED_LABEL_SIZE = TextService:GetTextSize('Groups and parts', 25/2, Enum.Font.Montserrat, TextBoundaries)
-local DIRECT_LABEL_SIZE = TextService:GetTextSize('Parts only', 25/2, Enum.Font.Montserrat, TextBoundaries)
+local TITLE_SIZE = TextService:GetTextSize('Selection mode', 24/2, Enum.Font.SourceSans, TextBoundaries)
+local HOTKEY_SIZE = TextService:GetTextSize('SHIFT-T', 24/2, Enum.Font.SourceSans, TextBoundaries)
+local SCOPED_LABEL_SIZE = TextService:GetTextSize('Groups and parts', 25/2, Enum.Font.SourceSans, TextBoundaries)
+local DIRECT_LABEL_SIZE = TextService:GetTextSize('Parts only', 25/2, Enum.Font.SourceSans, TextBoundaries)
 
 local function Tooltip(props)
     return new('ImageLabel', {
@@ -42,7 +42,7 @@ local function Tooltip(props)
         });
         Title = new('TextLabel', {
             BackgroundTransparency = 1;
-			Font = Enum.Font.Montserrat;
+			Font = Enum.Font.SourceSans;
             TextSize = 24/2;
             TextColor3 = Color3.new(1, 1, 1);
             TextTransparency = 1 - 0.6;
@@ -52,7 +52,7 @@ local function Tooltip(props)
         });
         Hotkey = new('TextLabel', {
             BackgroundTransparency = 1;
-			Font = Enum.Font.MontserratMedium;
+			Font = Enum.Font.SourceSansSemibold;
             TextSize = 20/2;
             TextColor3 = Color3.new(1, 1, 1);
             TextTransparency = 0;
@@ -74,7 +74,7 @@ local function Tooltip(props)
         });
         ScopedLabel = new('TextLabel', {
             BackgroundTransparency = 1;
-			Font = Enum.Font.Montserrat;
+			Font = Enum.Font.SourceSans;
             TextSize = 25/2;
             TextColor3 = Color3.new(1, 1, 1);
             Text = 'Groups and parts';
@@ -99,7 +99,7 @@ local function Tooltip(props)
         });
         DirectLabel = new('TextLabel', {
             BackgroundTransparency = 1;
-			Font = Enum.Font.Montserrat;
+			Font = Enum.Font.SourceSans;
             TextSize = 25/2;
             TextColor3 = Color3.new(1, 1, 1);
             Text = 'Parts only';

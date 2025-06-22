@@ -52,7 +52,7 @@ function ToolManualWindow:render()
 				TextScaled = true;
 				RichText = true;
 				TextColor3 = self.props.ThemeColor;
-				Font = Enum.Font.MontserratBlack;
+				Font = Enum.Font.SourceSansBold;
 				Position = UDim2.new(0.5, 0, 0.5, 0);
 				ZIndex = 0;
 			});

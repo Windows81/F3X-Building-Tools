@@ -298,9 +298,9 @@ function Explorer:BuildItemState(Item, Scope, Order, Changes, State)
     local ItemState = {
         Id = ItemId,
 		Name = Item.Name,
-
+		
 		-- CustomName is basically if you want to display something else.
-
+		
 		CustomName = Options.CustomNameFunction(Item, game.Players.LocalPlayer),
         IsPart = IsPart,
 		IsLocked = IsPart and Item.Locked == true or IsPart and (not Options.CheckPermission(Item, game.Players.LocalPlayer)) or false,
@@ -581,14 +581,13 @@ function Explorer:render()
         Image = 'rbxassetid://2244248341',
         ScaleType = 'Slice',
         SliceCenter = Rect.new(4, 4, 12, 12),
-        ImageTransparency = 1 - 0.6, -- 0.93
-		ImageColor3 = Color3.new(0, 0, 0) -- 3B3B3B
+        ImageTransparency = 1 - 0.93,
+        ImageColor = '3B3B3B'
     },
     {
         -- Window header
         Header = new(TextLabel, {
-			Text = '  EXPLORER',
-			Font = Enum.Font.SourceSans,
+            Text = '  EXPLORER',
             TextSize = 9,
             Height = UDim.new(0, 14),
             TextColor = 'FFFFFF',

@@ -48,9 +48,6 @@
       "$className": "BoolValue",
       "$properties": {
         "Value": false
-      },
-      "AutomaticUpdating": {
-        "$path": "AutomaticUpdating.server.lua"
       }
     },
     "Loaded": {
@@ -73,9 +70,6 @@
     },
     "UI": {
       "$path": "UI"
-    },
-    "Profiles": {
-      "$path": "Profiles"
     },
     "Handle": {
       "$path": "Handle.rbxmx"

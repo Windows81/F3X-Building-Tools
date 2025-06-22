@@ -36,7 +36,7 @@ local AboutPane = Roact.PureComponent:extend(script.Name)
 function AboutPane:init()
 	self.DockSize, self.SetDockSize = Roact.createBinding(UDim2.new())
 	self.Maid = Maid.new()
-	
+
 	self:UpdateColor()
 	self.Maid.TrackHistory = self.props.Core.ToolChanged:Connect(function (Tool)
 		self:UpdateColor(Tool)
@@ -119,10 +119,10 @@ function AboutPane:render()
 				Text = [[<font weight="900"><u>FORK</u><br/>3X</font>]];
 				TextStrokeTransparency = 0.8;
 				TextScaled = true;
-				RichText = true; 
+				RichText = true;
 				TextYAlignment = Enum.TextYAlignment.Bottom;
 				TextColor3 = Color3.new(1, 1, 1);
-				Font = Enum.Font.MontserratBlack;
+				Font = Enum.Font.SourceSansBold;
 				Position = UDim2.new(0.05, 0, 0.5, -4);
 				ZIndex = 3;
 			}, {

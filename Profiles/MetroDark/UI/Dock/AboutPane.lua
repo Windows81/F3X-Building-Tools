@@ -98,7 +98,7 @@ function AboutPane:render()
 			TextScaled = true;
 			RichText = true;
 			TextColor3 = Color3.new(1, 1, 1);
-			Font = Enum.Font.MontserratBlack;
+			Font = Enum.Font.SourceSansBold;
             Position = UDim2.new(0.05, 0, 0.5, 0);
         }, {
             AspectRatio = new('UIAspectRatioConstraint', {

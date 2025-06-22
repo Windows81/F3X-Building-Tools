@@ -125,14 +125,14 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	-- Get target
 	local NewTarget = Mouse.Target
 	local NewScopeTarget = self:FindTargetInScope(NewTarget, Scope)
-	
+
 	local Core = GetCore()
 
 	if Options.PartHintFunction ~= false then
 		if not IndicatorText then
 			IndicatorText = Make 'TextLabel' {
 				Name = "IndicatorText";
-				Font = Enum.Font.MontserratMedium;
+				Font = Enum.Font.SourceSansSemibold;
 				Parent = Core.UI;
 				Size = UDim2.new(0, 0, 0, 0);
 				TextColor3 = Color3.new(1, 1, 1);
@@ -163,7 +163,7 @@ function TargetingModule:UpdateTarget(Scope, Force)
 	end
 
 	-- Make sure target is selectable
-	
+
 	if not Core.IsSelectable({ NewTarget }) then
 		if Options.PartHintFunction ~= false then
 			IndicatorText.TextColor3 = Color3.new(1, 0, 0)
@@ -175,7 +175,7 @@ function TargetingModule:UpdateTarget(Scope, Force)
 		self.ScopeTargetChanged:Fire(nil)
 		return
 	end
-	
+
 	if Options.PartHintFunction ~= false then
 		IndicatorText.TextColor3 = Color3.new(1, 1, 1)
 	end
@@ -377,7 +377,7 @@ function TargetingModule.UpdateSelectionRectangle()
 			BackgroundTransparency = 0.6,
 			BorderSizePixel = 0
 		};
-		
+
 		UIStroke = Make 'UIStroke' {
 			Name = 'BTStroke',
 			Parent = SelectionRectangle,
@@ -387,7 +387,7 @@ function TargetingModule.UpdateSelectionRectangle()
 			LineJoinMode = Enum.LineJoinMode.Miter,
 		};
 	end;
-	
+
 	UIStroke.Color = Selection.Color.Color
 
 	local StartPoint = Vector2.new(
@@ -466,9 +466,9 @@ function TargetingModule.FinishRectangleSelecting()
 
 	-- Find items that lie within the rectangle
 	local ScopeParts = Support.GetDescendantsWhichAreA(TargetingModule.Scope, 'BasePart')
-	
+
 	local BreakFactor = 1
-	
+
 	for i, Part in pairs(ScopeParts) do
 		local ScreenPoint, OnScreen = Workspace.CurrentCamera:WorldToScreenPoint(Part.Position)
 		if OnScreen then

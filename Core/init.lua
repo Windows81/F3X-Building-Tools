@@ -17,7 +17,6 @@ History = require(script.History)
 Selection = require(script.Selection)
 Targeting = require(script.Targeting)
 
-local CurrentProfile = "CementDark"
 local UseGigsDarkWithPlugin = false
 
 -- Libraries
@@ -50,7 +49,6 @@ Assets = require(Tool:WaitForChild("Assets"))
 
 -- Core events
 ToolChanged = Signal.new()
-ProfileUpdate = Signal.new()
 
 function EquipTool(Tool)
 	-- Equips and switches to the given tool
@@ -1095,56 +1093,53 @@ function ExportSelection()
 		}))
 		print('[Building Tools by F3X] Uploaded Export:', CreationId);
 	end)
-
-			print("[Building Tools by F3X] Uploaded Export:", CreationId)
-		end)
-		-- Display error messages on failure
-		:Catch("Http requests are not enabled", function()
-			Roact.update(
-				DialogHandle,
-				Roact.createElement(DialogComponent, {
-					Text = "Please enable HTTP requests.",
-					OnDismiss = DialogDismissCallback,
-				})
-			)
-		end)
-		:Catch("Export failed due to server-side error", function()
-			Roact.update(
-				DialogHandle,
-				Roact.createElement(DialogComponent, {
-					Text = "An error occurred — please try again.",
-					OnDismiss = DialogDismissCallback,
-				})
-			)
-		end)
-		:Catch("Post data too large", function()
-			Roact.update(
-				DialogHandle,
-				Roact.createElement(DialogComponent, {
-					Text = "Try splitting up your build.",
-					OnDismiss = DialogDismissCallback,
-				})
-			)
-		end)
-		:Catch("Blacklisted content", function()
-			Roact.update(
-				DialogHandle,
-				Roact.createElement(DialogComponent, {
-					Text = "Unable to export.",
-					OnDismiss = DialogDismissCallback,
-				})
-			)
-		end)
-		:Catch(function(Error, Stack, Attempt)
-			Roact.update(
-				DialogHandle,
-				Roact.createElement(DialogComponent, {
-					Text = "An unknown error occurred — please try again.",
-					OnDismiss = DialogDismissCallback,
-				})
-			)
-			warn("❌ [Building Tools by F3X] Failed to export selection", "\n\nError:\n", Error, "\n\nStack:\n", Stack)
-		end)
+	-- Display error messages on failure
+	:Catch("Http requests are not enabled", function()
+		Roact.update(
+			DialogHandle,
+			Roact.createElement(DialogComponent, {
+				Text = "Please enable HTTP requests.",
+				OnDismiss = DialogDismissCallback,
+			})
+		)
+	end)
+	:Catch("Export failed due to server-side error", function()
+		Roact.update(
+			DialogHandle,
+			Roact.createElement(DialogComponent, {
+				Text = "An error occurred — please try again.",
+				OnDismiss = DialogDismissCallback,
+			})
+		)
+	end)
+	:Catch("Post data too large", function()
+		Roact.update(
+			DialogHandle,
+			Roact.createElement(DialogComponent, {
+				Text = "Try splitting up your build.",
+				OnDismiss = DialogDismissCallback,
+			})
+		)
+	end)
+	:Catch("Blacklisted content", function()
+		Roact.update(
+			DialogHandle,
+			Roact.createElement(DialogComponent, {
+				Text = "Unable to export.",
+				OnDismiss = DialogDismissCallback,
+			})
+		)
+	end)
+	:Catch(function(Error, Stack, Attempt)
+		Roact.update(
+			DialogHandle,
+			Roact.createElement(DialogComponent, {
+				Text = "An unknown error occurred — please try again.",
+				OnDismiss = DialogDismissCallback,
+			})
+		)
+		warn("❌ [Building Tools by F3X] Failed to export selection", "\n\nError:\n", Error, "\n\nStack:\n", Stack)
+	end)
 end
 
 -- Assign hotkey for exporting selection
@@ -1449,121 +1444,9 @@ function InitializeUI()
 	-- Sets up the UI
 
 	-- Ensure UI has not yet been initialized
-	local ProfilesFolder = Mode == "Plugin"
-			and not UseGigsDarkWithPlugin
-			and game.ReplicatedStorage:FindFirstChild("Fork3XProfile")
-		or Tool:WaitForChild("Profiles")
-
-	if ProfilesFolder then
-		local Profile = UseGigsDarkWithPlugin and "GigsDark"
-			or Mode == "Plugin" and ProfilesFolder.Name == "Fork3XProfile" and ProfilesFolder:GetChildren()[1].Name
-			or Options.CheckProfile(Player)
-
-		if Profile ~= CurrentProfile and Profile ~= nil then
-			CurrentProfile = Profile
-			local NewProfile = ProfilesFolder:FindFirstChild(CurrentProfile)
-
-			if NewProfile then
-				local NewProfile = NewProfile:Clone()
-
-				if UI then
-					UI:Destroy()
-					UI = nil
-				end
-
-				local OldItemsHierarchy = {}
-
-				for _, Item in Tool:WaitForChild("Interfaces"):GetDescendants() do
-					if Item:GetAttribute("IsNegligible") == true then
-						continue
-					end
-					OldItemsHierarchy[Item] = {}
-					local CurrentParent = Item.Parent
-
-					if Item.Parent == Tool.Interfaces then
-						table.insert(OldItemsHierarchy[Item], CurrentParent)
-						continue
-					end
-
-					repeat
-						table.insert(OldItemsHierarchy[Item], CurrentParent)
-						CurrentParent = CurrentParent.Parent
-					until CurrentParent == Tool.Interfaces
-					table.insert(OldItemsHierarchy[Item], Tool.Interfaces)
-				end
-
-				for _, Item in Tool:WaitForChild("UI"):GetDescendants() do
-					OldItemsHierarchy[Item] = {}
-					local CurrentParent = Item.Parent
-
-					if Item.Parent == Tool.UI then
-						table.insert(OldItemsHierarchy[Item], CurrentParent)
-						continue
-					end
-
-					repeat
-						table.insert(OldItemsHierarchy[Item], CurrentParent)
-						CurrentParent = CurrentParent.Parent
-					until CurrentParent == Tool.UI
-					table.insert(OldItemsHierarchy[Item], Tool.UI)
-				end
-
-				for MainItem, Item in OldItemsHierarchy do
-					local Count = #Item
-					local KnownParent = NewProfile
-
-					local Ended = false
-
-					repeat
-						local ItemToFind
-
-						if Count == 0 then
-							ItemToFind = MainItem
-						else
-							ItemToFind = Item[Count]
-						end
-
-						if
-							KnownParent:FindFirstChild(ItemToFind.Name)
-							and ItemToFind:GetAttribute("ChangeAnyway") ~= true
-						then
-							KnownParent = KnownParent[ItemToFind.Name]
-						elseif
-							KnownParent:FindFirstChild(ItemToFind.Name)
-							and ItemToFind:GetAttribute("ChangeAnyway") == true
-						then
-							break
-						else
-							ItemToFind:Clone().Parent = KnownParent
-							Ended = true
-							break
-						end
-
-						if Count == 0 then
-							Ended = true
-							break
-						end
-
-						Count -= 1
-					until Ended == true
-				end
-
-				Tool.Interfaces:Destroy()
-				NewProfile.Interfaces.Parent = Tool
-
-				Tool.UI:Destroy()
-				NewProfile.UI.Parent = Tool
-
-				UIElements = Tool:WaitForChild("UI")
-
-				NewProfile:Destroy()
-			end
-		end
-	end
-
 	if UI then
-		return true
-	end
+		return true;
+	end;
 
 	-- Create the root UI
 	UI = Instance.new("ScreenGui")
@@ -1587,7 +1470,6 @@ function InitializeUI()
 			Size = Size,
 		})
 
-		ProfileUpdate:Fire(DockHandle, DockComponent)
 		-- Update dock
 		--[[
 		Roact.update(DockHandle, Roact.createElement(DockComponent, {
@@ -1606,7 +1488,6 @@ function InitializeUI()
 		end
 	end)
 
-	ProfileUpdate:Fire(DockHandle, DockComponent)
 
 	return true
 end
@@ -1614,20 +1495,10 @@ end
 -- Initialize the UI
 InitializeUI()
 
-ProfileUpdate:Connect(function(DockHandle, DockComponent)
-	Roact.update(
-		DockHandle,
-		Roact.createElement(DockComponent, {
-			Core = Core,
-			Tools = Cryo.List.join(ToolList),
-		})
-	)
-end)
-
 -- Set up external connections
 Options.CustomCoreConnections(Core)
 
-for FunctionName, Arguments in Options.CustomCoreFunctions do
+for FunctionName, Arguments in pairs(Options.CustomCoreFunctions) do
 	Core[FunctionName] = function(...)
 		return Arguments[1](Core, ...)
 	end

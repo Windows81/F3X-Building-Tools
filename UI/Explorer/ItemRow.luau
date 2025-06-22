@@ -250,16 +250,13 @@ function ItemRow:render()
             Name = (not state.EditingName) and new(TextLabel, {
                 TextSize = 13,
                 TextColor = 'FFFFFF',
-				Text = '<font family="rbxassetid://12187365977">' .. props.CustomName .. '</font>',
-				RichText = true,
-				Font = Enum.Font.SourceSansSemibold,
+                Text = props.CustomName,
                 Width = 'WRAP_CONTENT'
             }),
             NameInput = state.EditingName and new(TextBox, {
                 TextSize = 13,
                 TextColor = 'FFFFFF',
-				Text = props.Name,
-				Font = Enum.Font.SourceSansSemibold,
+                Text = props.Name,
                 Width = 'WRAP_CONTENT',
                 [Roact.Event.FocusLost] = self.OnNameInputBlur
             })

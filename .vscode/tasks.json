@@ -9,7 +9,6 @@
 				"rojo build . --output '${workspaceFolder}/Build/Building Tools.rbxm';",
 				// `rfd` refers to an alias for Rōblox Freedom Distribution.
 				"rfd serialise --method rbxl --load '${workspaceFolder}/Build/Building Tools.rbxm' --save '${workspaceFolder}/Build/Building Tools (RFD).rbxm';",
-				"cp '${workspaceFolder}/Build/Building Tools (RFD).rbxm' 'C:/Users/USER/Projects/FilteringDisabled/Examples/F3X Server/AssetCache/game-asset-f3x.rbxm';",
 			],
 			"problemMatcher": [],
 			"group": {

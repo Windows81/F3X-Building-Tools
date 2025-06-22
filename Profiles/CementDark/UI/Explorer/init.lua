@@ -298,9 +298,9 @@ function Explorer:BuildItemState(Item, Scope, Order, Changes, State)
     local ItemState = {
         Id = ItemId,
 		Name = Item.Name,
-		
+
 		-- CustomName is basically if you want to display something else.
-		
+
 		CustomName = Options.CustomNameFunction(Item, game.Players.LocalPlayer),
         IsPart = IsPart,
 		IsLocked = IsPart and Item.Locked == true or IsPart and (not Options.CheckPermission(Item, game.Players.LocalPlayer)) or false,
@@ -588,7 +588,7 @@ function Explorer:render()
         -- Window header
         Header = new(TextLabel, {
 			Text = '<font family="rbxassetid://12187365977">  EXPLORER</font>',
-			Font = Enum.Font.Montserrat,
+			Font = Enum.Font.SourceSans,
 			RichText = true,
             TextSize = 9,
             Height = UDim.new(0, 14),

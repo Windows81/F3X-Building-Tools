@@ -8,10 +8,10 @@ local new = Roact.createElement
 
 -- Text sizes
 local TextBoundaries = Vector2.new(math.huge, math.huge)
-local TITLE_SIZE = TextService:GetTextSize('Selection mode', 24/2, Enum.Font.MontserratMedium, TextBoundaries)
-local HOTKEY_SIZE = TextService:GetTextSize('SHIFT-T', 24/2, Enum.Font.MontserratMedium, TextBoundaries)
-local SCOPED_LABEL_SIZE = TextService:GetTextSize('Groups and parts', 25/2, Enum.Font.MontserratMedium, TextBoundaries)
-local DIRECT_LABEL_SIZE = TextService:GetTextSize('Parts only', 25/2, Enum.Font.MontserratMedium, TextBoundaries)
+local TITLE_SIZE = TextService:GetTextSize('Selection mode', 24/2, Enum.Font.SourceSansSemibold, TextBoundaries)
+local HOTKEY_SIZE = TextService:GetTextSize('SHIFT-T', 24/2, Enum.Font.SourceSansSemibold, TextBoundaries)
+local SCOPED_LABEL_SIZE = TextService:GetTextSize('Groups and parts', 25/2, Enum.Font.SourceSansSemibold, TextBoundaries)
+local DIRECT_LABEL_SIZE = TextService:GetTextSize('Parts only', 25/2, Enum.Font.SourceSansSemibold, TextBoundaries)
 
 local function Tooltip(props)
     return new('ImageLabel', {

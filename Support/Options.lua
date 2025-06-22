@@ -27,16 +27,16 @@ Settings = {
 
 	DisallowHumanoidUngrouping = false,
 
-	-- Enormous meshes are very annoying to remove, and can cause Z-fighting artifacts that are very disturbing. 
+	-- Enormous meshes are very annoying to remove, and can cause Z-fighting artifacts that are very disturbing.
 	-- You can prevent them so. Note that the size is calculated this way: Mesh.Size.X * Part.Size.X e. g.
 
 	MaxNormalMeshSize = 10240,
 
 	-- If you want to kick the player when they place a big normal mesh.
 
-	TriggerBadBehaviorForNormalMeshes = false,	
+	TriggerBadBehaviorForNormalMeshes = false,
 
-	-- The biggest FileMesh would be 2048 studs big. This would limit the file mesh's size to 20480 e. g. for the worst.	
+	-- The biggest FileMesh would be 2048 studs big. This would limit the file mesh's size to 20480 e. g. for the worst.
 
 	MaxFileMeshSize = 20480,
 
@@ -66,7 +66,7 @@ Settings = {
 	-- - ImageBlacklist - "Image"
 	-- The table below contains a specific function for each of those. In this case, I used the webhook and kicked the player.
 
-	BadBehaviorFunction = function(Player: Player, Module, BehaviorCode, Values)	
+	BadBehaviorFunction = function(Player: Player, Module, BehaviorCode, Values)
 		local BadBehaviorSubFunctions = {
 			Anchor = function(Player: Player, Module, Values)
 	--			Module.Embed("", "INAPPROPRIATE BEHAVIOR WARNING FOR ".. Player.DisplayName .." (@"..Player.Name.."):", "The mentioned player unanchored " .. Values.Parts .. " parts at the minute, which is above the limit.", 0xff0000)
@@ -125,7 +125,7 @@ Settings = {
 				}
 
 				local MarketplaceService = game:GetService("MarketplaceService")
-				local ProductName = MarketplaceService:GetProductInfo(ImageId, Enum.InfoType.Asset) and 
+				local ProductName = MarketplaceService:GetProductInfo(ImageId, Enum.InfoType.Asset) and
 					string.lower(MarketplaceService:GetProductInfo(ImageId, Enum.InfoType.Asset).Name)
 
 				-- Yes. I use this way so I don't need to update.
@@ -182,13 +182,13 @@ Settings = {
 	SetPermission = function(Item: Instance, Player: Player, Type: string, Locking: boolean)
 		if Type == "Lock" then
 			Item.Locked = Locking
-		end 
+		end
 	end,
-	
+
 	-- The consider part function determines whether a part will be considered or not.
 	-- Compared to CheckPermission, when this function returns false, the part will just be ignored.
 	-- Use CheckPermission if you want to make the system to be aware of the part, or this function if you want to ignore it (baseplate i. e.)
-	
+
 	ConsiderPart = function(Item: Instance, Player: Player)
 		return not (Item:IsA("BasePart") and Item.Locked or Item:IsA("Terrain")) and true
 	end,
@@ -230,29 +230,13 @@ Settings = {
 		return Item.Name
 	end,
 
-	-- To allow everyone to feel comfortable, Fork3X supports profiles.
-	-- Profiles can allow layout changes, other colors, etc...
-	-- Your profile is a folder that includes everything about UIs. That means it must contain:
-
-	-- • The custom UI folder.
-	-- • The custom Interface folder.
-
-	-- Then, once the Building Tools will be opened, it will call this function that must return the profile's name.
-	-- You can use datastores in-game for example, but in Studio you can put your profile folder in ServerStorage -> Fork3XProfiles.
-	-- The Studio profile will of course be ignored in-game
-	-- You need to return the name of your profile in the function. Of course, you can do many things to check which profile the user uses.
-
-	CheckProfile = function(Player)
-		return "CementDark"
-	end,
-	
 	-- The SelectionBox and the TargetBox are the outlines seen when respectively selecting or targetting.
 	-- To prevent lag, those need to be used once and aren't stored in the tool's files.
 	-- You can modify how they're created by changing the different properties of those.
-	
+
 	SelectionBoxMake = function(Core)
 		print("show em one or two things")
-		
+
 		return {
 			Name = 'BTSelectionBox',
 			Parent = Core.UI,
@@ -261,7 +245,7 @@ Settings = {
 			Color = Core.Selection.Color,
 		};
 	end;
-		
+
 	TargetBoxMake = function(Core)
 		return {
 			Name = 'BTTargetBox',
@@ -271,7 +255,7 @@ Settings = {
 			Color = BrickColor.new 'Institutional white'
 		};
 	end;
-	
+
 	-- Adding tools is pretty way to go. However, adding new buttons for the selection pane might be more challenging.
 	-- The selection pane isn't too hard to modify. But the core module almost gets modified at each update.
 	-- This is why you can add some extra functions here that will be added natively to the Core module.
@@ -288,15 +272,15 @@ Settings = {
 
 	CustomCoreConnections = function(Core)
 	end;
-	
+
 	-- If you're interested in adding new functionalities while being able to update Fork3X with ease, you can add the functions here.
 	-- They will be natively integrated to the SyncModule. You don't need to do anything more.
-	
+
 	ExtraSyncAPIFunctions = {};
-	
+
 	-- If you're interested in adding custom instances via the New Part tool, you can add them here.
 	-- You need to specify the name of the instance and the function to create it.
-	
+
 	CustomPartTypes = {};
 
 	-- You can change the delay between each time you press the Load button with the Save/Load utility.

@@ -527,7 +527,6 @@ function MoveTool:RegisterChange()
 			CFrame = Part.CFrame;
 		})
 	end;
-<<<<<<< HEAD
 	for _, Attachment in pairs(self.HistoryRecord.Attachments) do
 		self.HistoryRecord.AfterCFrame[Attachment] = Attachment.WorldCFrame
 		table.insert(Changes, {
@@ -535,9 +534,7 @@ function MoveTool:RegisterChange()
 			WorldCFrame = Attachment.WorldCFrame;
 		})
 	end;
-=======
 	--[[ {PATCH} GetPivot didn't exist in 2021E.
->>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 	pcall(function ()
 		for _, Model in pairs(self.HistoryRecord.Models) do
 			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
@@ -568,7 +565,7 @@ function MoveTool:PrepareSelectionForDragging()
 
 	-- Get index of parts
 	local PartIndex = Support.FlipTable(Selection.Parts)
-	
+
 	local function SetUpPart(Part)
 		InitialPartStates[Part] = {
 			Anchored = Part.Anchored;
@@ -587,7 +584,7 @@ function MoveTool:PrepareSelectionForDragging()
 	for _, Part in pairs(Selection.Parts) do
 		SetUpPart(Part)
 	end;
-	
+
 	for _, Model in ipairs(Selection.Models) do
 		for _, Part in Model:GetChildren() do
 			if Part:IsA("BasePart") then
@@ -599,13 +596,13 @@ function MoveTool:PrepareSelectionForDragging()
 	-- Get initial model states (temporarily pcalled due to pivot API being in beta)
 --[[	pcall(function ()
 		for _, Model in ipairs(Selection.Models) do
-			
+
 			InitialModelStates[Model] = {
 				Pivot = Model:GetPivot();
 			}
 		end
 	end)]]
-	
+
 	pcall(function ()
 		for _, Attachment in ipairs(Selection.Attachments) do
 			InitialAttachmentsStates[Attachment] = {

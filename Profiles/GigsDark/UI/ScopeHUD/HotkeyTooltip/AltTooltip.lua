@@ -28,7 +28,7 @@ local function ScopeInTooltip(props)
             Size = UDim2.new(0, LABEL_LENGTH, 1, 0);
             Position = UDim2.new(0, 5/2, 0.5, 0);
             AnchorPoint = Vector2.new(0, 0.5);
-            Font = Enum.Font.MontserratMedium;
+            Font = Enum.Font.SourceSansSemibold;
             TextSize = 21/2;
             Text = LABEL_TEXT;
             TextTransparency = 0.5;

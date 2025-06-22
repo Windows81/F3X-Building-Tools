@@ -251,14 +251,14 @@ function ItemRow:render()
                 TextSize = 13,
                 TextColor = 'FFFFFF',
 				Text = props.CustomName,
-				Font = Enum.Font.MontserratMedium,
+				Font = Enum.Font.SourceSansSemibold,
                 Width = 'WRAP_CONTENT'
             }),
             NameInput = state.EditingName and new(TextBox, {
                 TextSize = 13,
                 TextColor = 'FFFFFF',
 				Text = props.Name,
-				Font = Enum.Font.MontserratMedium,
+				Font = Enum.Font.SourceSansSemibold,
                 Width = 'WRAP_CONTENT',
                 [Roact.Event.FocusLost] = self.OnNameInputBlur
             })
