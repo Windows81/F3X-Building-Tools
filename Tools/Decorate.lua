@@ -393,7 +393,7 @@ end;
 function UpdateEnumInput(Input, Value, IsBoolean, PositiveValue)
 
 	if IsBoolean == false then
-		for _, Button in Input:GetChildren() do
+		for _, Button in pairs(Input:GetChildren()) do
 			if not Button:FindFirstChild("SelectedIndicator") then continue end
 
 			if typeof(Value) == "EnumItem" and Value.Name == Button.Name then
@@ -561,7 +561,7 @@ function EnableOptionsUI(SettingsUI)
 		SyncInputToProperty('Acceleration', DecorationType, 'Number', Options.WeightOption.Input.TextBox);
 		SyncInputToProperty('RotSpeed', DecorationType, 'Number', Options.RSpeedOption.Input.TextBox);
 
-		for _, Button in Options.OrientationOption:GetChildren() do
+		for _, Button in pairs(Options.OrientationOption:GetChildren()) do
 			if Button:FindFirstChild("Button") then
 				Button.Button.Activated:Connect(function()
 					SoundService:PlayLocalSound(Sounds:WaitForChild("Press"))

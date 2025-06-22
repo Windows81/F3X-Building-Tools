@@ -563,7 +563,7 @@ function CloneSelection()
 		Clones = {}
 
 		-- Gather initial available clones
-		for _, Clone in game:GetService("CollectionService"):GetTagged("BTStreamingClone") do
+		for _, Clone in pairs(game:GetService("CollectionService"):GetTagged("BTStreamingClone")) do
 			if Clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
 				table.insert(Clones, Clone)
 			end

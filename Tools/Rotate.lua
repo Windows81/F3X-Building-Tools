@@ -380,7 +380,9 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 			elseif Selection.Focus:IsA 'Model' then
 				PivotPoint = Selection.Focus:GetModelCFrame()
 				pcall(function ()
-					PivotPoint = Selection.Focus:GetPivot()
+					-- {PATCH} GetPivot didn't exist in 2021E.
+					-- PivotPoint = Selection.Focus:GetPivot()
+					PivotPoint = Selection.Focus:GetModelCFrame()
 				end)
 			elseif Selection.Focus:IsA 'Attachment' then
 				PivotPoint = Selection.Focus.WorldCFrame
@@ -844,7 +846,9 @@ function NudgeSelectionByAxis(Axis, Direction)
 		elseif Selection.Focus:IsA 'Model' then
 			PivotPoint = Selection.Focus:GetModelCFrame()
 			pcall(function ()
-				PivotPoint = Selection.Focus:GetPivot();
+				-- {PATCH} GetPivot didn't exist in 2021E.
+				-- PivotPoint = Selection.Focus:GetPivot()
+				PivotPoint = Selection.Focus:GetModelCFrame()
 			end)
 		elseif Selection.Focus:IsA 'Attachment' then
 			PivotPoint = Selection.Focus.WorldCFrame
@@ -971,7 +975,9 @@ function TrackChange()
 	end;
 	pcall(function ()
 		for _, Model in pairs(HistoryRecord.Models) do
-			HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
+			-- {PATCH} GetPivot didn't exist in 2021E.
+			-- HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
+			HistoryRecord.BeforeCFrame[Model] = Model:GetModelCFrame()
 		end;
 	end);
 	for _, Attachment in pairs(HistoryRecord.Attachments) do
@@ -998,10 +1004,14 @@ function RegisterChange()
 	end;
 	pcall(function ()
 		for _, Model in pairs(HistoryRecord.Models) do
-			HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
+			-- {PATCH} GetPivot didn't exist in 2021E.
+			-- HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
+			HistoryRecord.AfterCFrame[Model] = Model:GetModelCFrame()
 			table.insert(Changes, {
 				Model = Model;
-				Pivot = Model:GetPivot();
+				-- {PATCH} GetPivot didn't exist in 2021E.
+				-- Pivot = Model:GetPivot()
+				Pivot = Model:GetModelCFrame();
 			});
 		end;
 	end)

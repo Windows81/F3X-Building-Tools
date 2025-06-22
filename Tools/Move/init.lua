@@ -504,7 +504,9 @@ function MoveTool:TrackChange()
 	end
 	pcall(function ()
 		for _, Model in ipairs(self.HistoryRecord.Models) do
-			self.HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
+			-- {PATCH} GetPivot didn't exist in 2021E.
+			-- self.HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
+			self.HistoryRecord.BeforeCFrame[Model] = Model:GetModelCFrame()
 		end
 	end)
 
@@ -534,17 +536,19 @@ function MoveTool:RegisterChange()
 			WorldCFrame = Attachment.WorldCFrame;
 		})
 	end;
-	--[[ {PATCH} GetPivot didn't exist in 2021E.
 	pcall(function ()
 		for _, Model in pairs(self.HistoryRecord.Models) do
-			self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
+			-- {PATCH} GetPivot didn't exist in 2021E.
+			-- self.HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
+			self.HistoryRecord.AfterCFrame[Model] = Model:GetModelCFrame()
 			table.insert(Changes, {
 				Model = Model;
-				Pivot = Model:GetPivot();
+				-- {PATCH} GetPivot didn't exist in 2021E.
+				-- Pivot = Model:GetPivot()
+				Pivot = Model:GetModelCFrame();
 			})
 		end
 	end)
-	]]
 
 	-- Send the change to the server
 	Core.SyncAPI:Invoke('SyncMove', Changes);
@@ -586,7 +590,7 @@ function MoveTool:PrepareSelectionForDragging()
 	end;
 
 	for _, Model in ipairs(Selection.Models) do
-		for _, Part in Model:GetChildren() do
+		for _, Part in pairs(Model:GetChildren()) do
 			if Part:IsA("BasePart") then
 				SetUpPart(Part)
 			end
@@ -623,7 +627,9 @@ function MoveTool:PrepareSelectionForDragging()
 	elseif Focus:IsA 'Model' then
 		InitialFocusCFrame = Focus:GetModelCFrame()
 		pcall(function ()
-			InitialFocusCFrame = Focus:GetPivot()
+			-- {PATCH} GetPivot didn't exist in 2021E.
+			-- InitialFocusCFrame = Focus:GetPivot();
+			InitialFocusCFrame = Focus:GetModelCFrame();
 		end)
 	end
 

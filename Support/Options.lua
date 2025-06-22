@@ -134,7 +134,7 @@ Settings = {
 
 				local IsBlacklisted = false
 
-				for _, BadName in BadNames do
+				for _, BadName in pairs(BadNames) do
 					if string.find(ProductName, BadName) then
 						IsBlacklisted = true
 					end

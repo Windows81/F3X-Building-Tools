@@ -19,7 +19,6 @@ local copyPartProps = function(fromPart: BasePart, toPart: BasePart)
 	toPart.Material     = fromPart.Material
 	toPart.Reflectance  = fromPart.Reflectance
 	toPart.Transparency = fromPart.Transparency
-	toPart.MaterialVariant = fromPart.MaterialVariant
 end
 
 local function setPartSizeWithMeshIfNeeded(part, meshType: Enum.MeshType, a, b, c)
@@ -89,8 +88,8 @@ local function doFill(edgeA, edgeB, extrudeDirectionModifier: number, thicknessO
 		local edg2 = math.abs(0.5 + e2)
 		local edg3 = math.abs(0.5 + e3)
 		-- Idea: Find the edge onto which the vertex opposite that
-		-- edge has the projection closest to 1/2 of the way along that 
-		-- edge. That is the edge thatwe want to split on in order to 
+		-- edge has the projection closest to 1/2 of the way along that
+		-- edge. That is the edge thatwe want to split on in order to
 		-- avoid ending up with small "sliver" triangles with one very
 		-- small dimension relative to the other one.
 		if math.abs(e1) > 0.0001 and math.abs(e2) > 0.0001 and math.abs(e3) > 0.0001 then
@@ -212,10 +211,10 @@ local function doFill(edgeA, edgeB, extrudeDirectionModifier: number, thicknessO
 			part2.CFrame = maincf*CFrame.Angles(math.pi, math.pi, -math.pi/2)*CFrame.new(flip*(depth/2), width/2, -len1 - len2/2)
 			part2.Parent = parent
 		end
-		
+
 		PermissionFunction(part1)
 		PermissionFunction(part2)
-		
+
 		return normal*flip
 	end
 
@@ -305,7 +304,7 @@ local function doFill(edgeA, edgeB, extrudeDirectionModifier: number, thicknessO
 			normal = normal * extrudeDirectionModifier
 
 			local thickness = thicknessOverride or maxDepth
-			
+
 			local position = point + axis*((axisMin + axisMax)/2) + perpDir*(perpLen/2) + normal*(thickness/2)
 			local size = Vector3.new(perpLen, thickness, (axisMax - axisMin))
 			local cf = CFrameFromTopBack(position, normal, axis)
@@ -323,7 +322,7 @@ local function doFill(edgeA, edgeB, extrudeDirectionModifier: number, thicknessO
 			copyPartProps(edgeA.part, part)
 			setPartSizeWithMeshIfNeeded(part, Enum.MeshType.Brick, size.X, size.Y, size.Z)
 			part.CFrame = cf
-			
+
 			PermissionFunction(part)
 		end
 	else
@@ -368,7 +367,7 @@ local function doFill(edgeA, edgeB, extrudeDirectionModifier: number, thicknessO
 				fill(pointA, pointB, pointC)
 
 			elseif (lenA < -0.01 or lenA > edgeA.length + 0.01) and (lenB < -0.01 or lenB > edgeB.length + 0.01) then
-				-- The intersection is outside of both edges. 
+				-- The intersection is outside of both edges.
 				-- In this case we need to use multiple triangles
 				if lenA*lenB > 0 then
 					fill(extA, endA, endB)
