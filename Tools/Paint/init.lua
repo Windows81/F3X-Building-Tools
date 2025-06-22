@@ -47,6 +47,11 @@ You can apply the selected color by selecting the part you want to color.
 
 <b>TIP:</b> Press <b><i>R</i></b> while hovering over a part to copy its color.]]
 
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+PaintTool.ManualText = PaintTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+
 function PaintTool:Equip()
 	-- Enables the tool's equipped functionality
 

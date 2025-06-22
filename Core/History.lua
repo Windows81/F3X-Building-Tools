@@ -13,9 +13,19 @@ History = {
 	Index = 0,
 
 	-- History change event
-	Changed = Signal.new()
+	Changed = Signal.new(),
+	
+	-- To prevent edge cases where multiple actions take place at the same time 
+	Debounce = false
 
 };
+
+function WaitForDebounce()
+	while History.Debounce do
+		-- task.wait();
+		wait();
+	end;
+end;
 
 function History.Undo()
 	-- Unapplies the previous record in stack
@@ -24,6 +34,10 @@ function History.Undo()
 	if History.Index - 1 < 0 then
 		return;
 	end;
+
+	-- Prevent edit conflicts
+	WaitForDebounce();
+	History.Debounce = true;
 
 	-- Get the history record, unapply it
 	local Record = History.Stack[History.Index];
@@ -42,6 +56,9 @@ function History.Undo()
 	-- Fire the Changed event
 	History.Changed:Fire();
 
+	-- Release debounce lock
+	History.Debounce = false;
+
 end;
 
 function History.Redo()
@@ -51,6 +68,10 @@ function History.Redo()
 	if History.Index + 1 > #History.Stack then
 		return;
 	end;
+	
+	-- Prevent edit conflicts
+	WaitForDebounce();
+	History.Debounce = true;
 
 	-- Update the index
 	History.Index = History.Index + 1;
@@ -68,10 +89,17 @@ function History.Redo()
 	-- Fire the Changed event
 	History.Changed:Fire();
 
+	-- Release debounce lock
+	History.Debounce = false;
+	
 end;
 
 function History.Add(Record)
 	-- Adds new history record to stack
+
+	-- Prevent edit conflicts
+	WaitForDebounce();
+	History.Debounce = true;
 
 	-- Update the index
 	History.Index = History.Index + 1;
@@ -86,6 +114,9 @@ function History.Add(Record)
 
 	-- Fire the Changed event	
 	History.Changed:Fire();
+
+	-- Release debounce lock
+	History.Debounce = false;
 
 end;
 

@@ -1,15 +1,15 @@
 local Core = getfenv(0)
-Tool = script.Parent;
-Plugin = (Tool.Parent:IsA 'Plugin') and Tool.Parent or nil
+Tool = script.Parent
+Plugin = (Tool.Parent:IsA("Plugin")) and Tool.Parent or nil
 
 -- Detect mode
-Mode = Plugin and 'Plugin' or 'Tool';
+Mode = Plugin and "Plugin" or "Tool"
 
 -- Load tool completely
-local Indicator = Tool:WaitForChild 'Loaded';
+local Indicator = Tool:WaitForChild("Loaded")
 while not Indicator.Value do
-	Indicator.Changed:Wait();
-end;
+	Indicator.Changed:Wait()
+end
 
 -- Modules
 Security = require(script.Security)
@@ -26,14 +26,14 @@ Signal = require(Tool.Libraries.Signal)
 Support = require(Tool.Libraries.SupportLibrary)
 Try = require(Tool.Libraries.Try)
 Make = require(Tool.Libraries.Make)
-local Roact = require(Tool.Vendor:WaitForChild 'Roact')
-local Maid = require(Tool.Libraries:WaitForChild 'Maid')
-local Cryo = require(Tool.Libraries:WaitForChild('Cryo'))
+local Roact = require(Tool.Vendor:WaitForChild("Roact"))
+local Maid = require(Tool.Libraries:WaitForChild("Maid"))
+local Cryo = require(Tool.Libraries:WaitForChild("Cryo"))
 
 -- References
-Support.ImportServices();
-SyncAPI = Tool.SyncAPI;
-Player = Players.LocalPlayer;
+Support.ImportServices()
+SyncAPI = Tool.SyncAPI
+Player = Players.LocalPlayer
 Options = Tool:WaitForChild("Options", 1) and require(Tool.Options)
 
 if not Options then
@@ -42,7 +42,7 @@ end
 
 local DataStoresEnabled
 
-local RunService = game:GetService('RunService')
+local RunService = game:GetService("RunService")
 local CanClone = true
 
 -- Preload assets
@@ -57,112 +57,107 @@ function EquipTool(Tool)
 
 	-- Unequip current tool
 	if CurrentTool and CurrentTool.Equipped then
-		CurrentTool:Unequip();
-		CurrentTool.Equipped = false;
-	end;
+		CurrentTool:Unequip()
+		CurrentTool.Equipped = false
+	end
 
 	-- Set `Tool` as current
-	CurrentTool = Tool;
-	CurrentTool.Equipped = true;
+	CurrentTool = Tool
+	CurrentTool.Equipped = true
 
 	-- Fire relevant events
-	ToolChanged:Fire(Tool);
+	ToolChanged:Fire(Tool)
 
 	-- Equip the tool
-	Tool:Equip();
-
-end;
+	Tool:Equip()
+end
 
 function RecolorHandle(Color)
-	SyncAPI:Invoke('RecolorHandle', Color);
-end;
+	SyncAPI:Invoke("RecolorHandle", Color)
+end
 
 -- Theme UI to current tool
-ToolChanged:Connect(function (Tool)
-	coroutine.wrap(RecolorHandle)(Tool.Color);
-	coroutine.wrap(Selection.RecolorOutlines)(Tool.Color);
-end);
+ToolChanged:Connect(function(Tool)
+	coroutine.wrap(RecolorHandle)(Tool.Color)
+	coroutine.wrap(Selection.RecolorOutlines)(Tool.Color)
+end)
 
 -- Core hotkeys
-Hotkeys = {};
+Hotkeys = {}
 
 function AssignHotkey(Hotkey, Callback)
 	-- Assigns the given hotkey to `Callback`
 
 	-- Standardize enum-described hotkeys
-	if type(Hotkey) == 'userdata' then
-		Hotkey = { Hotkey };
+	if type(Hotkey) == "userdata" then
+		Hotkey = { Hotkey }
 
 	-- Standardize string-described hotkeys
-	elseif type(Hotkey) == 'string' then
-		Hotkey = { Enum.KeyCode[Hotkey] };
+	elseif type(Hotkey) == "string" then
+		Hotkey = { Enum.KeyCode[Hotkey] }
 
 	-- Standardize string table-described hotkeys
-	elseif type(Hotkey) == 'table' then
+	elseif type(Hotkey) == "table" then
 		for Index, Key in ipairs(Hotkey) do
-			if type(Key) == 'string' then
-				Hotkey[Index] = Enum.KeyCode[Key];
-			end;
-		end;
-	end;
+			if type(Key) == "string" then
+				Hotkey[Index] = Enum.KeyCode[Key]
+			end
+		end
+	end
 
 	-- Register the hotkey
-	table.insert(Hotkeys, { Keys = Hotkey, Callback = Callback });
-
-end;
+	table.insert(Hotkeys, { Keys = Hotkey, Callback = Callback })
+end
 
 function EnableHotkeys()
 	-- Begins to listen for hotkey triggering
 
 	-- Listen for pressed keys
-	Connections.Hotkeys = Support.AddUserInputListener('Began', 'Keyboard', false, function (Input)
-		local _PressedKeys = Support.GetListMembers(UserInputService:GetKeysPressed(), 'KeyCode');
+	Connections.Hotkeys = Support.AddUserInputListener("Began", "Keyboard", false, function(Input)
+		local _PressedKeys = Support.GetListMembers(UserInputService:GetKeysPressed(), "KeyCode")
 
 		-- Filter out problematic keys
-		local PressedKeys = {};
-		local FilteredKeys = Support.FlipTable { 'LeftAlt', 'W', 'S', 'A', 'D', 'Space' };
+		local PressedKeys = {}
+		local FilteredKeys = Support.FlipTable({ "LeftAlt", "W", "S", "A", "D", "Space" })
 		for _, Key in ipairs(_PressedKeys) do
 			if not FilteredKeys[Key.Name] then
-				table.insert(PressedKeys, Key);
-			end;
-		end;
+				table.insert(PressedKeys, Key)
+			end
+		end
 
 		-- Count pressed keys
-		local KeyCount = #PressedKeys;
+		local KeyCount = #PressedKeys
 
 		-- Prioritize hotkeys based on # of required keys
-		table.sort(Hotkeys, function (A, B)
+		table.sort(Hotkeys, function(A, B)
 			if #A.Keys > #B.Keys then
-				return true;
-			end;
-		end);
+				return true
+			end
+		end)
 
 		-- Identify matching hotkeys
 		for _, Hotkey in ipairs(Hotkeys) do
 			if KeyCount == #Hotkey.Keys then
-
 				-- Get the hotkey's key index
 				local Keys = Support.FlipTable(Hotkey.Keys)
-				local MatchingKeys = 0;
+				local MatchingKeys = 0
 
 				-- Check matching pressed keys
 				for _, PressedKey in pairs(PressedKeys) do
 					if Keys[PressedKey] then
-						MatchingKeys = MatchingKeys + 1;
-					end;
-				end;
+						MatchingKeys = MatchingKeys + 1
+					end
+				end
 
 				-- Trigger the first matching hotkey's callback
 				if MatchingKeys == KeyCount then
-					Hotkey.Callback();
-					break;
-				end;
-
-			end;
-		end;
-	end);
-
-end;
+					Hotkey.Callback()
+					break
+				end
+			end
+		end
+	end)
+end
 
 Enabling = Signal.new()
 Disabling = Signal.new()
@@ -170,71 +165,70 @@ Enabled = Signal.new()
 Disabled = Signal.new()
 
 function Enable(Mouse)
-
 	-- Ensure tool is disabled or disabling, and not already enabling
 	if (IsEnabled and not IsDisabling) or IsEnabling then
-		return;
+		return
 
 	-- If tool is disabling, enable it once fully disabled
 	elseif IsDisabling then
-		Disabled:Wait();
-		return Enable(Mouse, CheckNewUI);
-	end;
-	
+		Disabled:Wait()
+		return Enable(Mouse, CheckNewUI)
+	end
+
 	local UILoaded = false
-	
+
 	-- Wait for UI to initialize asynchronously
 	if UI then
 		UILoaded = InitializeUI()
 	end
 
 	-- Indicate that tool is enabling
-	IsEnabling = true;
-	Enabling:Fire();
+	IsEnabling = true
+	Enabling:Fire()
 
 	-- Update the core mouse
-	getfenv(0).Mouse = Mouse;
+	getfenv(0).Mouse = Mouse
 
 	-- Use default mouse behavior
-	UserInputService.MouseBehavior = Enum.MouseBehavior.Default;
+	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 
 	-- Disable mouse lock in tool mode
-	if Mode == 'Tool' then
-		coroutine.resume(coroutine.create(function ()
-			SyncAPI:Invoke('SetMouseLockEnabled', false)
-			DataStoresEnabled = SyncAPI:Invoke('CheckDataStores')
+	if Mode == "Tool" then
+		coroutine.resume(coroutine.create(function()
+			SyncAPI:Invoke("SetMouseLockEnabled", false)
+			DataStoresEnabled = SyncAPI:Invoke("CheckDataStores")
 		end))
 	end
-	
+
 	while not UI or UILoaded ~= true do
-		wait(0.1);
-	end;
+		wait(0.1)
+	end
 
 	-- Show UI
-	UI.Parent = UIContainer;
+	UI.Parent = UIContainer
 
 	-- Display startup notifications
 	if not Core.StartupNotificationsDisplayed then
-		local NotificationsComponent = require(Tool:WaitForChild('UI'):WaitForChild('Notifications'))
+		local NotificationsComponent = require(Tool:WaitForChild("UI"):WaitForChild("Notifications"))
 		local NotificationsElement = Roact.createElement(NotificationsComponent, {
-			Core = Core;
+			Core = Core,
 		})
-		Roact.mount(NotificationsElement, UI, 'Notifications')
+		Roact.mount(NotificationsElement, UI, "Notifications")
 		Core.StartupNotificationsDisplayed = true
-	end;
+	end
 
 	-- Start systems
-	EnableHotkeys();
+	EnableHotkeys()
 	Targeting:EnableTargeting()
-	Selection.EnableOutlines();
-	Selection.EnableBeams();
-	Selection.ShowHiddenAttachments();
-	Selection.EnableMultiselectionHotkeys();
+	Selection.EnableOutlines()
+	Selection.EnableBeams()
+	Selection.ShowHiddenAttachments()
+	Selection.EnableMultiselectionHotkeys()
 
 	-- Sync studio selection in
-	if Mode == 'Plugin' then
+	if Mode == "Plugin" then
 		local LastSelectionChangeHandle
-		Connections.StudioSelectionListener = SelectionService.SelectionChanged:Connect(function ()
+		Connections.StudioSelectionListener = SelectionService.SelectionChanged:Connect(function()
 			local SelectionChangeHandle = {}
 			LastSelectionChangeHandle = SelectionChangeHandle
 
@@ -247,92 +241,91 @@ function Enable(Mouse)
 	end
 
 	-- Equip current tool
-	EquipTool(CurrentTool or require(Tool.Tools.Move));
+	EquipTool(CurrentTool or require(Tool.Tools.Move))
 
 	-- Indicate that tool is now enabled
-	IsEnabled = true;
-	IsEnabling = false;
-	Enabled:Fire();
-
-end;
+	IsEnabled = true
+	IsEnabling = false
+	Enabled:Fire()
+end
 
 function Disable()
-
 	-- Ensure tool is enabled or enabling, and not already disabling
 	if (not IsEnabled and not IsEnabling) or IsDisabling then
-		return;
+		return
 
 	-- If tool is enabling, disable it once fully enabled
 	elseif IsEnabling then
-		Enabled:Wait();
-		return Disable();
-	end;
+		Enabled:Wait()
+		return Disable()
+	end
 
 	-- Indicate that tool is now disabling
-	IsDisabling = true;
-	Disabling:Fire();
+	IsDisabling = true
+	Disabling:Fire()
 
 	-- Reenable mouse lock option in tool mode
-	if Mode == 'Tool' then
-		coroutine.resume(coroutine.create(function ()
-			SyncAPI:Invoke('SetMouseLockEnabled', true)
+	if Mode == "Tool" then
+		coroutine.resume(coroutine.create(function()
+			SyncAPI:Invoke("SetMouseLockEnabled", true)
 		end))
 	end
 
 	-- Hide UI
 	if UI then
-		UI.Parent = script;
-	end;
-	
+		UI.Parent = script
+	end
+
 	-- Hide attachments while the tool is being inactive
 	Selection.HideHiddenAttachments()
 
 	-- Unequip current tool
 	if CurrentTool then
-		CurrentTool:Unequip();
-		CurrentTool.Equipped = false;
-	end;
+		CurrentTool:Unequip()
+		CurrentTool.Equipped = false
+	end
 
 	-- Clear temporary connections
-	ClearConnections();
+	ClearConnections()
 
 	-- Indicate that tool is now disabled
-	IsEnabled = false;
-	IsDisabling = false;
-	Disabled:Fire();
-
-end;
-
+	IsEnabled = false
+	IsDisabling = false
+	Disabled:Fire()
+end
 
 -- Core connections
-Connections = {};
+Connections = {}
 
 function ClearConnections()
 	-- Clears and disconnects temporary connections
 	for Index, Connection in pairs(Connections) do
-		Connection:Disconnect();
-		Connections[Index] = nil;
-	end;
-end;
+		Connection:Disconnect()
+		Connections[Index] = nil
+	end
+end
 
-local UIElements = Tool:WaitForChild 'UI'
-local ExplorerTemplate = require(UIElements:WaitForChild 'Explorer')
+local UIElements = Tool:WaitForChild("UI")
+local ExplorerTemplate = require(UIElements:WaitForChild("Explorer"))
 Core.ExplorerVisibilityChanged = Signal.new()
 Core.ExplorerVisible = false
 
 function ToggleExplorer()
-	if type(Options.CanUseExplorer) == "boolean" and Options.CanUseExplorer == false or type(Options.CanUseExplorer) == "function" and Options.CanUseExplorer(Player) == false then
+	if
+		type(Options.CanUseExplorer) == "boolean" and Options.CanUseExplorer == false
+		or type(Options.CanUseExplorer) == "function" and Options.CanUseExplorer(Player) == false
+	then
 		local DialogHandle
-		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
-		
+		local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("Error"))
+
 		local DialogElement = Roact.createElement(DialogComponent, {
-			Text = "You're not allowed to use the explorer.";
+			Text = "You're not allowed to use the explorer.",
 			Hide = function()
 				Roact.unmount(DialogHandle)
 			end,
 		})
-		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
-		return 
+		DialogHandle = Roact.mount(DialogElement, UI, "Error")
+		return
 	end
 	if not Core.ExplorerVisible then
 		OpenExplorer()
@@ -342,7 +335,6 @@ function ToggleExplorer()
 end
 
 function OpenExplorer()
-
 	-- Ensure explorer not already open
 	if ExplorerHandle then
 		return
@@ -352,16 +344,16 @@ function OpenExplorer()
 	Explorer = Roact.createElement(ExplorerTemplate, {
 		Core = getfenv(0),
 		Close = CloseExplorer,
-		Scope = Targeting.Scope
+		Scope = Targeting.Scope,
 	})
 
 	-- Mount explorer
-	ExplorerHandle = Roact.mount(Explorer, UI, 'Explorer')
+	ExplorerHandle = Roact.mount(Explorer, UI, "Explorer")
 	Core.ExplorerVisible = true
 
 	-- Unmount explorer on tool cleanup
 	UIMaid.Explorer = Support.Call(Roact.unmount, ExplorerHandle)
-	UIMaid.ExplorerScope = Targeting.ScopeChanged:Connect(function (Scope)
+	UIMaid.ExplorerScope = Targeting.ScopeChanged:Connect(function(Scope)
 		local UpdatedProps = Support.Merge({}, Explorer.props, { Scope = Scope })
 		local UpdatedExplorer = Roact.createElement(ExplorerTemplate, UpdatedProps)
 		ExplorerHandle = Roact.update(ExplorerHandle, UpdatedExplorer)
@@ -372,7 +364,6 @@ function OpenExplorer()
 end
 
 function CloseExplorer()
-
 	-- Clean up explorer
 	UIMaid.Explorer = nil
 	UIMaid.ExplorerScope = nil
@@ -384,100 +375,37 @@ function CloseExplorer()
 end
 
 -- Create scope HUD when tool opens
-coroutine.wrap(function ()
+coroutine.wrap(function()
 	Enabled:Wait()
 
 	-- Create scope HUD
-	local ScopeHUDTemplate = require(UIElements:WaitForChild 'ScopeHUD')
+	local ScopeHUDTemplate = require(UIElements:WaitForChild("ScopeHUD"))
 	local ScopeHUD = Roact.createElement(ScopeHUDTemplate, {
-		Core = getfenv(0);
+		Core = getfenv(0),
 	})
 
 	-- Mount scope HUD
-	Roact.mount(ScopeHUD, UI, 'ScopeHUD')
+	Roact.mount(ScopeHUD, UI, "ScopeHUD")
 end)()
 
 -- Register explorer pane toggling hotkeys
-AssignHotkey({ 'LeftShift', 'H' }, ToggleExplorer)
-AssignHotkey({ 'RightShift', 'H' }, ToggleExplorer)
+AssignHotkey({ "LeftShift", "H" }, ToggleExplorer)
+AssignHotkey({ "RightShift", "H" }, ToggleExplorer)
 
 -- Enable tool or plugin
-if Mode == 'Plugin' then
-	
+if Mode == "Plugin" then
 	-- Set the UI root
-	UIContainer = CoreGui;
+	UIContainer = CoreGui
 
 	-- Create the toolbar button
-	PluginToolbar = Plugin:CreateToolbar('Fork3X Building Tools by Vikko151')
-	
-	PluginButton = PluginToolbar:CreateButton(
-			'Building Tools by F3X',
-			'Building Tools by F3X',
-			Assets.PluginIcon
-	);
-	
-	ThemeButton = PluginToolbar:CreateButton(
-		'Change Theme',
-		'Change Theme',
-		Assets.ThemeIcon
-	);
+	PluginToolbar = Plugin:CreateToolbar("Fork3X Building Tools by Vikko151")
 
+	PluginButton = PluginToolbar:CreateButton("Building Tools by F3X", "Building Tools by F3X", Assets.PluginIcon)
+
+	ThemeButton = PluginToolbar:CreateButton("Change Theme", "Change Theme", Assets.ThemeIcon)
 
 	-- Connect the button to the system
-	PluginButton.Click:Connect(function ()
-		PluginEnabled = not PluginEnabled;
-		PluginButton:SetActive(PluginEnabled);
-
-		-- Toggle the tool
-		if PluginEnabled then
-			Plugin:Activate(true);
-			Enable(Plugin:GetMouse());
-		else
-			Disable();
-		end;
-	end);
-	
-	ThemeButton.Click:Connect(function ()
-		UseGigsDarkWithPlugin = not UseGigsDarkWithPlugin
-		if IsEnabled then
-			Disable()
-			if IsDisabling then
-				Disabled:Wait()
-			end
-			Enable(Plugin:GetMouse())
-		else
-			InitializeUI()
-		end
-	end);
-
-	-- Disable the tool upon plugin deactivation
-	Plugin.Deactivation:Connect(Disable);
-
-	-- Sync Studio selection to internal selection
-	Selection.Changed:Connect(function ()
-		SelectionService:Set(Selection.Items);
-	end);
-
-	-- Sync internal selection to Studio selection on enabling
-	Enabling:Connect(function ()
-		Selection.Replace(SelectionService:Get());
-	end);
-
-	-- Roughly sync Studio history to internal history (API lacking necessary functionality)
-	History.Changed:Connect(function ()
-		ChangeHistoryService:SetWaypoint 'Building Tools by F3X';
-	end);
-
-	-- Add plugin action for toggling tool
-	local ToggleAction = Plugin:CreatePluginAction(
-		'Fork3X/ToggleBuildingTools',
-		'Toggle Building Tools',
-		'Toggles the Building Tools by F3X plugin.',
-		Assets.PluginIcon,
-		true
-	)
-	
-	ToggleAction.Triggered:Connect(function ()
+	PluginButton.Click:Connect(function()
 		PluginEnabled = not PluginEnabled
 		PluginButton:SetActive(PluginEnabled)
 
@@ -490,44 +418,98 @@ if Mode == 'Plugin' then
 		end
 	end)
 
-elseif Mode == 'Tool' then
+	ThemeButton.Click:Connect(function()
+		UseGigsDarkWithPlugin = not UseGigsDarkWithPlugin
+		if IsEnabled then
+			Disable()
+			if IsDisabling then
+				Disabled:Wait()
+			end
+			Enable(Plugin:GetMouse())
+		else
+			InitializeUI()
+		end
+	end)
 
+	-- Disable the tool upon plugin deactivation
+	Plugin.Deactivation:Connect(Disable)
+
+	-- Sync Studio selection to internal selection
+	Selection.Changed:Connect(function()
+		SelectionService:Set(Selection.Items)
+	end)
+
+	-- Sync internal selection to Studio selection on enabling
+	Enabling:Connect(function()
+		Selection.Replace(SelectionService:Get())
+	end)
+
+	-- Roughly sync Studio history to internal history (API lacking necessary functionality)
+	History.Changed:Connect(function()
+		ChangeHistoryService:SetWaypoint("Building Tools by F3X")
+	end)
+
+	-- Add plugin action for toggling tool
+	local ToggleAction = Plugin:CreatePluginAction(
+		"Fork3X/ToggleBuildingTools",
+		"Toggle Building Tools",
+		"Toggles the Building Tools by F3X plugin.",
+		Assets.PluginIcon,
+		true
+	)
+
+	ToggleAction.Triggered:Connect(function()
+		PluginEnabled = not PluginEnabled
+		PluginButton:SetActive(PluginEnabled)
+
+		-- Toggle the tool
+		if PluginEnabled then
+			Plugin:Activate(true)
+			Enable(Plugin:GetMouse())
+		else
+			Disable()
+		end
+	end)
+elseif Mode == "Tool" then
 	-- Set the UI root
-	UIContainer = Player:WaitForChild 'PlayerGui';
+	UIContainer = Player:WaitForChild("PlayerGui")
 
 	-- Connect the tool to the system
-	Tool.Equipped:Connect(Enable);
-	Tool.Unequipped:Connect(Disable);
+	Tool.Equipped:Connect(Enable)
+	Tool.Unequipped:Connect(Disable)
 
 	-- Disable the tool if not parented
 	if not Tool.Parent then
-		Disable();
-	end;
+		Disable()
+	end
 
 	-- Disable the tool automatically if not equipped or in backpack
-	Tool.AncestryChanged:Connect(function (Item, Parent)
-		if not Parent or not (Parent:IsA 'Backpack' or (Parent:IsA 'Model' and Players:GetPlayerFromCharacter(Parent))) then
-			Disable();
-		end;
-	end);
-
-end;
+	Tool.AncestryChanged:Connect(function(Item, Parent)
+		if
+			not Parent or not (
+				Parent:IsA("Backpack") or (Parent:IsA("Model") and Players:GetPlayerFromCharacter(Parent))
+			)
+		then
+			Disable()
+		end
+	end)
+end
 
 -- Assign hotkeys for undoing (left or right shift + Z)
-AssignHotkey({ 'LeftShift', 'Z' }, History.Undo);
-AssignHotkey({ 'RightShift', 'Z' }, History.Undo);
+AssignHotkey({ "LeftShift", "Z" }, History.Undo)
+AssignHotkey({ "RightShift", "Z" }, History.Undo)
 
 -- Assign hotkeys for redoing (left or right shift + Y)
-AssignHotkey({ 'LeftShift', 'Y' }, History.Redo);
-AssignHotkey({ 'RightShift', 'Y' }, History.Redo);
+AssignHotkey({ "LeftShift", "Y" }, History.Redo)
+AssignHotkey({ "RightShift", "Y" }, History.Redo)
 
 -- If in-game, enable ctrl hotkeys for undoing and redoing
-if Mode == 'Tool' then
-	AssignHotkey({ 'LeftControl', 'Z' }, History.Undo);
-	AssignHotkey({ 'RightControl', 'Z' }, History.Undo);
-	AssignHotkey({ 'LeftControl', 'Y' }, History.Redo);
-	AssignHotkey({ 'RightControl', 'Y' }, History.Redo);
-end;
+if Mode == "Tool" then
+	AssignHotkey({ "LeftControl", "Z" }, History.Undo)
+	AssignHotkey({ "RightControl", "Z" }, History.Undo)
+	AssignHotkey({ "LeftControl", "Y" }, History.Redo)
+	AssignHotkey({ "RightControl", "Y" }, History.Redo)
+end
 
 local function GetDepthFromAncestor(Item, Ancestor)
 	-- Returns the depth of `Item` from `Ancestor`
@@ -565,17 +547,18 @@ function CloneSelection()
 
 	-- Make sure that there are items in the selection
 	if (#Selection.Items == 0) or CanClone == false then
-		return;
-	end;
-	
+		return
+	end
+
 	CanClone = false
-	
+
 	-- Clones selected parts
 
 	-- Make sure that there are items in the selection
 
 	-- Send the cloning request to the server
-	local Clones, StreamingCloneId, StreamingCloneCount = SyncAPI:Invoke('Clone', Selection.Items, GetHighestParent(Selection.Items))
+	local Clones, StreamingCloneId, StreamingCloneCount =
+		SyncAPI:Invoke("Clone", Selection.Items, GetHighestParent(Selection.Items))
 
 	-- If the server is streaming clones, wait for them to replicate
 	if Clones == nil then
@@ -594,23 +577,27 @@ function CloneSelection()
 
 			-- If streaming takes too long, ignore remaining clones and resume thread early
 			local CLONE_STREAMING_TIMEOUT = 3
-			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function ()
-				warn(`[Building Tools by F3X] Cloning operation only received {#Clones}/{StreamingCloneCount} items after {CLONE_STREAMING_TIMEOUT} seconds, ignoring rest`)
+			local timeoutThread = task.delay(CLONE_STREAMING_TIMEOUT, function()
+				warn(
+					`[Building Tools by F3X] Cloning operation only received {#Clones}/{StreamingCloneCount} items after {CLONE_STREAMING_TIMEOUT} seconds, ignoring rest`
+				)
 				coroutine.resume(thread)
 			end)
 
 			-- Track incoming clones from this cloning operation
-			local replicationListener = game:GetService("CollectionService"):GetInstanceAddedSignal("BTStreamingClone"):Connect(function (clone)
-				if clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
-					table.insert(Clones, clone)
+			local replicationListener = game:GetService("CollectionService")
+				:GetInstanceAddedSignal("BTStreamingClone")
+				:Connect(function(clone)
+					if clone:GetAttribute("BTStreamingCloneID") == StreamingCloneId then
+						table.insert(Clones, clone)
 
-					-- Once all clones have arrived, resume thread
-					if #Clones == StreamingCloneCount then
-						task.cancel(timeoutThread)
-						coroutine.resume(thread)
+						-- Once all clones have arrived, resume thread
+						if #Clones == StreamingCloneCount then
+							task.cancel(timeoutThread)
+							coroutine.resume(thread)
+						end
 					end
-				end
-			end)
+				end)
 
 			-- Yield until resumed by replication completion, or timeout thread
 			coroutine.yield()
@@ -620,129 +607,120 @@ function CloneSelection()
 
 	-- Put together the history record
 	local HistoryRecord = {
-		Clones = Clones;
+		Clones = Clones,
 
-		Unapply = function (HistoryRecord)
+		Unapply = function(HistoryRecord)
 			-- Reverts this change
 
 			-- Deselect the clones
-			Selection.Remove(HistoryRecord.Clones, false);
+			Selection.Remove(HistoryRecord.Clones, false)
 
 			-- Remove the clones
-			SyncAPI:Invoke('Remove', HistoryRecord.Clones);
+			SyncAPI:Invoke("Remove", HistoryRecord.Clones)
+		end,
 
-		end;
-
-		Apply = function (HistoryRecord)
+		Apply = function(HistoryRecord)
 			-- Reapplies this change
 
 			-- Restore the clones
-			SyncAPI:Invoke('UndoRemove', HistoryRecord.Clones);
-
-			-- Reselect the restored clones
-			Selection.Replace(HistoryRecord.Clones)
-
-		end;
-
-	};
+			SyncAPI:Invoke("UndoRemove", HistoryRecord.Clones)
+		end,
+	}
 
 	-- Register the history record
-	History.Add(HistoryRecord);
+	History.Add(HistoryRecord)
 
 	-- Select the clones
-	Selection.Replace(Clones);
+	Selection.Replace(Clones)
 
 	-- Flash the outlines of the new parts
-	coroutine.wrap(Selection.FlashOutlines)();
-	task.delay(Options.CloningDelay, function() CanClone = true; end)
-	
-end;
+	coroutine.wrap(Selection.FlashOutlines)()
+	task.delay(Options.CloningDelay, function()
+		CanClone = true
+	end)
+end
 
 function DeleteSelection()
 	-- Deletes selected items
 
 	-- Put together the history record
 	local HistoryRecord = {
-		IsDeleting = true;
-		Parts = Support.CloneTable(Selection.Items);
+		IsDeleting = true,
+		Parts = Support.CloneTable(Selection.Items),
 
-		Unapply = function (HistoryRecord)
+		Unapply = function(HistoryRecord)
 			-- Reverts this change
 
 			-- Restore the parts
-			SyncAPI:Invoke('UndoRemove', HistoryRecord.Parts);
+			SyncAPI:Invoke("UndoRemove", HistoryRecord.Parts)
 
 			-- Select the restored parts
-			Selection.Replace(HistoryRecord.Parts);
+			Selection.Replace(HistoryRecord.Parts)
+		end,
 
-		end;
-
-		Apply = function (HistoryRecord)
+		Apply = function(HistoryRecord)
 			-- Applies this change
 
 			-- Deselect the parts
-			Selection.Remove(HistoryRecord.Parts, false);
+			Selection.Remove(HistoryRecord.Parts, false)
 
 			-- Remove the parts
-			SyncAPI:Invoke('Remove', HistoryRecord.Parts);
-
-		end;
-
-	};
+			SyncAPI:Invoke("Remove", HistoryRecord.Parts)
+		end,
+	}
 
 	-- Deselect parts before deleting
-	Selection.Remove(HistoryRecord.Parts, false);
+	Selection.Remove(HistoryRecord.Parts, false)
 
 	-- Perform the removal
-	SyncAPI:Invoke('Remove', HistoryRecord.Parts);
+	SyncAPI:Invoke("Remove", HistoryRecord.Parts)
 
 	-- Register the history record
-	History.Add(HistoryRecord);
-
-end;
+	History.Add(HistoryRecord)
+end
 
 -- Assign hotkeys for cloning (left or right shift + c)
-AssignHotkey({ 'LeftShift', 'C' }, CloneSelection);
-AssignHotkey({ 'RightShift', 'C' }, CloneSelection);
+AssignHotkey({ "LeftShift", "C" }, CloneSelection)
+AssignHotkey({ "RightShift", "C" }, CloneSelection)
 
 -- Assign hotkeys for deletion (left or right shift + X)
-AssignHotkey({ 'LeftShift', 'X' }, DeleteSelection);
-AssignHotkey({ 'RightShift', 'X' }, DeleteSelection);
+AssignHotkey({ "LeftShift", "X" }, DeleteSelection)
+AssignHotkey({ "RightShift", "X" }, DeleteSelection)
 
 -- If in-game, enable ctrl hotkeys for cloning and deleting
-if Mode == 'Tool' then
-	AssignHotkey({ 'LeftControl', 'C' }, CloneSelection);
-	AssignHotkey({ 'RightControl', 'C' }, CloneSelection);
-	AssignHotkey({ 'LeftControl', 'X' }, DeleteSelection);
-	AssignHotkey({ 'RightControl', 'X' }, DeleteSelection);
-end;
+if Mode == "Tool" then
+	AssignHotkey({ "LeftControl", "C" }, CloneSelection)
+	AssignHotkey({ "RightControl", "C" }, CloneSelection)
+	AssignHotkey({ "LeftControl", "X" }, DeleteSelection)
+	AssignHotkey({ "RightControl", "X" }, DeleteSelection)
+end
 
 -- Assign hotkeys for prism selection
-AssignHotkey({ 'LeftShift', 'K' }, Targeting.PrismSelect);
-AssignHotkey({ 'RightShift', 'K' }, Targeting.PrismSelect);
+AssignHotkey({ "LeftShift", "K" }, Targeting.PrismSelect)
+AssignHotkey({ "RightShift", "K" }, Targeting.PrismSelect)
 
 -- If in-game, enable ctrl hotkeys for prism selection
-if Mode == 'Tool' then
-	AssignHotkey({ 'LeftControl', 'K' }, Targeting.PrismSelect);
-	AssignHotkey({ 'RightControl', 'K' }, Targeting.PrismSelect);
-end;
+if Mode == "Tool" then
+	AssignHotkey({ "LeftControl", "K" }, Targeting.PrismSelect)
+	AssignHotkey({ "RightControl", "K" }, Targeting.PrismSelect)
+end
 
 -- Assign hotkeys for sibling selection
-AssignHotkey({ 'LeftBracket' }, Support.Call(Targeting.SelectSiblings, false, true));
-AssignHotkey({ 'LeftShift', 'LeftBracket' }, Support.Call(Targeting.SelectSiblings, false, false));
-AssignHotkey({ 'RightShift', 'LeftBracket' }, Support.Call(Targeting.SelectSiblings, false, false));
+AssignHotkey({ "LeftBracket" }, Support.Call(Targeting.SelectSiblings, false, true))
+AssignHotkey({ "LeftShift", "LeftBracket" }, Support.Call(Targeting.SelectSiblings, false, false))
+AssignHotkey({ "RightShift", "LeftBracket" }, Support.Call(Targeting.SelectSiblings, false, false))
 
 -- Assign hotkeys for selection clearing
-AssignHotkey({ 'LeftShift', 'R' }, Support.Call(Selection.Clear, true));
-AssignHotkey({ 'RightShift', 'R' }, Support.Call(Selection.Clear, true));
+AssignHotkey({ "LeftShift", "R" }, Support.Call(Selection.Clear, true))
+AssignHotkey({ "RightShift", "R" }, Support.Call(Selection.Clear, true))
 
 -- If in-game, enable ctrl hotkeys for sibling selection & selection clearing
-if Mode == 'Tool' then
-	AssignHotkey({ 'LeftControl', 'LeftBracket' }, Support.Call(Targeting.SelectSiblings, false, false));
-	AssignHotkey({ 'RightControl', 'LeftBracket' }, Support.Call(Targeting.SelectSiblings, false, false));
-	AssignHotkey({ 'LeftControl', 'R' }, Support.Call(Selection.Clear, true));
-	AssignHotkey({ 'RightControl', 'R' }, Support.Call(Selection.Clear, true));
-end;
+if Mode == "Tool" then
+	AssignHotkey({ "LeftControl", "LeftBracket" }, Support.Call(Targeting.SelectSiblings, false, false))
+	AssignHotkey({ "RightControl", "LeftBracket" }, Support.Call(Targeting.SelectSiblings, false, false))
+	AssignHotkey({ "LeftControl", "R" }, Support.Call(Selection.Clear, true))
+	AssignHotkey({ "RightControl", "R" }, Support.Call(Selection.Clear, true))
+end
 
 function GroupSelection(GroupType)
 	-- Groups the selected items
@@ -750,33 +728,30 @@ function GroupSelection(GroupType)
 	-- Create history record
 	local HistoryRecord = {
 		Items = Support.CloneTable(Selection.Items),
-		CurrentParents = Support.GetListMembers(Selection.Items, 'Parent')
+		CurrentParents = Support.GetListMembers(Selection.Items, "Parent"),
 	}
 
 	function HistoryRecord:Unapply()
-		SyncAPI:Invoke('SetParent', self.Items, self.CurrentParents)
-		SyncAPI:Invoke('Remove', { self.NewParent })
+		SyncAPI:Invoke("SetParent", self.Items, self.CurrentParents)
+		SyncAPI:Invoke("Remove", { self.NewParent })
 		Selection.Replace(self.Items)
 	end
 
 	function HistoryRecord:Apply()
-		SyncAPI:Invoke('UndoRemove', { self.NewParent })
-		SyncAPI:Invoke('SetParent', self.Items, self.NewParent)
+		SyncAPI:Invoke("UndoRemove", { self.NewParent })
+		SyncAPI:Invoke("SetParent", self.Items, self.NewParent)
 		Selection.Replace({ self.NewParent })
 	end
 
 	-- Perform group creation
-	HistoryRecord.NewParent = SyncAPI:Invoke('CreateGroup', GroupType,
-		GetHighestParent(HistoryRecord.Items),
-		HistoryRecord.Items
-	)
+	HistoryRecord.NewParent =
+		SyncAPI:Invoke("CreateGroup", GroupType, GetHighestParent(HistoryRecord.Items), HistoryRecord.Items)
 
 	-- Register history record
 	History.Add(HistoryRecord)
 
 	-- Select new group
 	Selection.Replace({ HistoryRecord.NewParent })
-
 end
 
 function UngroupSelection()
@@ -784,16 +759,16 @@ function UngroupSelection()
 
 	-- Create history record
 	local HistoryRecord = {
-		Selection = Selection.Items
+		Selection = Selection.Items,
 	}
 
 	function HistoryRecord:Unapply()
-		SyncAPI:Invoke('UndoRemove', self.Groups)
+		SyncAPI:Invoke("UndoRemove", self.Groups)
 
 		-- Reparent children
 		for GroupId, Items in ipairs(self.GroupChildren) do
-			coroutine.resume(coroutine.create(function ()
-				SyncAPI:Invoke('SetParent', Items, self.Groups[GroupId])
+			coroutine.resume(coroutine.create(function()
+				SyncAPI:Invoke("SetParent", Items, self.Groups[GroupId])
 			end))
 		end
 
@@ -802,18 +777,17 @@ function UngroupSelection()
 	end
 
 	function HistoryRecord:Apply()
-
 		-- Get groups from selection
 		self.Groups = {}
 		for _, Item in ipairs(self.Selection) do
-			if Item:IsA 'Model' or Item:IsA 'Folder' then
+			if Item:IsA("Model") or Item:IsA("Folder") then
 				self.Groups[#self.Groups + 1] = Item
 			end
 		end
 
 		-- Perform ungrouping
-		self.GroupParents = Support.GetListMembers(self.Groups, 'Parent')
-		self.GroupChildren = SyncAPI:Invoke('Ungroup', self.Groups) or {}
+		self.GroupParents = Support.GetListMembers(self.Groups, "Parent")
+		self.GroupChildren = SyncAPI:Invoke("Ungroup", self.Groups) or {}
 
 		-- Get unpacked children
 		local UnpackedChildren = Support.CloneTable(self.Selection)
@@ -825,7 +799,6 @@ function UngroupSelection()
 
 		-- Select unpacked items
 		Selection.Replace(UnpackedChildren)
-
 	end
 
 	-- Perform action
@@ -833,63 +806,65 @@ function UngroupSelection()
 
 	-- Register history record
 	History.Add(HistoryRecord)
-
 end
 
 -- Assign grouping hotkeys
-AssignHotkey({ 'LeftShift', 'G' }, Support.Call(GroupSelection, 'Model'))
-AssignHotkey({ 'RightShift', 'G' }, Support.Call(GroupSelection, 'Model'))
-AssignHotkey({ 'LeftShift', 'F' }, Support.Call(GroupSelection, 'Folder'))
-AssignHotkey({ 'RightShift', 'F' }, Support.Call(GroupSelection, 'Folder'))
-AssignHotkey({ 'LeftShift', 'U' }, UngroupSelection)
-AssignHotkey({ 'RightShift', 'U' }, UngroupSelection)
+AssignHotkey({ "LeftShift", "G" }, Support.Call(GroupSelection, "Model"))
+AssignHotkey({ "RightShift", "G" }, Support.Call(GroupSelection, "Model"))
+AssignHotkey({ "LeftShift", "F" }, Support.Call(GroupSelection, "Folder"))
+AssignHotkey({ "RightShift", "F" }, Support.Call(GroupSelection, "Folder"))
+AssignHotkey({ "LeftShift", "U" }, UngroupSelection)
+AssignHotkey({ "RightShift", "U" }, UngroupSelection)
 
 function ArrangePartHotkey()
 	-- Exports the selected parts
 
 	-- Make sure that there are items in the selection
 	if #Selection.Items == 0 then
-		return;
-	end;
+		return
+	end
 
 	-- Start an export dialog
 	local DialogHandle
-	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('GroupDialog'))
-	local FolderCallback = function ()
+	local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("GroupDialog"))
+	local FolderCallback = function()
 		GroupSelection("Folder")
 		DialogHandle = Roact.unmount(DialogHandle)
 	end
-	local ModelCallback = function ()
+	local ModelCallback = function()
 		GroupSelection("Model")
 		DialogHandle = Roact.unmount(DialogHandle)
 	end
-	local UngroupCallback = function ()
+	local UngroupCallback = function()
 		UngroupSelection()
 		DialogHandle = Roact.unmount(DialogHandle)
 	end
-	local GroupCallback = function ()
-		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-			Text = 'What kind of grouping do you want to do?<font size="5"><br /></font>\n' ..
-				'<font face="Gotham" size="10"> Tip: If you still need to select your group piece per piece, a folder might be better. </font>';
-			Function1 = ModelCallback;
-			Function2 = FolderCallback;
-			CallForGroup = nil;
-			CallForUnGroup = nil;
-			Option1 = "Model";
-			Option2 = "Folder";
-		}))
+	local GroupCallback = function()
+		Roact.update(
+			DialogHandle,
+			Roact.createElement(DialogComponent, {
+				Text = 'What kind of grouping do you want to do?<font size="5"><br /></font>\n'
+					.. '<font face="Gotham" size="10"> Tip: If you still need to select your group piece per piece, a folder might be better. </font>',
+				Function1 = ModelCallback,
+				Function2 = FolderCallback,
+				CallForGroup = nil,
+				CallForUnGroup = nil,
+				Option1 = "Model",
+				Option2 = "Folder",
+			})
+		)
 	end
-local DialogElement = Roact.createElement(DialogComponent, {
-		Text = 'What kind of arrangement do you want to do?<font size="5"><br /></font>\n' ..
-			'<font face="Gotham" size="10"> WARNING: Ungrouping a NPC or player might result into consequences! </font>';
-		CallForGroup = nil;
-		CallForUnGroup = nil;
-		Function1 = GroupCallback;
-		Function2 = UngroupCallback;
-		Option1 = "Group";
-		Option2 = "Ungroup";
+	local DialogElement = Roact.createElement(DialogComponent, {
+		Text = 'What kind of arrangement do you want to do?<font size="5"><br /></font>\n'
+			.. '<font face="Gotham" size="10"> WARNING: Ungrouping a NPC or player might result into consequences! </font>',
+		CallForGroup = nil,
+		CallForUnGroup = nil,
+		Function1 = GroupCallback,
+		Function2 = UngroupCallback,
+		Option1 = "Group",
+		Option2 = "Ungroup",
 	})
-	DialogHandle = Roact.mount(DialogElement, UI, 'ExportDialog')
+	DialogHandle = Roact.mount(DialogElement, UI, "ExportDialog")
 end
 
 Core.SaveLoadVisibilityChanged = Signal.new()
@@ -897,51 +872,47 @@ Core.SaveLoadVisible = false
 Core.CanLoad = true
 
 function ToggleSaveLoad()
-	
-	if type(Options.CanUseSaveLoad) == "boolean" and Options.CanUseSaveLoad == false or type(Options.CanUseSaveLoad) == "function" and Options.CanUseSaveLoad(Player) == false then
-		
+	if
+		type(Options.CanUseSaveLoad) == "boolean" and Options.CanUseSaveLoad == false
+		or type(Options.CanUseSaveLoad) == "function" and Options.CanUseSaveLoad(Player) == false
+	then
 		local DialogHandle
-		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+		local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("Error"))
 
 		local DialogElement = Roact.createElement(DialogComponent, {
-			Text = "You're not allowed to use the save/load interface.";
+			Text = "You're not allowed to use the save/load interface.",
 			Hide = function()
 				Roact.unmount(DialogHandle)
 			end,
 		})
-		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
-		return 
-			
+		DialogHandle = Roact.mount(DialogElement, UI, "Error")
+		return
 	elseif DataStoresEnabled == false then
-		
 		local DialogHandle
-		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+		local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("Error"))
 
 		local DialogElement = Roact.createElement(DialogComponent, {
-			Text = "You cannot use Save/Load because DataStores are disabled in this game.";
+			Text = "You cannot use Save/Load because DataStores are disabled in this game.",
 			Hide = function()
 				Roact.unmount(DialogHandle)
 			end,
 		})
-		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
-		return 
-			
-	elseif Mode == 'Plugin' then
-		
+		DialogHandle = Roact.mount(DialogElement, UI, "Error")
+		return
+	elseif Mode == "Plugin" then
 		local DialogHandle
-		local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('Error'))
+		local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("Error"))
 
 		local DialogElement = Roact.createElement(DialogComponent, {
-			Text = "You cannot use Save/Load in Studio.";
+			Text = "You cannot use Save/Load in Studio.",
 			Hide = function()
 				Roact.unmount(DialogHandle)
 			end,
 		})
-		DialogHandle = Roact.mount(DialogElement, UI, 'Error')
-		return 
-		
+		DialogHandle = Roact.mount(DialogElement, UI, "Error")
+		return
 	end
-	
+
 	if not UI:FindFirstChild("SaveInterface") then
 		CreateSaveAndLoad()
 		Core.SaveLoadVisible = true
@@ -959,80 +930,86 @@ function CreateSaveAndLoad()
 	-- Exports the selected parts
 	-- Start an export dialog
 	local DialogHandle
-	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('SaveInterface'))
-	
-	local FirstSaveCallback = function ()	
+	local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("SaveInterface"))
+
+	local FirstSaveCallback = function()
 		if #Selection.Items == 0 then
-			return;
-		end;
-		SyncAPI:Invoke('SaveBuild', Selection.Items, "1")
+			return
+		end
+		SyncAPI:Invoke("SaveBuild", Selection.Items, "1")
 	end
 
-	local SecondSaveCallback = function ()	
+	local SecondSaveCallback = function()
 		if #Selection.Items == 0 then
-			return;
-		end;
-		SyncAPI:Invoke('SaveBuild', Selection.Items, "2")
+			return
+		end
+		SyncAPI:Invoke("SaveBuild", Selection.Items, "2")
 	end
-	
-	local ThirdSaveCallback = function ()	
+
+	local ThirdSaveCallback = function()
 		if #Selection.Items == 0 then
-			return;
-		end;
-		SyncAPI:Invoke('SaveBuild', Selection.Items, "3")
+			return
+		end
+		SyncAPI:Invoke("SaveBuild", Selection.Items, "3")
 	end
-	
-	local FirstLoadCallback = function ()	
+
+	local FirstLoadCallback = function()
 		if not Core.CanLoad then
-			return;
-		end;
-		SyncAPI:Invoke('LoadBuild', "1")
+			return
+		end
+		SyncAPI:Invoke("LoadBuild", "1")
 		Core.CanLoad = false
-		task.delay(Options.LoadDelay, function() Core.CanLoad = true end)
+		task.delay(Options.LoadDelay, function()
+			Core.CanLoad = true
+		end)
 	end
-	
-	local SecondLoadCallback = function ()	
+
+	local SecondLoadCallback = function()
 		if not Core.CanLoad then
-			return;
-		end;
-		SyncAPI:Invoke('LoadBuild', "2")
+			return
+		end
+		SyncAPI:Invoke("LoadBuild", "2")
 		Core.CanLoad = false
-		task.delay(Options.LoadDelay, function() Core.CanLoad = true end)
+		task.delay(Options.LoadDelay, function()
+			Core.CanLoad = true
+		end)
 	end
-	
-	local ThirdLoadCallback = function ()	
+
+	local ThirdLoadCallback = function()
 		if not Core.CanLoad then
-			return;
-		end;
-		SyncAPI:Invoke('LoadBuild', "3")
+			return
+		end
+		SyncAPI:Invoke("LoadBuild", "3")
 		Core.CanLoad = false
-		task.delay(Options.LoadDelay, function() Core.CanLoad = true end)
+		task.delay(Options.LoadDelay, function()
+			Core.CanLoad = true
+		end)
 	end
 
 	local DialogElement = Roact.createElement(DialogComponent, {
-		Core = Core;
-		FirstSaveLoad = FirstLoadCallback;
-		FirstSave = FirstSaveCallback;
-		SecondSaveLoad = SecondLoadCallback;
-		SecondSave = SecondSaveCallback;
-		ThirdSaveLoad = ThirdLoadCallback;
-		ThirdSave = ThirdSaveCallback;
+		Core = Core,
+		FirstSaveLoad = FirstLoadCallback,
+		FirstSave = FirstSaveCallback,
+		SecondSaveLoad = SecondLoadCallback,
+		SecondSave = SecondSaveCallback,
+		ThirdSaveLoad = ThirdLoadCallback,
+		ThirdSave = ThirdSaveCallback,
 	})
-	DialogHandle = Roact.mount(DialogElement, UI, 'SaveInterface')
-end 
+	DialogHandle = Roact.mount(DialogElement, UI, "SaveInterface")
+end
 
 function GetPartsFromSelection(Selection)
 	local Parts = {}
 
 	-- Get parts from selection
 	for _, Item in pairs(Selection) do
-		if Item:IsA 'BasePart' then
+		if Item:IsA("BasePart") then
 			Parts[#Parts + 1] = Item
 
 		-- Get parts within other items
 		else
 			for _, Descendant in pairs(Item:GetDescendants()) do
-				if Descendant:IsA 'BasePart' then
+				if Descendant:IsA("BasePart") then
 					Parts[#Parts + 1] = Descendant
 				end
 			end
@@ -1048,11 +1025,10 @@ function IsSelectable(Items)
 
 	-- Check each item
 	for _, Item in pairs(Items) do
-
 		-- Ensure item exists and is not locked
-		if (not Item) or (not Item.Parent) then
+		if (not Item) or not Item.Parent then
 			return false
-		elseif Item:IsA 'BasePart' and Item.Locked then
+		elseif Item:IsA("BasePart") and Item.Locked then
 			return false
 		end
 
@@ -1060,7 +1036,7 @@ function IsSelectable(Items)
 		if not Security.IsItemAllowed(Item, Player) then
 			return false
 		end
-		
+
 		if not Options.ConsiderPart(Item, Player) then
 			return false
 		end
@@ -1074,7 +1050,6 @@ function IsSelectable(Items)
 
 	-- If no checks fail, items are selectable
 	return true
-
 end
 
 function ExportSelection()
@@ -1082,84 +1057,115 @@ function ExportSelection()
 
 	-- Make sure that there are items in the selection
 	if #Selection.Items == 0 then
-		return;
-	end;
+		return
+	end
 
 	-- Start an export dialog
 	local DialogHandle
-	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('ExportDialog'))
-	local DialogDismissCallback = function ()
+	local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("ExportDialog"))
+	local DialogDismissCallback = function()
 		DialogHandle = Roact.unmount(DialogHandle)
 	end
 	local DialogElement = Roact.createElement(DialogComponent, {
-		Text = 'Uploading selection...';
-		OnDismiss = DialogDismissCallback;
+		Text = "Uploading selection...",
+		OnDismiss = DialogDismissCallback,
 	})
-	DialogHandle = Roact.mount(DialogElement, UI, 'ExportDialog')
+	DialogHandle = Roact.mount(DialogElement, UI, "ExportDialog")
 
 	-- Send the exporting request to the server
-	Try(SyncAPI.Invoke, SyncAPI, 'Export', Selection.Items)
-
-	-- Display creation ID on success
-		:Then(function (CreationId)
+	Try(SyncAPI.Invoke, SyncAPI, "Export", Selection.Items)
+		-- Display creation ID on success
+		:Then(function(CreationId)
+			--[[
 		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
 			Text = 'Your creation\'s ID:<font size="5"><br /></font>\n' ..
-				'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' .. 
+				'<font face="GothamBlack" size="18">' .. CreationId .. '</font><font size="6"><br /></font>\n' ..
 				'<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>';
 			OnDismiss = DialogDismissCallback;
 		}))
-		print('[Building Tools by F3X] Uploaded Export:', CreationId);
-	end)
+		]]
 
-	-- Display error messages on failure
-	:Catch('Http requests are not enabled', function ()
-		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-			Text = 'Please enable HTTP requests.';
-			OnDismiss = DialogDismissCallback;
-		}))
-	end)
-	:Catch('Export failed due to server-side error', function ()
-		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-			Text = 'An error occurred — please try again.';
-			OnDismiss = DialogDismissCallback;
-		}))
-	end)
-	:Catch('Post data too large', function ()
-		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-			Text = 'Try splitting up your build.';
-			OnDismiss = DialogDismissCallback;
-		}))
-	end)
-	:Catch('Blacklisted content', function ()
-		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-			Text = 'Unable to export.';
-			OnDismiss = DialogDismissCallback;
-		}))
-	end)
-	:Catch(function (Error, Stack, Attempt)
-		Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-			Text = 'An unknown error occurred — please try again.';
-			OnDismiss = DialogDismissCallback;
-		}))
-		warn('❌ [Building Tools by F3X] Failed to export selection', '\n\nError:\n', Error, '\n\nStack:\n', Stack)
-	end)
+			-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+			local Text = 'Your creation\'s ID:<font size="5"><br /></font>\n'
+				.. '<font face="GothamBlack" size="18">'
+				.. CreationId
+				.. '</font><font size="6"><br /></font>\n'
+				.. '<font face="Gotham" size="10">Use the code above to import your creation using the plugin in Studio.</font>'
+			Text = Text:gsub("\n", '<font size="0">\n</font>')
+				:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>')
+			Roact.update(
+				DialogHandle,
+				Roact.createElement(DialogComponent, {
+					Text = Text,
+					OnDismiss = DialogDismissCallback,
+				})
+			)
 
-
-end;
+			print("[Building Tools by F3X] Uploaded Export:", CreationId)
+		end)
+		-- Display error messages on failure
+		:Catch("Http requests are not enabled", function()
+			Roact.update(
+				DialogHandle,
+				Roact.createElement(DialogComponent, {
+					Text = "Please enable HTTP requests.",
+					OnDismiss = DialogDismissCallback,
+				})
+			)
+		end)
+		:Catch("Export failed due to server-side error", function()
+			Roact.update(
+				DialogHandle,
+				Roact.createElement(DialogComponent, {
+					Text = "An error occurred — please try again.",
+					OnDismiss = DialogDismissCallback,
+				})
+			)
+		end)
+		:Catch("Post data too large", function()
+			Roact.update(
+				DialogHandle,
+				Roact.createElement(DialogComponent, {
+					Text = "Try splitting up your build.",
+					OnDismiss = DialogDismissCallback,
+				})
+			)
+		end)
+		:Catch("Blacklisted content", function()
+			Roact.update(
+				DialogHandle,
+				Roact.createElement(DialogComponent, {
+					Text = "Unable to export.",
+					OnDismiss = DialogDismissCallback,
+				})
+			)
+		end)
+		:Catch(function(Error, Stack, Attempt)
+			Roact.update(
+				DialogHandle,
+				Roact.createElement(DialogComponent, {
+					Text = "An unknown error occurred — please try again.",
+					OnDismiss = DialogDismissCallback,
+				})
+			)
+			warn("❌ [Building Tools by F3X] Failed to export selection", "\n\nError:\n", Error, "\n\nStack:\n", Stack)
+		end)
+end
 
 -- Assign hotkey for exporting selection
-AssignHotkey({ 'LeftShift', 'P' }, ExportSelection);
-AssignHotkey({ 'RightShift', 'P' }, ExportSelection);
+AssignHotkey({ "LeftShift", "P" }, ExportSelection)
+AssignHotkey({ "RightShift", "P" }, ExportSelection)
 
 -- If in-game, enable ctrl hotkeys for exporting
-if Mode == 'Tool' then
-	AssignHotkey({ 'LeftControl', 'P' }, ExportSelection);
-	AssignHotkey({ 'RightControl', 'P' }, ExportSelection);
-end;
+if Mode == "Tool" then
+	AssignHotkey({ "LeftControl", "P" }, ExportSelection)
+	AssignHotkey({ "RightControl", "P" }, ExportSelection)
+end
 
 function IsVersionOutdated()
 	-- Returns whether this version of Building Tools is out of date
 
+	--[[ {PATCH} skips to always returning false that no updating will be needed.
 	-- Check most recent version number
 	local AssetInfo = game.MarketplaceService:GetProductInfo(142785488, Enum.InfoType.Asset);
 	local LatestMajorVersion, LatestMinorVersion, LatestPatchVersion = AssetInfo.Description:match '%[Version: ([0-9]+)%.([0-9]+)%.([0-9]+)%]';
@@ -1181,11 +1187,11 @@ function IsVersionOutdated()
 			return LatestPatchVersion > CurrentPatchVersion;
 		end;
 	end;
+	]]
 
 	-- Return an up-to-date status if not oudated
-	return false;
-
-end;
+	return false
+end
 
 function ToggleMultiSelect()
 	if Selection.Multiselecting == false then
@@ -1263,57 +1269,77 @@ function NewExport()
 
 	-- Start an export dialog
 	local DialogHandle
-	local DialogComponent = require(Tool:WaitForChild('UI'):WaitForChild('ImportDialog'))
-	local DialogDismissCallback = function ()
+	local DialogComponent = require(Tool:WaitForChild("UI"):WaitForChild("ImportDialog"))
+	local DialogDismissCallback = function()
 		DialogHandle = Roact.unmount(DialogHandle)
 	end
-	local DialogSendCallback = function (CreationID)
-		if CreationID == nil then return end
-		Try(SyncAPI.Invoke, SyncAPI, 'Import', CreationID)
-			:Then(function ()
-				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-					Text = 'Your creation has been succesfully imported!<font size="5"><br /></font>\n';
-					OnDismiss = DialogDismissCallback;
-				}))
+	local DialogSendCallback = function(CreationID)
+		if CreationID == nil then
+			return
+		end
+		Try(SyncAPI.Invoke, SyncAPI, "Import", CreationID)
+			:Then(function()
+				Roact.update(
+					DialogHandle,
+					Roact.createElement(DialogComponent, {
+						Text = 'Your creation has been succesfully imported!<font size="5"><br /></font>\n',
+						OnDismiss = DialogDismissCallback,
+					})
+				)
 			end)
-			:Catch('Http requests are not enabled', function ()
-				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-					Text = 'Please enable HTTP requests.';
-					OnDismiss = DialogDismissCallback;
-				}))
+			:Catch("Http requests are not enabled", function()
+				Roact.update(
+					DialogHandle,
+					Roact.createElement(DialogComponent, {
+						Text = "Please enable HTTP requests.",
+						OnDismiss = DialogDismissCallback,
+					})
+				)
 			end)
-			:Catch('Export failed due to server-side error', function ()
-				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-					Text = 'An error occurred — please try again.';
-					OnDismiss = DialogDismissCallback;
-				}))
+			:Catch("Export failed due to server-side error", function()
+				Roact.update(
+					DialogHandle,
+					Roact.createElement(DialogComponent, {
+						Text = "An error occurred — please try again.",
+						OnDismiss = DialogDismissCallback,
+					})
+				)
 			end)
-			:Catch('Post data too large', function ()
-				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-					Text = 'Try splitting up your build.';
-					OnDismiss = DialogDismissCallback;
-				}))
+			:Catch("Post data too large", function()
+				Roact.update(
+					DialogHandle,
+					Roact.createElement(DialogComponent, {
+						Text = "Try splitting up your build.",
+						OnDismiss = DialogDismissCallback,
+					})
+				)
 			end)
-			:Catch(function (Error, Stack, Attempt)
-				Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-					Text = 'An unknown error occurred — please try again.';
-					OnDismiss = DialogDismissCallback;
-				}))
-				warn('❌ [Building Tools by F3X] Failed to import', '\n\nError:\n', Error, '\n\nStack:\n', Stack)
+			:Catch(function(Error, Stack, Attempt)
+				Roact.update(
+					DialogHandle,
+					Roact.createElement(DialogComponent, {
+						Text = "An unknown error occurred — please try again.",
+						OnDismiss = DialogDismissCallback,
+					})
+				)
+				warn("❌ [Building Tools by F3X] Failed to import", "\n\nError:\n", Error, "\n\nStack:\n", Stack)
 			end)
 		DialogHandle = Roact.unmount(DialogHandle)
 	end
 	local DialogElement = Roact.createElement(DialogComponent, {
-		Text = 'Loading...';
-		OnDismiss = DialogDismissCallback;
+		Text = "Loading...",
+		OnDismiss = DialogDismissCallback,
 	})
-	DialogHandle = Roact.mount(DialogElement, UI, 'ImportDialog')
-	Roact.update(DialogHandle, Roact.createElement(DialogComponent, {
-		Text = 'How would you like to export your creation?<font size="5"><br /></font>\n';
-		OnDismiss = DialogDismissCallback;
-		OnSend = DialogSendCallback;			}))
-
-end;
+	DialogHandle = Roact.mount(DialogElement, UI, "ImportDialog")
+	Roact.update(
+		DialogHandle,
+		Roact.createElement(DialogComponent, {
+			Text = 'How would you like to export your creation?<font size="5"><br /></font>\n',
+			OnDismiss = DialogDismissCallback,
+			OnSend = DialogSendCallback,
+		})
+	)
+end
 
 -- Assign hotkey for exporting selection
 --AssignHotkey({ 'LeftShift', 'M' }, Import);
@@ -1325,128 +1351,116 @@ end;
 --	AssignHotkey({ 'RightControl', 'M' }, Import);
 --end;
 
-
 function ToggleSwitch(CurrentButtonName, SwitchContainer)
 	-- Toggles between the buttons in a switch
 
 	-- Reset all buttons
 	for _, Button in pairs(SwitchContainer:GetChildren()) do
-
 		-- Make sure to not mistake the option label for a button
-		if Button.Name ~= 'Label' then
-
+		if Button.Name ~= "Label" then
 			-- Set appearance to disabled
-			Button.SelectedIndicator.BackgroundTransparency = 1;
-			Button.Background.Image = Assets.LightSlantedRectangle;
-
-		end;
-
-	end;
+			Button.SelectedIndicator.BackgroundTransparency = 1
+			Button.Background.Image = Assets.LightSlantedRectangle
+		end
+	end
 
 	-- Make sure there's a new current button
 	if CurrentButtonName then
-
 		-- Get the current button
-		local CurrentButton = SwitchContainer[CurrentButtonName];
+		local CurrentButton = SwitchContainer[CurrentButtonName]
 
 		-- Set the current button's appearance to enabled
-		CurrentButton.SelectedIndicator.BackgroundTransparency = 0;
-		CurrentButton.Background.Image = Assets.DarkSlantedRectangle;
-
-	end;
-end;
+		CurrentButton.SelectedIndicator.BackgroundTransparency = 0
+		CurrentButton.Background.Image = Assets.DarkSlantedRectangle
+	end
+end
 
 -- References to reduce indexing time
-local GetConnectedParts = Instance.new('Part').GetConnectedParts;
-local GetChildren = script.GetChildren;
+local GetConnectedParts = Instance.new("Part").GetConnectedParts
+local GetChildren = script.GetChildren
 
 function GetPartJoints(Part, Whitelist)
 	-- Returns any manual joints involving `Part`
 
-	local Joints = {};
+	local Joints = {}
 
 	-- Get joints stored inside `Part`
 	for Joint, JointParent in pairs(SearchJoints(Part, Part, Whitelist)) do
-		Joints[Joint] = JointParent;
-	end;
+		Joints[Joint] = JointParent
+	end
 
 	-- Get joints stored inside connected parts
 	for _, ConnectedPart in pairs(GetConnectedParts(Part)) do
 		for Joint, JointParent in pairs(SearchJoints(ConnectedPart, Part, Whitelist)) do
-			Joints[Joint] = JointParent;
-		end;
-	end;
+			Joints[Joint] = JointParent
+		end
+	end
 
 	-- Return all found joints
-	return Joints;
-
-end;
+	return Joints
+end
 
 -- Types of joints to assume should be preserved
-local ManualJointTypes = Support.FlipTable { 'Weld', 'ManualWeld', 'ManualGlue', 'Motor', 'Motor6D' };
+local ManualJointTypes = Support.FlipTable({ "Weld", "ManualWeld", "ManualGlue", "Motor", "Motor6D" })
 
 function SearchJoints(Haystack, Part, Whitelist)
 	-- Searches for and returns manual joints in `Haystack` involving `Part` and other parts in `Whitelist`
 
-	local Joints = {};
+	local Joints = {}
 
 	-- Search the haystack for joints involving `Part`
 	for _, Item in pairs(GetChildren(Haystack)) do
-
 		-- Check if this item is a manual, intentional joint
-		if ManualJointTypes[Item.ClassName] and
-		   (Whitelist[Item.Part0] and Whitelist[Item.Part1]) then
-
+		if ManualJointTypes[Item.ClassName] and (Whitelist[Item.Part0] and Whitelist[Item.Part1]) then
 			-- Save joint and state if intentional
-			Joints[Item] = Item.Parent;
-
-		end;
-
-	end;
+			Joints[Item] = Item.Parent
+		end
+	end
 
 	-- Return the found joints
-	return Joints;
-
-end;
+	return Joints
+end
 
 function RestoreJoints(Joints)
 	-- Restores the joints from the given `Joints` data
 
 	-- Restore each joint
 	for Joint, JointParent in pairs(Joints) do
-		Joint.Parent = JointParent;
-	end;
-
-end;
+		Joint.Parent = JointParent
+	end
+end
 
 function PreserveJoints(Part, Whitelist)
 	-- Preserves and returns intentional joints of `Part` connecting parts in `Whitelist`
 
 	-- Get the part's joints
-	local Joints = GetPartJoints(Part, Whitelist);
+	local Joints = GetPartJoints(Part, Whitelist)
 
 	-- Save the joints from being broken
 	for Joint in pairs(Joints) do
-		Joint.Parent = nil;
-	end;
+		Joint.Parent = nil
+	end
 
 	-- Return the joints
-	return Joints;
-
-end;
+	return Joints
+end
 
 local ToolList = {}
 
 function InitializeUI()
 	-- Sets up the UI
-	
+
 	-- Ensure UI has not yet been initialized
-	local ProfilesFolder = Mode == "Plugin" and not UseGigsDarkWithPlugin and game.ReplicatedStorage:FindFirstChild("Fork3XProfile") or Tool:WaitForChild("Profiles")
+	local ProfilesFolder = Mode == "Plugin"
+			and not UseGigsDarkWithPlugin
+			and game.ReplicatedStorage:FindFirstChild("Fork3XProfile")
+		or Tool:WaitForChild("Profiles")
 
 	if ProfilesFolder then
-		
-		local Profile = UseGigsDarkWithPlugin and "GigsDark" or Mode == "Plugin" and ProfilesFolder.Name == "Fork3XProfile" and ProfilesFolder:GetChildren()[1].Name or Options.CheckProfile(Player)
-		
+		local Profile = UseGigsDarkWithPlugin and "GigsDark"
+			or Mode == "Plugin" and ProfilesFolder.Name == "Fork3XProfile" and ProfilesFolder:GetChildren()[1].Name
+			or Options.CheckProfile(Player)
+
 		if Profile ~= CurrentProfile and Profile ~= nil then
 			CurrentProfile = Profile
 			local NewProfile = ProfilesFolder:FindFirstChild(CurrentProfile)
@@ -1461,8 +1475,10 @@ function InitializeUI()
 
 				local OldItemsHierarchy = {}
 
-				for _, Item in Tool:WaitForChild("Interfaces"):GetDescendants() do		
-					if Item:GetAttribute("IsNegligible") == true then continue end
+				for _, Item in Tool:WaitForChild("Interfaces"):GetDescendants() do
+					if Item:GetAttribute("IsNegligible") == true then
+						continue
+					end
 					OldItemsHierarchy[Item] = {}
 					local CurrentParent = Item.Parent
 
@@ -1478,7 +1494,7 @@ function InitializeUI()
 					table.insert(OldItemsHierarchy[Item], Tool.Interfaces)
 				end
 
-				for _, Item in Tool:WaitForChild("UI"):GetDescendants() do			
+				for _, Item in Tool:WaitForChild("UI"):GetDescendants() do
 					OldItemsHierarchy[Item] = {}
 					local CurrentParent = Item.Parent
 
@@ -1509,9 +1525,15 @@ function InitializeUI()
 							ItemToFind = Item[Count]
 						end
 
-						if KnownParent:FindFirstChild(ItemToFind.Name) and ItemToFind:GetAttribute("ChangeAnyway") ~= true then
+						if
+							KnownParent:FindFirstChild(ItemToFind.Name)
+							and ItemToFind:GetAttribute("ChangeAnyway") ~= true
+						then
 							KnownParent = KnownParent[ItemToFind.Name]
-						elseif KnownParent:FindFirstChild(ItemToFind.Name) and ItemToFind:GetAttribute("ChangeAnyway") == true then
+						elseif
+							KnownParent:FindFirstChild(ItemToFind.Name)
+							and ItemToFind:GetAttribute("ChangeAnyway") == true
+						then
 							break
 						else
 							ItemToFind:Clone().Parent = KnownParent
@@ -1533,41 +1555,40 @@ function InitializeUI()
 
 				Tool.UI:Destroy()
 				NewProfile.UI.Parent = Tool
-				
+
 				UIElements = Tool:WaitForChild("UI")
 
 				NewProfile:Destroy()
 			end
 		end
-
 	end
 
 	if UI then
-		return true;
-	end;
+		return true
+	end
 
 	-- Create the root UI
-	UI = Instance.new('ScreenGui')
-	UI.Name = 'Building Tools by F3X (UI)'
+	UI = Instance.new("ScreenGui")
+	UI.Name = "Building Tools by F3X (UI)"
 
 	-- Create dock
-	local DockComponent = require(Tool:WaitForChild('UI'):WaitForChild('Dock'))
+	local DockComponent = require(Tool:WaitForChild("UI"):WaitForChild("Dock"))
 	local DockElement = Roact.createElement(DockComponent, {
-		Core = Core;
-		Tools = ToolList;
+		Core = Core,
+		Tools = ToolList,
 	})
-	local DockHandle = Roact.mount(DockElement, UI, 'Dock')
+	local DockHandle = Roact.mount(DockElement, UI, "Dock")
 
 	-- Provide API for adding tool buttons to dock
 	local function AddToolButton(IconAssetId, HotkeyLabel, Tool, Position, Size)
 		table.insert(ToolList, {
-			IconAssetId = IconAssetId;
-			HotkeyLabel = HotkeyLabel;
-			Tool = Tool;
-			Position = Position;
-			Size = Size;
+			IconAssetId = IconAssetId,
+			HotkeyLabel = HotkeyLabel,
+			Tool = Tool,
+			Position = Position,
+			Size = Size,
 		})
-		
+
 		ProfileUpdate:Fire(DockHandle, DockComponent)
 		-- Update dock
 		--[[
@@ -1576,30 +1597,33 @@ function InitializeUI()
 			Tools = Cryo.List.join(ToolList);
 		}))]]
 	end
-	
+
 	Core.AddToolButton = AddToolButton
 
 	-- Clean up UI on tool teardown
 	UIMaid = Maid.new()
-	Tool.AncestryChanged:Connect(function (Item, Parent)
+	Tool.AncestryChanged:Connect(function(Item, Parent)
 		if Parent == nil then
 			UIMaid:Destroy()
 		end
 	end)
-	
+
 	ProfileUpdate:Fire(DockHandle, DockComponent)
-	
+
 	return true
 end
 
 -- Initialize the UI
-InitializeUI();
+InitializeUI()
 
 ProfileUpdate:Connect(function(DockHandle, DockComponent)
-	Roact.update(DockHandle, Roact.createElement(DockComponent, {
-		Core = Core;
-		Tools = Cryo.List.join(ToolList);
-	}))
+	Roact.update(
+		DockHandle,
+		Roact.createElement(DockComponent, {
+			Core = Core,
+			Tools = Cryo.List.join(ToolList),
+		})
+	)
 end)
 
 -- Set up external connections
@@ -1609,11 +1633,11 @@ for FunctionName, Arguments in Options.CustomCoreFunctions do
 	Core[FunctionName] = function(...)
 		return Arguments[1](Core, ...)
 	end
-	
+
 	if Arguments[2] then
 		AssignHotkey(Arguments[2], Core[FunctionName])
 	end
 end
 
 -- Return core
-return getfenv(0);
+return getfenv(0)

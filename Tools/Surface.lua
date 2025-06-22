@@ -46,6 +46,11 @@ Lets you change the surfaces of parts. The appearance only applies to non-mesh p
 
 <b>TIP: </b>Click a part's surface to select it quickly.]]
 
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+SurfaceTool.ManualText = SurfaceTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
 

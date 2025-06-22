@@ -1,3 +1,8 @@
+--[[
+To maintain compatibility with 2021E, lines ~125+ are taken from F3X version 3.0.2.
+Lines prior to ~125 are kept from the current 3.1.0.  
+]]
+
 Tool = script.Parent.Parent;
 Core = require(Tool.Core);
 SnapTracking = require(Tool.Core.Snapping);
@@ -54,6 +59,11 @@ Lets you choose how many degrees to rotate by.<font size="6"><br /></font>
 <font size="12" color="rgb(150, 150, 150)"><b>Snapping</b></font>
 Press <b><i>R</i></b> and click on a part's <b>snap point</b> to rotate around it.
 ]]
+
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+RotateTool.ManualText = RotateTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
 
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
@@ -184,10 +194,6 @@ function ShowUI()
 			SetAxisAngle('Z', NewAngle);
 		end;
 	end);
-
-	-- Hook up manual triggering
-	local SignatureButton = RotateTool.UI:WaitForChild('Title'):WaitForChild('Signature')
-	ListenForManualWindowTrigger(RotateTool.ManualText, RotateTool.Color.Color, SignatureButton)
 
 	-- Update the UI every 0.1 seconds
 	UIUpdater = Support.ScheduleRecurringTask(UpdateUI, 0.1);
@@ -348,7 +354,11 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 		end;
 
 		-- Stop parts from moving, and capture the initial state of the parts
+<<<<<<< HEAD
 		InitialPartStates, InitialModelStates, InitialAttachmentsStates = PrepareSelectionForRotating()
+=======
+		InitialState = PreparePartsForRotating();
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 		-- Track the change
 		TrackChange();
@@ -373,11 +383,14 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 				PivotPoint = Selection.Focus.CFrame
 			elseif Selection.Focus:IsA 'Model' then
 				PivotPoint = Selection.Focus:GetModelCFrame()
+<<<<<<< HEAD
 				pcall(function ()
 					PivotPoint = Selection.Focus:GetPivot()
 				end)
 			elseif Selection.Focus:IsA 'Attachment' then
 				PivotPoint = Selection.Focus.WorldCFrame
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 			end
 		end;
 
@@ -401,19 +414,26 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 		local DisplayedRotation = GetHandleDisplayDelta(Rotation);
 
 		-- Perform the rotation
+<<<<<<< HEAD
 		RotateSelectionAroundPivot(RotateTool.Pivot, PivotPoint, Axis, Rotation, InitialPartStates, InitialModelStates, InitialAttachmentsStates)
+=======
+		RotatePartsAroundPivot(RotateTool.Pivot, PivotPoint, Axis, Rotation, InitialState);
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 		-- Make sure we're not entering any unauthorized private areas
 		if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
-			for Part, State in pairs(InitialPartStates) do
+			for Part, State in pairs(InitialState) do
 				Part.CFrame = State.CFrame;
 			end;
+<<<<<<< HEAD
 			for Model, State in pairs(InitialModelStates) do
 				Model.WorldPivot = State.Pivot
 			end
 			for Attachment, State in pairs(InitialAttachmentsStates) do
 				Attachment.WorldCFrame = State.WorldCFrame
 			end
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 			-- Reset displayed rotation delta
 			DisplayedRotation = 0;
@@ -446,7 +466,7 @@ function AttachHandles(Part, Autofocus, IsGlobal)
 		LastDisplayedRotation = nil;
 
 		-- Make joints, restore original anchor and collision states
-		for Part, State in pairs(InitialPartStates) do
+		for Part, State in pairs(InitialState) do
 			Part:MakeJoints();
 			Core.RestoreJoints(State.Joints);
 			Part.CanCollide = State.CanCollide;
@@ -491,14 +511,19 @@ function HideHandles()
 
 end;
 
+<<<<<<< HEAD
 function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, InitialPartStates, InitialModelStates, InitialAttachmentsStates)
 	-- Rotates the given selection around `PivotMode` (using `PivotPoint` if applicable)'s `Axis` by `Rotation`
+=======
+function RotatePartsAroundPivot(PivotMode, PivotPoint, Axis, Rotation, InitialStates)
+	-- Rotates the given parts in `InitialStates` around `PivotMode` (using `PivotPoint` if applicable)'s `Axis` by `Rotation`
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Create a CFrame that increments rotation by `Rotation` around `Axis`
 	local RotationCFrame = CFrame.fromAxisAngle(Vector3.FromAxis(Axis), math.rad(Rotation));
 
 	-- Rotate each part
-	for Part, InitialState in pairs(InitialPartStates) do
+	for Part, InitialState in pairs(InitialStates) do
 
 		-- Rotate around the selection's center, or the currently focused part
 		if PivotMode == 'Center' or PivotMode == 'Last' then
@@ -520,6 +545,7 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 
 	end;
 
+<<<<<<< HEAD
 	-- Rotate each model's pivot
 	for Model, InitialState in pairs(InitialModelStates) do
 		
@@ -559,6 +585,8 @@ function RotateSelectionAroundPivot(PivotMode, PivotPoint, Axis, Rotation, Initi
 		
 	end
 
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 end;
 
 function GetHandleDisplayDelta(HandleRotation)
@@ -651,6 +679,14 @@ function BindShortcutKeys()
 				SetPivot('Center');
 			end;
 
+		-- Check if the - key was pressed
+		elseif InputInfo.KeyCode == Enum.KeyCode.Minus or InputInfo.KeyCode == Enum.KeyCode.KeypadMinus then
+
+			-- Focus on the increment input
+			if RotateTool.UI then
+				RotateTool.UI.IncrementOption.Increment.TextBox:CaptureFocus();
+			end;
+
 		-- Nudge around X axis if the 8 button on the keypad is pressed
 		elseif InputInfo.KeyCode == Enum.KeyCode.KeypadEight then
 			NudgeSelectionByAxis(Enum.Axis.X, 1);
@@ -687,24 +723,6 @@ function BindShortcutKeys()
 
 	end));
 
-	-- Track ending user input while this tool is equipped
-	Connections.HotkeyRelease = UserInputService.InputEnded:Connect(function (InputInfo, GameProcessedEvent)
-		if GameProcessedEvent then
-			return
-		end
-
-		-- Make sure this is input from the keyboard
-		if InputInfo.UserInputType ~= Enum.UserInputType.Keyboard then
-			return
-		end
-
-		-- If - key was released, focus on increment input
-		if (InputInfo.KeyCode.Name == 'Minus') or (InputInfo.KeyCode.Name == 'KeypadMinus') then
-			if RotateTool.UI then
-				RotateTool.UI.IncrementOption.Increment.TextBox:CaptureFocus()
-			end
-		end
-	end)
 end;
 
 function StartSnapping()
@@ -765,10 +783,14 @@ function SetAxisAngle(Axis, Angle)
 	TrackChange();
 
 	-- Prepare parts to be moved
+<<<<<<< HEAD
 	local InitialPartStates, uzhdsgzs, InitialAttachmentsStates = PrepareSelectionForRotating()
+=======
+	local InitialStates = PreparePartsForRotating();
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Update each part
-	for Part, State in pairs(InitialPartStates) do
+	for Part, State in pairs(InitialStates) do
 
 		-- Set the part's new CFrame
 		Part.CFrame = CFrame.new(Part.Position) * CFrame.fromOrientation(
@@ -795,13 +817,13 @@ function SetAxisAngle(Axis, Angle)
 
 	-- Revert changes if player is not authorized to move parts to target destination
 	if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
-		for Part, State in pairs(InitialPartStates) do
+		for Part, State in pairs(InitialStates) do
 			Part.CFrame = State.CFrame;
 		end;
 	end;
 
 	-- Restore the parts' original states
-	for Part, State in pairs(InitialPartStates) do
+	for Part, State in pairs(InitialStates) do
 		Part:MakeJoints();
 		Core.RestoreJoints(State.Joints);
 		Part.CanCollide = State.CanCollide;
@@ -834,7 +856,11 @@ function NudgeSelectionByAxis(Axis, Direction)
 	TrackChange();
 
 	-- Stop parts from moving, and capture the initial state of the parts
+<<<<<<< HEAD
 	local InitialPartStates, InitialModelStates, InitialAttachmentsStates = PrepareSelectionForRotating()
+=======
+	local InitialState = PreparePartsForRotating();
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Set the pivot point to the center of the selection if in Center mode
 	if RotateTool.Pivot == 'Center' and #Selection.Parts == 0 then
@@ -847,16 +873,23 @@ function NudgeSelectionByAxis(Axis, Direction)
 			PivotPoint = Selection.Focus.CFrame
 		elseif Selection.Focus:IsA 'Model' then
 			PivotPoint = Selection.Focus:GetModelCFrame()
+<<<<<<< HEAD
 			pcall(function ()
 				PivotPoint = Selection.Focus:GetPivot()
 			end)
 		elseif Selection.Focus:IsA 'Attachment' then
 			PivotPoint = Selection.Focus.WorldCFrame
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 		end
 	end;
 
 	-- Perform the rotation
+<<<<<<< HEAD
 	RotateSelectionAroundPivot(RotateTool.Pivot, PivotPoint, Axis, NudgeAmount * (Direction or 1), InitialPartStates, InitialModelStates, InitialAttachmentsStates)
+=======
+	RotatePartsAroundPivot(RotateTool.Pivot, PivotPoint, Axis, NudgeAmount * (Direction or 1), InitialState);
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Update the "degrees rotated" indicator
 	if RotateTool.UI then
@@ -868,19 +901,22 @@ function NudgeSelectionByAxis(Axis, Direction)
 
 	-- Make sure we're not entering any unauthorized private areas
 	if Core.Mode == 'Tool' and Security.ArePartsViolatingAreas(Selection.Parts, Core.Player, false, AreaPermissions) then
-		for Part, State in pairs(InitialPartStates) do
+		for Part, State in pairs(InitialState) do
 			Part.CFrame = State.CFrame;
 		end;
+<<<<<<< HEAD
 		for Model, State in pairs(InitialModelStates) do
 			Model.WorldPivot = State.Pivot
 		end
 		for Attachment, State in pairs(InitialAttachmentsStates) do
 			Attachment.WorldCFrame = State.WorldCFrame;
 		end;
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 	end;
 
 	-- Make joints, restore original anchor and collision states
-	for Part, State in pairs(InitialPartStates) do
+	for Part, State in pairs(InitialState) do
 		Part:MakeJoints();
 		Core.RestoreJoints(State.Joints);
 		Part.CanCollide = State.CanCollide;
@@ -897,8 +933,11 @@ function TrackChange()
 	-- Start the record
 	HistoryRecord = {
 		Parts = Support.CloneTable(Selection.Parts);
+<<<<<<< HEAD
 		Models = Support.CloneTable(Selection.Models);
 		Attachments = Support.CloneTable(Selection.Attachments);
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 		BeforeCFrame = {};
 		AfterCFrame = {};
 		Selection = Selection.Items;
@@ -912,11 +951,9 @@ function TrackChange()
 			-- Put together the change request
 			local Changes = {};
 			for _, Part in pairs(Record.Parts) do
-				table.insert(Changes, {
-					Part = Part;
-					CFrame = Record.BeforeCFrame[Part];
-				})
+				table.insert(Changes, { Part = Part, CFrame = Record.BeforeCFrame[Part] });
 			end;
+<<<<<<< HEAD
 			for _, Model in pairs(Record.Models) do
 				table.insert(Changes, {
 					Model = Model;
@@ -929,6 +966,8 @@ function TrackChange()
 					Pivot = Record.BeforeCFrame[Attachment];
 				})
 			end
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 			-- Send the change request
 			Core.SyncAPI:Invoke('SyncRotate', Changes);
@@ -944,11 +983,9 @@ function TrackChange()
 			-- Put together the change request
 			local Changes = {};
 			for _, Part in pairs(Record.Parts) do
-				table.insert(Changes, {
-					Part = Part;
-					CFrame = Record.AfterCFrame[Part];
-				})
+				table.insert(Changes, { Part = Part, CFrame = Record.AfterCFrame[Part] });
 			end;
+<<<<<<< HEAD
 			for _, Model in pairs(Record.Models) do
 				table.insert(Changes, {
 					Model = Model;
@@ -961,6 +998,8 @@ function TrackChange()
 					Pivot = Record.AfterCFrame[Attachment];
 				})
 			end
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 			-- Send the change request
 			Core.SyncAPI:Invoke('SyncRotate', Changes);
@@ -973,6 +1012,7 @@ function TrackChange()
 	for _, Part in pairs(HistoryRecord.Parts) do
 		HistoryRecord.BeforeCFrame[Part] = Part.CFrame;
 	end;
+<<<<<<< HEAD
 	pcall(function ()
 		for _, Model in pairs(HistoryRecord.Models) do
 			HistoryRecord.BeforeCFrame[Model] = Model:GetPivot()
@@ -981,6 +1021,9 @@ function TrackChange()
 		for _, Attachment in pairs(HistoryRecord.Attachments) do
 			HistoryRecord.BeforeCFrame[Attachment] = Attachment.WorldCFrame;
 		end;
+=======
+
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 end;
 
 function RegisterChange()
@@ -995,11 +1038,9 @@ function RegisterChange()
 	local Changes = {};
 	for _, Part in pairs(HistoryRecord.Parts) do
 		HistoryRecord.AfterCFrame[Part] = Part.CFrame;
-		table.insert(Changes, {
-			Part = Part;
-			CFrame = Part.CFrame;
-		})
+		table.insert(Changes, { Part = Part, CFrame = Part.CFrame });
 	end;
+<<<<<<< HEAD
 	pcall(function ()
 		for _, Model in pairs(HistoryRecord.Models) do
 			HistoryRecord.AfterCFrame[Model] = Model:GetPivot()
@@ -1016,6 +1057,8 @@ function RegisterChange()
 			WorldCFrame = Attachment.WorldCFrame;
 		})
 	end;
+=======
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Send the change to the server
 	Core.SyncAPI:Invoke('SyncRotate', Changes);
@@ -1026,31 +1069,32 @@ function RegisterChange()
 
 end;
 
-function PrepareSelectionForRotating()
+function PreparePartsForRotating()
 	-- Prepares parts for rotating and returns the initial state of the parts
 
+<<<<<<< HEAD
 	local InitialPartStates = {}
 	local InitialModelStates = {}
 	local InitialAttachmentsStates = {}
+=======
+	local InitialState = {};
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 
 	-- Get index of parts
 	local PartIndex = Support.FlipTable(Selection.Parts);
 
 	-- Stop parts from moving, and capture the initial state of the parts
 	for _, Part in pairs(Selection.Parts) do
-		InitialPartStates[Part] = {
-			Anchored = Part.Anchored;
-			CanCollide = Part.CanCollide;
-			CFrame = Part.CFrame;
-		}
+		InitialState[Part] = { Anchored = Part.Anchored, CanCollide = Part.CanCollide, CFrame = Part.CFrame };
 		Part.Anchored = true;
 		Part.CanCollide = false;
-		InitialPartStates[Part].Joints = Core.PreserveJoints(Part, PartIndex);
+		InitialState[Part].Joints = Core.PreserveJoints(Part, PartIndex);
 		Part:BreakJoints();
 		Part.Velocity = Vector3.new();
 		Part.RotVelocity = Vector3.new();
 	end;
 
+<<<<<<< HEAD
 	-- Record model pivots
 	-- (temporarily pcalled due to pivot API being in beta)
 	pcall(function ()
@@ -1068,6 +1112,9 @@ function PrepareSelectionForRotating()
 	end
 
 	return InitialPartStates, InitialModelStates, InitialAttachmentsStates
+=======
+	return InitialState;
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 end;
 
 function GetIncrementMultiple(Number, Increment)

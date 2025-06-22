@@ -54,6 +54,11 @@ Lets you choose how many studs to resize by.<font size="6"><br /></font>
 Hold the <b><i>R</i></b> key, and <b>click and drag the snap point</b> of a part (in the direction you want to resize) towards the snap point of another part, to resize up to that point.
 ]]
 
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+ResizeTool.ManualText = ResizeTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
 
@@ -1039,12 +1044,17 @@ function StartSnapping()
 
 	-- Listen for when the user starts dragging while in snap mode
 	Connections.SnapDragStart = Support.AddUserInputListener('Began', 'MouseButton1', false, function (Input)
+		
+		if SnapTracking.Target == nil then
+			return;
+		end;
 
 		-- Initialize snapping state
 		SnappingStage = 'Direction';
 		SnappingStartAim = Vector2.new(Input.Position.X, Input.Position.Y);
 		SnappingStartPoint = SnappedPoint;
 		SnappingStartTarget = SnapTracking.Target;
+		
 		SnappingStartDirections = GetFaceOffsetsFromCorner(SnappingStartTarget, SnappingStartPoint);
 		
 		SnappingStartSelectionState = PreparePartsForResizing();

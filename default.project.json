@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "Building Tools",
   "tree": {
     "$className": "Tool",
@@ -87,4 +88,85 @@
       "$path": "Sounds.rbxmx"
     }
   }
+=======
+	"name": "Building Tools",
+	"tree": {
+		"$className": "Tool",
+		"$ignoreUnknownInstances": true,
+		"Core": {
+			"$path": "Core"
+		},
+		"Tools": {
+			"$className": "Folder",
+			"$path": "Tools"
+		},
+		"Loader": {
+			"$path": "Loader"
+		},
+		"SyncAPI": {
+			"$className": "BindableFunction",
+			"SyncModule": {
+				"$path": "SyncAPI.lua"
+			},
+			"LocalEndpoint": {
+				"$path": "Support/LocalAPIEndpoint.client.lua"
+			},
+			"ServerEndpoint": {
+				"$className": "RemoteFunction",
+				"ServerEndpoint": {
+					"$path": "Support/ServerAPIEndpoint.server.lua"
+				}
+			}
+		},
+		"Libraries": {
+			"$path": "Libraries"
+		},
+		"Vendor": {
+			"$className": "Folder",
+			"$ignoreUnknownInstances": false,
+			"Roact": {
+				"$path": "Vendor/Roact"
+			}
+		},
+		"Assets": {
+			"$path": "Support/Assets.lua"
+		},
+		"AutoUpdate": {
+			"$className": "BoolValue",
+			"$properties": {
+				"Value": false
+			},
+			"AutomaticUpdating": {
+				"$path": "AutomaticUpdating.server.lua"
+			}
+		},
+		"Loaded": {
+			"$className": "BoolValue",
+			"DescendantCount": {
+				"$className": "IntValue",
+				"DescendantCounter": {
+					"$path": "Support/DescendantCounter.server.lua"
+				}
+			},
+			"ReplicationListener": {
+				"$path": "Support/ReplicationListener.client.lua"
+			}
+		},
+		"Version": {
+			"$className": "StringValue",
+			"$properties": {
+				"Value": "3.1.0"
+			}
+		},
+		"UI": {
+			"$path": "UI"
+		},
+		"Handle": {
+			"$path": "Handle.rbxmx"
+		},
+		"Interfaces": {
+			"$path": "Interfaces.rbxmx"
+		}
+	}
+>>>>>>> 7f554bf23fbe876f7bd3b803d56b443f3debac10
 }

@@ -44,6 +44,11 @@ Lets you add decals and textures to parts. Decals are one image fitting the whol
 
 <b>NOTE: </b>If HttpService isn't enabled, you must manually type an image's ID.]]
 
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+TextureTool.ManualText = TextureTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
 

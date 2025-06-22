@@ -38,6 +38,11 @@ Lets you create new parts.<font size="6"><br /></font>
 
 <b>TIP:</b> Click and drag where you want your part to be.]]
 
+-- {PATCH} annoying boxes appear after newlines in 2021E rich text.
+NewPartTool.ManualText = NewPartTool.ManualText
+	:gsub('\n', '<font size="0">\n</font>')
+	:gsub('<font size="([0-9]+)"><br /></font>', '<font size="0">\n<font size="%1"> </font></font>');
+
 -- Container for temporary connections (disconnected automatically)
 local Connections = {};
 
@@ -101,7 +106,7 @@ function NewPartTool:ShowUI()
 	self.UI.Visible = true
 
 	-- Creatable part types
-	Types = {
+	local Types = {
 		'Normal';
 		'Truss';
 		'Wedge';
